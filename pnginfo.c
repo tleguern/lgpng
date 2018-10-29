@@ -71,6 +71,7 @@ const char *chunktypemap[CHUNK_TYPE__MAX] = {
 bool		is_png(FILE *);
 int32_t		read_next_chunk_len(FILE *);
 enum chunktype	read_next_chunk_type(FILE *);
+int		read_next_chunk_data(FILE *, int32_t);;;;
 uint32_t	read_next_chunk_crc(FILE *);
 void		usage(void);
 
@@ -111,8 +112,8 @@ main(int argc, char *argv[])
 			errx(EXIT_FAILURE, "Invalid chunk len");
 		if (CHUNK_TYPE__MAX == (type = read_next_chunk_type(fflag)))
 			errx(EXIT_FAILURE, "Invalid chunk type");
-		if (-1 == fseek(fflag, chunkz, SEEK_CUR))
-			err(EXIT_FAILURE, "Can't seek on stdin");
+		if (-1 == read_next_chunk_data(fflag, chunkz))
+			errx(EXIT_FAILURE, "Invalid chunk data");
 		if (0 == (chunkcrc = read_next_chunk_crc(fflag)))
 			errx(EXIT_FAILURE, "Invalid chunk crc");
 		printf("%s\n", chunktypemap[type]);
@@ -122,6 +123,23 @@ main(int argc, char *argv[])
 	} while(1);
 	fclose(fflag);
 	return(EXIT_SUCCESS);
+}
+
+int
+read_next_chunk_data(FILE *f, int32_t chunkz)
+{
+	size_t	 bufz;
+	uint8_t	*buf;
+
+	bufz = chunkz + 1;
+	if (NULL == (buf = malloc(bufz)))
+		return(-1);
+	if (chunkz != (int32_t)fread(buf, 1, chunkz, f)) {
+		free(buf);
+		return(-1);
+	}
+	free(buf);
+	return(0);
 }
 
 uint32_t
