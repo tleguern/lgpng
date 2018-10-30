@@ -186,6 +186,31 @@ struct tEXt {
 	char	*text;
 };
 
+struct sPLT {
+	size_t	 entriesz;
+	char	*palettename;
+	uint8_t	 sampledepth;
+	struct {
+		union {
+			uint8_t raw[10];
+			struct {
+				uint16_t red;
+				uint16_t green;
+				uint16_t blue;
+				uint16_t alpha;
+				uint16_t frequency;
+			} depth16;
+			struct {
+				uint8_t red;
+				uint8_t green;
+				uint8_t blue;
+				uint8_t alpha;
+				uint16_t frequency;
+			} depth8;
+		};
+	} **entries;
+};
+
 bool		is_png(FILE *);
 int32_t		read_next_chunk_len(FILE *);
 enum chunktype	read_next_chunk_type(FILE *);
@@ -201,6 +226,7 @@ void		parse_pHYs(uint8_t *, size_t);
 void		parse_IEND(uint8_t *, size_t);
 void		parse_tIME(uint8_t *, size_t);
 void		parse_tEXt(uint8_t *, size_t);
+void		parse_sPLT(uint8_t *, size_t);
 void		usage(void);
 
 struct chunktypemap {
@@ -223,7 +249,7 @@ struct chunktypemap {
 	{ "bKGD", NULL },
 	{ "hIST", parse_hIST },
 	{ "pHYs", parse_pHYs },
-	{ "sPLT", NULL },
+	{ "sPLT", parse_sPLT },
 	{ "tIME", parse_tIME },
 };
 
@@ -644,6 +670,76 @@ parse_tEXt(uint8_t *data, size_t dataz)
 	}
 	text.text = data + strlen(data) + 1;
 	printf("%s: %s\n", text.keyword, text.text);
+}
+
+void
+parse_sPLT(uint8_t *data, size_t dataz)
+{
+	struct sPLT	splt;
+	size_t		palettenamez;
+	int		offset;
+
+	splt.palettename = data;
+	palettenamez = strlen(splt.palettename);
+	if (palettenamez >= 80) {
+		errx(EXIT_FAILURE, "sPLT: Invalid palette name size");
+	}
+	offset = palettenamez + 1;
+	splt.sampledepth = data[offset];
+	if (8 != splt.sampledepth && 16 != splt.sampledepth) {
+		errx(EXIT_FAILURE, "sPLT: Invalid sample depth");
+	}
+	offset += 1;
+	splt.entriesz = (dataz - offset) / splt.sampledepth;
+	splt.entries = calloc(splt.entriesz, sizeof(*(splt.entries)));
+	for (size_t i = 0; i < splt.entriesz; i++) {
+		splt.entries[i] = calloc(1, sizeof(**(splt.entries)));
+		if (8 == splt.sampledepth) {
+			memcpy(splt.entries[i], data + offset, 6);
+			offset += 6;
+			splt.entries[i]->depth8.frequency =
+			    ntohs(splt.entries[i]->depth8.frequency);
+		} else {
+			memcpy(splt.entries[i], data + offset, 10);
+			offset += 10;
+			splt.entries[i]->depth16.red =
+			    ntohs(splt.entries[i]->depth16.red);
+			splt.entries[i]->depth16.green =
+			    ntohs(splt.entries[i]->depth16.green);
+			splt.entries[i]->depth16.blue =
+			    ntohs(splt.entries[i]->depth16.blue);
+			splt.entries[i]->depth16.alpha =
+			    ntohs(splt.entries[i]->depth16.alpha);
+			splt.entries[i]->depth16.frequency =
+			    ntohs(splt.entries[i]->depth16.frequency);
+		}
+	}
+	printf("sPLT: palette name: %s\n", splt.palettename);
+	printf("sPLT: sample depth: %i\n", splt.sampledepth);
+	printf("sPLT: %zu entries\n", splt.entriesz);
+	for (size_t i = 0; i < splt.entriesz; i++) {
+		if (8 == splt.sampledepth) {
+			printf("sPLT: entry %3zu: red: 0x%02X, green 0x%02X, "
+			  "blue: 0x%02X, alpha: 0x%02X, frequency: %hi\n", i,
+			     splt.entries[i]->depth8.red,
+			     splt.entries[i]->depth8.green,
+			     splt.entries[i]->depth8.blue,
+			     splt.entries[i]->depth8.alpha,
+			     splt.entries[i]->depth8.frequency);
+		} else {
+			printf("sPLT: entry %3zu: red: 0x%04X, green 0x%04X, "
+			  "blue: 0x%04X, alpha: 0x%04X, frequency: %hi\n", i,
+			     splt.entries[i]->depth16.red,
+			     splt.entries[i]->depth16.green,
+			     splt.entries[i]->depth16.blue,
+			     splt.entries[i]->depth16.alpha,
+			     splt.entries[i]->depth16.frequency);
+		}
+		free(splt.entries[i]);
+		splt.entries[i] = NULL;
+	}
+	free(splt.entries);
+	splt.entries = NULL;
 }
 
 void
