@@ -128,12 +128,21 @@ struct IHDR {
 	int8_t		interlace;
 } __attribute__((packed));
 
+struct PLTE {
+	struct {
+		uint8_t		red;
+		uint8_t		green;
+		uint8_t		blue;
+	} entries[256];
+};
+
 bool		is_png(FILE *);
 int32_t		read_next_chunk_len(FILE *);
 enum chunktype	read_next_chunk_type(FILE *);
 int		read_next_chunk_data(FILE *, uint8_t **, int32_t);
 uint32_t	read_next_chunk_crc(FILE *);
 void		parse_IHDR(uint8_t *, size_t);
+void		parse_PLTE(uint8_t *, size_t);
 void		usage(void);
 
 int
@@ -198,6 +207,9 @@ main(int argc, char *argv[])
 			switch (type) {
 			case CHUNK_TYPE_IHDR:
 				parse_IHDR(chunkdata, chunkz);
+				break;
+			case CHUNK_TYPE_PLTE:
+				parse_PLTE(chunkdata, chunkz);
 				break;
 			case CHUNK_TYPE__MAX:
 				/* FALLTHROUGH */
@@ -365,6 +377,32 @@ parse_IHDR(uint8_t *data, size_t dataz)
 	    compressiontypemap[ihdr->compression]);
 	printf("IHDR: filter: %s\n", filtertypemap[ihdr->filter]);
 	printf("IHDR: interlace method: %s\n", interlacemap[ihdr->interlace]);
+}
+
+void
+parse_PLTE(uint8_t *data, size_t dataz)
+{
+	size_t		 elemz;
+	struct PLTE	*plte;
+
+	/*
+	 * TODO:
+	 * - colour type should only be 2, 3 or 6 ;
+	 * - check if struct png doesn't already contain a PLTE ;
+	 * - elemz should not be greater than pow(2, bitdepth).
+	 */
+	elemz = dataz / 3;
+	if (0 != dataz % 3 || 256 < elemz) {
+		errx(EXIT_FAILURE, "PLTE: Invalid chunk size");
+	}
+	plte = (struct PLTE *)data;
+	printf("PLTE: %zu entries\n", elemz);
+	for (size_t i = 0; i < elemz; i++) {
+		printf("PLTE: entry %zu: 0x%x%x%x\n", i,
+		    plte->entries[i].red,
+		    plte->entries[i].green,
+		    plte->entries[i].blue);
+	}
 }
 
 void
