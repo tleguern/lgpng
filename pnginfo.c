@@ -47,27 +47,6 @@ enum chunktype {
 	CHUNK_TYPE__MAX,
 };
 
-const char *chunktypemap[CHUNK_TYPE__MAX] = {
-	"IHDR",
-	"PLTE",
-	"IDAT",
-	"IEND",
-	"tRNS",
-	"cHRM",
-	"gAMA",
-	"iCCP",
-	"sBIT",
-	"sRGB",
-	"iTXt",
-	"tEXt",
-	"zTXt",
-	"bKGD",
-	"hIST",
-	"pHYs",
-	"sPLT",
-	"tIME",
-};
-
 enum colourtype {
 	COLOUR_TYPE_GREYSCALE,
 	COLOUR_TYPE_FILLER1,
@@ -207,6 +186,30 @@ void		parse_hIST(uint8_t *, size_t);
 void		parse_pHYs(uint8_t *, size_t);
 void		usage(void);
 
+struct chunktypemap {
+	const char *const name;
+	void (*fn)(uint8_t *, size_t);
+} chunktypemap[CHUNK_TYPE__MAX] = {
+	{ "IHDR", parse_IHDR },
+	{ "PLTE", parse_PLTE },
+	{ "IDAT", NULL },
+	{ "IEND", NULL },
+	{ "tRNS", NULL },
+	{ "cHRM", parse_cHRM },
+	{ "gAMA", parse_gAMA },
+	{ "iCCP", NULL },
+	{ "sBIT", NULL },
+	{ "sRGB", parse_sRGB },
+	{ "iTXt", NULL },
+	{ "tEXt", NULL },
+	{ "zTXt", NULL },
+	{ "bKGD", NULL },
+	{ "hIST", parse_hIST },
+	{ "pHYs", parse_pHYs },
+	{ "sPLT", NULL },
+	{ "tIME", NULL },
+};
+
 int
 main(int argc, char *argv[])
 {
@@ -222,7 +225,7 @@ main(int argc, char *argv[])
 		switch (ch) {
 		case 'c':
 			for (int i = 0; i < CHUNK_TYPE__MAX; i++) {
-				if (strcmp(optarg, chunktypemap[i]) == 0) {
+				if (strcmp(optarg, chunktypemap[i].name) == 0) {
 					cflag = i;
 					break;
 				}
@@ -264,34 +267,10 @@ main(int argc, char *argv[])
 		if (0 == (chunkcrc = read_next_chunk_crc(fflag)))
 			errx(EXIT_FAILURE, "Invalid chunk crc");
 		if (lflag) {
-			printf("%s\n", chunktypemap[type]);
+			printf("%s\n", chunktypemap[type].name);
 		} else if (cflag == type) {
-			switch (type) {
-			case CHUNK_TYPE_IHDR:
-				parse_IHDR(chunkdata, chunkz);
-				break;
-			case CHUNK_TYPE_PLTE:
-				parse_PLTE(chunkdata, chunkz);
-				break;
-			case CHUNK_TYPE_cHRM:
-				parse_cHRM(chunkdata, chunkz);
-				break;
-			case CHUNK_TYPE_gAMA:
-				parse_gAMA(chunkdata, chunkz);
-				break;
-			case CHUNK_TYPE_sRGB:
-				parse_sRGB(chunkdata, chunkz);
-				break;
-			case CHUNK_TYPE_hIST:
-				parse_hIST(chunkdata, chunkz);
-				break;
-			case CHUNK_TYPE_pHYs:
-				parse_pHYs(chunkdata, chunkz);
-				break;
-			case CHUNK_TYPE__MAX:
-				/* FALLTHROUGH */
-			default:
-				break;
+			if (NULL != chunktypemap[type].fn) {
+				chunktypemap[type].fn(chunkdata, chunkz);
 			}
 		}
 		free(chunkdata);
@@ -347,7 +326,7 @@ read_next_chunk_type(FILE *f)
 			return(CHUNK_TYPE__MAX);
 	}
 	for (i = 0; i < CHUNK_TYPE__MAX; i++) {
-		if (memcmp(chunk, chunktypemap[i], sizeof(chunk)) == 0)
+		if (memcmp(chunk, chunktypemap[i].name, sizeof(chunk)) == 0)
 			return(i);
 	}
 	return(CHUNK_TYPE__MAX);
