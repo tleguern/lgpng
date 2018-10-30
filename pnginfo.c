@@ -170,6 +170,12 @@ struct sRGB {
 	uint8_t		intent;
 };
 
+struct hIST {
+	struct {
+		uint16_t	frequency;
+	} entries[256];
+};
+
 bool		is_png(FILE *);
 int32_t		read_next_chunk_len(FILE *);
 enum chunktype	read_next_chunk_type(FILE *);
@@ -180,6 +186,7 @@ void		parse_PLTE(uint8_t *, size_t);
 void		parse_cHRM(uint8_t *, size_t);
 void		parse_gAMA(uint8_t *, size_t);
 void		parse_sRGB(uint8_t *, size_t);
+void		parse_hIST(uint8_t *, size_t);
 void		usage(void);
 
 int
@@ -256,6 +263,9 @@ main(int argc, char *argv[])
 				break;
 			case CHUNK_TYPE_sRGB:
 				parse_sRGB(chunkdata, chunkz);
+				break;
+			case CHUNK_TYPE_hIST:
+				parse_hIST(chunkdata, chunkz);
 				break;
 			case CHUNK_TYPE__MAX:
 				/* FALLTHROUGH */
@@ -519,6 +529,30 @@ parse_sRGB(uint8_t *data, size_t dataz)
 	}
 	printf("sRGB: rendering intent: %s\n",
 	    rendering_intentmap[srgb->intent]);
+}
+
+void
+parse_hIST(uint8_t *data, size_t dataz)
+{
+	size_t		 elemz;
+	struct hIST	*hist;
+
+	/*
+	 * TODO:
+	 * - probably the same restrictions as in PLTE
+	 * - can only appear if PLTE is defined
+	 * - should be of the same size a PLTE
+	 */
+	elemz = dataz / 3;
+	if (0 != dataz % 3 || 256 < elemz) {
+		errx(EXIT_FAILURE, "hIST: Invalid chunk size");
+	}
+	hist = (struct hIST *)data;
+	printf("hIST: %zu entries\n", elemz);
+	for (size_t i = 0; i < elemz; i++) {
+		printf("hIST: entry %zu: %i\n", i,
+		    hist->entries[i].frequency);
+	}
 }
 
 void
