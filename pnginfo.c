@@ -136,6 +136,17 @@ struct PLTE {
 	} entries[256];
 };
 
+struct cHRM {
+	uint32_t	whitex;
+	uint32_t	whitey;
+	uint32_t	redx;
+	uint32_t	redy;
+	uint32_t	greenx;
+	uint32_t	greeny;
+	uint32_t	bluex;
+	uint32_t	bluey;
+};
+
 bool		is_png(FILE *);
 int32_t		read_next_chunk_len(FILE *);
 enum chunktype	read_next_chunk_type(FILE *);
@@ -143,6 +154,7 @@ int		read_next_chunk_data(FILE *, uint8_t **, int32_t);
 uint32_t	read_next_chunk_crc(FILE *);
 void		parse_IHDR(uint8_t *, size_t);
 void		parse_PLTE(uint8_t *, size_t);
+void		parse_cHRM(uint8_t *, size_t);
 void		usage(void);
 
 int
@@ -210,6 +222,9 @@ main(int argc, char *argv[])
 				break;
 			case CHUNK_TYPE_PLTE:
 				parse_PLTE(chunkdata, chunkz);
+				break;
+			case CHUNK_TYPE_cHRM:
+				parse_cHRM(chunkdata, chunkz);
 				break;
 			case CHUNK_TYPE__MAX:
 				/* FALLTHROUGH */
@@ -403,6 +418,42 @@ parse_PLTE(uint8_t *data, size_t dataz)
 		    plte->entries[i].green,
 		    plte->entries[i].blue);
 	}
+}
+
+void
+parse_cHRM(uint8_t *data, size_t dataz)
+{
+	struct cHRM	*chrm;
+	double whitex, whitey, redx, redy, greenx, greeny, bluex, bluey;
+
+	if (sizeof(struct cHRM) != dataz) {
+		errx(EXIT_FAILURE, "cHRM: invalid chunk size");
+	}
+	chrm = (struct cHRM *)data;
+	chrm->whitex = ntohl(chrm->whitex);
+	chrm->whitey = ntohl(chrm->whitey);
+	chrm->redx = ntohl(chrm->redx);
+	chrm->redy = ntohl(chrm->redy);
+	chrm->greenx = ntohl(chrm->greenx);
+	chrm->greeny = ntohl(chrm->greeny);
+	chrm->bluex = ntohl(chrm->bluex);
+	chrm->bluey = ntohl(chrm->bluey);
+	whitex = (double)chrm->whitex / 100000.0;
+	whitey = (double)chrm->whitey / 100000.0;
+	redx = (double)chrm->redx / 100000.0;
+	redy = (double)chrm->redy / 100000.0;
+	greenx = (double)chrm->greenx / 100000.0;
+	greeny = (double)chrm->greeny / 100000.0;
+	bluex = (double)chrm->bluex / 100000.0;
+	bluey = (double)chrm->bluey / 100000.0;
+	printf("cHRM: white point x: %f\n", whitex);
+	printf("cHRM: white point y: %f\n", whitey);
+	printf("cHRM: red x: %f\n", redx);
+	printf("cHRM: red y: %f\n", redy);
+	printf("cHRM: green x: %f\n", greenx);
+	printf("cHRM: green y: %f\n", greeny);
+	printf("cHRM: blue x: %f\n", bluex);
+	printf("cHRM: blue y: %f\n", bluey);
 }
 
 void
