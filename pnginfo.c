@@ -184,6 +184,7 @@ void		parse_gAMA(uint8_t *, size_t);
 void		parse_sRGB(uint8_t *, size_t);
 void		parse_hIST(uint8_t *, size_t);
 void		parse_pHYs(uint8_t *, size_t);
+void		parse_IEND(uint8_t *, size_t);
 void		usage(void);
 
 struct chunktypemap {
@@ -193,7 +194,7 @@ struct chunktypemap {
 	{ "IHDR", parse_IHDR },
 	{ "PLTE", parse_PLTE },
 	{ "IDAT", NULL },
-	{ "IEND", NULL },
+	{ "IEND", parse_IEND },
 	{ "tRNS", NULL },
 	{ "cHRM", parse_cHRM },
 	{ "gAMA", parse_gAMA },
@@ -573,6 +574,15 @@ parse_pHYs(uint8_t *data, size_t dataz)
 	printf("pHYs: pixel per unit, Y axis: %i\n", phys->ppuy);
 	printf("pHYs: unit specifier: %s\n",
 	    unitspecifiermap[phys->unitspecifier]);
+}
+
+void
+parse_IEND(uint8_t *data, size_t dataz)
+{
+	(void)data;
+	if (0 != dataz) {
+		errx(EXIT_FAILURE, "IEND: invalid chunk size");
+	}
 }
 
 void
