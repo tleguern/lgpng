@@ -151,6 +151,25 @@ struct gAMA {
 	uint32_t	gama;
 };
 
+enum rendering_intent {
+	RENDERING_INTENT_PERCEPTUAL,
+	RENDERING_INTENT_RELATIVE,
+	RENDERING_INTENT_SATURATION,
+	RENDERING_INTENT_ABSOLUTE,
+	RENDERING_INTENT__MAX,
+};
+
+const char *rendering_intentmap[RENDERING_INTENT__MAX] = {
+	"perceptual",
+	"relative colorimetric",
+	"saturation",
+	"absolute colorimetric",
+};
+
+struct sRGB {
+	uint8_t		intent;
+};
+
 bool		is_png(FILE *);
 int32_t		read_next_chunk_len(FILE *);
 enum chunktype	read_next_chunk_type(FILE *);
@@ -160,6 +179,7 @@ void		parse_IHDR(uint8_t *, size_t);
 void		parse_PLTE(uint8_t *, size_t);
 void		parse_cHRM(uint8_t *, size_t);
 void		parse_gAMA(uint8_t *, size_t);
+void		parse_sRGB(uint8_t *, size_t);
 void		usage(void);
 
 int
@@ -233,6 +253,9 @@ main(int argc, char *argv[])
 				break;
 			case CHUNK_TYPE_gAMA:
 				parse_gAMA(chunkdata, chunkz);
+				break;
+			case CHUNK_TYPE_sRGB:
+				parse_sRGB(chunkdata, chunkz);
 				break;
 			case CHUNK_TYPE__MAX:
 				/* FALLTHROUGH */
@@ -480,6 +503,22 @@ parse_gAMA(uint8_t *data, size_t dataz)
 		errx(EXIT_FAILURE, "gAMA: invalid value of 0");
 	}
 	printf("gAMA: image gama: %f\n", imagegama);
+}
+
+void
+parse_sRGB(uint8_t *data, size_t dataz)
+{
+	struct sRGB	*srgb;
+
+	if (sizeof(struct sRGB) != dataz) {
+		errx(EXIT_FAILURE, "sRGB: invalid chunk size");
+	}
+	srgb = (struct sRGB *)data;
+	if (srgb->intent >= RENDERING_INTENT__MAX) {
+		errx(EXIT_FAILURE, "sRGB: invalid rendering intent value");
+	}
+	printf("sRGB: rendering intent: %s\n",
+	    rendering_intentmap[srgb->intent]);
 }
 
 void
