@@ -181,6 +181,11 @@ struct tIME {
 	uint8_t		second;
 } __attribute__((packed));
 
+struct tEXt {
+	char	*keyword;
+	char	*text;
+};
+
 bool		is_png(FILE *);
 int32_t		read_next_chunk_len(FILE *);
 enum chunktype	read_next_chunk_type(FILE *);
@@ -195,6 +200,7 @@ void		parse_hIST(uint8_t *, size_t);
 void		parse_pHYs(uint8_t *, size_t);
 void		parse_IEND(uint8_t *, size_t);
 void		parse_tIME(uint8_t *, size_t);
+void		parse_tEXt(uint8_t *, size_t);
 void		usage(void);
 
 struct chunktypemap {
@@ -212,7 +218,7 @@ struct chunktypemap {
 	{ "sBIT", NULL },
 	{ "sRGB", parse_sRGB },
 	{ "iTXt", NULL },
-	{ "tEXt", NULL },
+	{ "tEXt", parse_tEXt },
 	{ "zTXt", NULL },
 	{ "bKGD", NULL },
 	{ "hIST", parse_hIST },
@@ -624,6 +630,20 @@ parse_tIME(uint8_t *data, size_t dataz)
 	printf("tIME: %i-%i-%i %i:%i:%i\n",
 	    time->year, time->month, time->day,
 	    time->hour, time->minute, time->second);
+}
+
+void
+parse_tEXt(uint8_t *data, size_t dataz)
+{
+	struct tEXt	text;
+
+	(void)dataz;
+	text.keyword = data;
+	if (strlen(text.keyword) >= 80) {
+		errx(EXIT_FAILURE, "tEXt: Invalid keyword size");
+	}
+	text.text = data + strlen(data) + 1;
+	printf("%s: %s\n", text.keyword, text.text);
 }
 
 void
