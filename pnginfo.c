@@ -147,6 +147,10 @@ struct cHRM {
 	uint32_t	bluey;
 };
 
+struct gAMA {
+	uint32_t	gama;
+};
+
 bool		is_png(FILE *);
 int32_t		read_next_chunk_len(FILE *);
 enum chunktype	read_next_chunk_type(FILE *);
@@ -155,6 +159,7 @@ uint32_t	read_next_chunk_crc(FILE *);
 void		parse_IHDR(uint8_t *, size_t);
 void		parse_PLTE(uint8_t *, size_t);
 void		parse_cHRM(uint8_t *, size_t);
+void		parse_gAMA(uint8_t *, size_t);
 void		usage(void);
 
 int
@@ -225,6 +230,9 @@ main(int argc, char *argv[])
 				break;
 			case CHUNK_TYPE_cHRM:
 				parse_cHRM(chunkdata, chunkz);
+				break;
+			case CHUNK_TYPE_gAMA:
+				parse_gAMA(chunkdata, chunkz);
 				break;
 			case CHUNK_TYPE__MAX:
 				/* FALLTHROUGH */
@@ -454,6 +462,24 @@ parse_cHRM(uint8_t *data, size_t dataz)
 	printf("cHRM: green y: %f\n", greeny);
 	printf("cHRM: blue x: %f\n", bluex);
 	printf("cHRM: blue y: %f\n", bluey);
+}
+
+void
+parse_gAMA(uint8_t *data, size_t dataz)
+{
+	struct gAMA	*gama;
+	double		 imagegama;
+
+	if (sizeof(struct gAMA) != dataz) {
+		errx(EXIT_FAILURE, "gAMA: invalid chunk size");
+	}
+	gama = (struct gAMA *)data;
+	gama->gama = ntohl(gama->gama);
+	imagegama = (double)gama->gama / 100000.0;
+	if (0 == imagegama) {
+		errx(EXIT_FAILURE, "gAMA: invalid value of 0");
+	}
+	printf("gAMA: image gama: %f\n", imagegama);
 }
 
 void
