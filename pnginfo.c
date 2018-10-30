@@ -176,6 +176,23 @@ struct hIST {
 	} entries[256];
 };
 
+enum unitspecifier {
+	UNITSPECIFIER_UNKNOWN,
+	UNITSPECIFIER_METRE,
+	UNITSPECIFIER__MAX,
+};
+
+const char *unitspecifiermap[UNITSPECIFIER__MAX] = {
+	"unknown",
+	"metre",
+};
+
+struct pHYs {
+	uint32_t	ppux;
+	uint32_t	ppuy;
+	uint8_t		unitspecifier;
+} __attribute__((packed));
+
 bool		is_png(FILE *);
 int32_t		read_next_chunk_len(FILE *);
 enum chunktype	read_next_chunk_type(FILE *);
@@ -187,6 +204,7 @@ void		parse_cHRM(uint8_t *, size_t);
 void		parse_gAMA(uint8_t *, size_t);
 void		parse_sRGB(uint8_t *, size_t);
 void		parse_hIST(uint8_t *, size_t);
+void		parse_pHYs(uint8_t *, size_t);
 void		usage(void);
 
 int
@@ -266,6 +284,9 @@ main(int argc, char *argv[])
 				break;
 			case CHUNK_TYPE_hIST:
 				parse_hIST(chunkdata, chunkz);
+				break;
+			case CHUNK_TYPE_pHYs:
+				parse_pHYs(chunkdata, chunkz);
 				break;
 			case CHUNK_TYPE__MAX:
 				/* FALLTHROUGH */
@@ -553,6 +574,26 @@ parse_hIST(uint8_t *data, size_t dataz)
 		printf("hIST: entry %zu: %i\n", i,
 		    hist->entries[i].frequency);
 	}
+}
+
+void
+parse_pHYs(uint8_t *data, size_t dataz)
+{
+	struct pHYs	*phys;
+
+	if (sizeof(struct pHYs) != dataz) {
+		errx(EXIT_FAILURE, "pHYs: invalid chunk size");
+	}
+	phys = (struct pHYs *)data;
+	phys->ppux = ntohl(phys->ppux);
+	phys->ppuy = ntohl(phys->ppuy);
+	if (phys->unitspecifier >= UNITSPECIFIER__MAX ) {
+		errx(EXIT_FAILURE, "pHYs: invalid unit specifier");
+	}
+	printf("pHYs: pixel per unit, X axis: %i\n", phys->ppux);
+	printf("pHYs: pixel per unit, Y axis: %i\n", phys->ppuy);
+	printf("pHYs: unit specifier: %s\n",
+	    unitspecifiermap[phys->unitspecifier]);
 }
 
 void
