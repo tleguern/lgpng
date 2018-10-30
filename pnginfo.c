@@ -172,6 +172,15 @@ struct pHYs {
 	uint8_t		unitspecifier;
 } __attribute__((packed));
 
+struct tIME {
+	uint16_t	year;
+	uint8_t		month;
+	uint8_t		day;
+	uint8_t		hour;
+	uint8_t		minute;
+	uint8_t		second;
+} __attribute__((packed));
+
 bool		is_png(FILE *);
 int32_t		read_next_chunk_len(FILE *);
 enum chunktype	read_next_chunk_type(FILE *);
@@ -185,6 +194,7 @@ void		parse_sRGB(uint8_t *, size_t);
 void		parse_hIST(uint8_t *, size_t);
 void		parse_pHYs(uint8_t *, size_t);
 void		parse_IEND(uint8_t *, size_t);
+void		parse_tIME(uint8_t *, size_t);
 void		usage(void);
 
 struct chunktypemap {
@@ -208,7 +218,7 @@ struct chunktypemap {
 	{ "hIST", parse_hIST },
 	{ "pHYs", parse_pHYs },
 	{ "sPLT", NULL },
-	{ "tIME", NULL },
+	{ "tIME", parse_tIME },
 };
 
 int
@@ -583,6 +593,37 @@ parse_IEND(uint8_t *data, size_t dataz)
 	if (0 != dataz) {
 		errx(EXIT_FAILURE, "IEND: invalid chunk size");
 	}
+
+}
+
+void
+parse_tIME(uint8_t *data, size_t dataz)
+{
+	struct tIME	*time;
+
+	if (sizeof(struct tIME) != dataz) {
+		errx(EXIT_FAILURE, "tIME: invalid chunk size");
+	}
+	time = (struct tIME *)data;
+	time->year = htons(time->year);
+	if (time->month <= 0 || time->month > 12) {
+		errx(EXIT_FAILURE, "tIME: invalid month value");
+	}
+	if (time->day <= 0 || time->day > 31) {
+		errx(EXIT_FAILURE, "tIME: invalid day value");
+	}
+	if (time->hour < 0 || time->hour > 23) {
+		errx(EXIT_FAILURE, "tIME: invalid hour value");
+	}
+	if (time->minute < 0 || time->minute > 59) {
+		errx(EXIT_FAILURE, "tIME: invalid minute value");
+	}
+	if (time->second < 0 || time->second > 60) {
+		errx(EXIT_FAILURE, "tIME: invalid second value");
+	}
+	printf("tIME: %i-%i-%i %i:%i:%i\n",
+	    time->year, time->month, time->day,
+	    time->hour, time->minute, time->second);
 }
 
 void
