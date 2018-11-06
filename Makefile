@@ -1,5 +1,5 @@
 PROG= pnginfo
-SRCS= pnginfo.c
+SRCS= pnginfo.c compats.c
 OBJS= ${SRCS:.c=.o}
 
 LDADD?= 

@@ -14,9 +14,13 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+#include "config.h"
+
 #include <arpa/inet.h>
 
-#include <err.h>
+#if HAVE_ERR
+# include <err.h>
+#endif
 #include <ctype.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -264,6 +268,9 @@ main(int argc, char *argv[])
 	lflag = true;
 	fflag = stdin;
 	cflag = CHUNK_TYPE__MAX;
+#ifdef HAVE_PLEDGE
+	pledge("stdio rpath", NULL);
+#endif
 	while (-1 != (ch = getopt(argc, argv, "c:lf:")))
 		switch (ch) {
 		case 'c':
