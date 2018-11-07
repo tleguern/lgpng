@@ -215,6 +215,18 @@ struct sPLT {
 	} **entries;
 };
 
+struct rgb16 {
+	uint16_t	red;
+	uint16_t	green;
+	uint16_t	blue;
+};
+
+struct bKGD {
+	uint16_t	greyscale;
+	uint8_t		paletteindex;
+	struct rgb16	rgb;
+};
+
 bool		is_png(FILE *);
 int32_t		read_next_chunk_len(FILE *);
 enum chunktype	read_next_chunk_type(FILE *);
@@ -225,6 +237,7 @@ void		parse_PLTE(uint8_t *, size_t);
 void		parse_cHRM(uint8_t *, size_t);
 void		parse_gAMA(uint8_t *, size_t);
 void		parse_sRGB(uint8_t *, size_t);
+void		parse_bKGD(uint8_t *, size_t);
 void		parse_hIST(uint8_t *, size_t);
 void		parse_pHYs(uint8_t *, size_t);
 void		parse_IEND(uint8_t *, size_t);
@@ -250,7 +263,7 @@ struct chunktypemap {
 	{ "iTXt", NULL },
 	{ "tEXt", parse_tEXt },
 	{ "zTXt", NULL },
-	{ "bKGD", NULL },
+	{ "bKGD", parse_bKGD },
 	{ "hIST", parse_hIST },
 	{ "pHYs", parse_pHYs },
 	{ "sPLT", parse_sPLT },
@@ -579,6 +592,40 @@ parse_sRGB(uint8_t *data, size_t dataz)
 	}
 	printf("sRGB: rendering intent: %s\n",
 	    rendering_intentmap[srgb->intent]);
+}
+
+void
+parse_bKGD(uint8_t *data, size_t dataz)
+{
+	struct bKGD	bkgd;
+
+	bkgd.greyscale= 0;
+	bkgd.paletteindex = 0;
+	bkgd.rgb.red = 0;
+	bkgd.rgb.green = 0;
+	bkgd.rgb.blue = 0;
+	if (1 == dataz) {
+		bkgd.paletteindex = data[0];
+		printf("bKGD: palette index %u\n", bkgd.paletteindex);
+	} else if (2 == dataz) {
+		bkgd.greyscale = (uint16_t)data;
+		bkgd.greyscale = ntohs(bkgd.greyscale);
+		printf("bKGD: greyscale %u\n", bkgd.greyscale);
+	} else if (6 == dataz) {
+		struct rgb16	*rgb;
+
+		rgb = (struct rgb16 *)data;
+		rgb->red = htons(rgb->red);
+		rgb->green = htons(rgb->green);
+		rgb->blue = htons(rgb->blue);
+		bkgd.rgb.red = rgb->red;
+		bkgd.rgb.green = rgb->green;
+		bkgd.rgb.blue = rgb->blue;
+		printf("bKGD: rgb value 0x%x%x%x\n",
+		    bkgd.rgb.red, bkgd.rgb.green, bkgd.rgb.blue);
+	} else {
+		errx(EXIT_FAILURE, "bKGD: Invalid chunk size");
+	}
 }
 
 void
