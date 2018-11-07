@@ -676,6 +676,9 @@ parse_tEXt(uint8_t *data, size_t dataz)
 		errx(EXIT_FAILURE, "tEXt: Invalid keyword size");
 	}
 	text.text = data + strlen(data) + 1;
+	if ('\n' == text.text[strlen(text.text) - 1]) {
+		text.text[strlen(text.text) - 1] = '\0';
+	}
 	printf("%s: %s\n", text.keyword, text.text);
 }
 
