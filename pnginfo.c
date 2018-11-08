@@ -261,6 +261,7 @@ void		parse_IEND(uint8_t *, size_t);
 void		parse_tIME(uint8_t *, size_t);
 void		parse_tEXt(uint8_t *, size_t);
 void		parse_sPLT(uint8_t *, size_t);
+bool		is_chunk_public(const char *);
 void		usage(void);
 
 struct chunktypemap {
@@ -343,27 +344,30 @@ main(int argc, char *argv[])
 		if (-1 == (chunkz = read_next_chunk_len(fflag)))
 			errx(EXIT_FAILURE, "Invalid chunk len");
 		type = read_next_chunk_type(fflag, &unknown);
-		if (CHUNK_TYPE__MAX == type) {
-			if (NULL != unknown) {
-				errx(EXIT_FAILURE, "Invalid chunk type %s",
-				    unknown);
-				free(unknown);
-			} else {
-				errx(EXIT_FAILURE, "Invalid chunk type");
-			}
+		if (CHUNK_TYPE__MAX == type && NULL == unknown) {
+			errx(EXIT_FAILURE, "Invalid chunk type");
 		}
 		if (-1 == read_next_chunk_data(fflag, &chunkdata, chunkz))
 			errx(EXIT_FAILURE, "Invalid chunk data");
 		if (0 == (chunkcrc = read_next_chunk_crc(fflag)))
 			errx(EXIT_FAILURE, "Invalid chunk crc");
 		if (lflag) {
-			printf("%s\n", chunktypemap[type].name);
+			if (NULL != unknown) {
+				printf("%s (unknown %s chunk)\n", unknown,
+				    is_chunk_public(unknown)
+				    ? "public" : "private");
+			} else {
+				printf("%s\n", chunktypemap[type].name);
+			}
 		} else if (cflag == type) {
 			if (NULL != chunktypemap[type].fn) {
 				chunktypemap[type].fn(chunkdata, chunkz);
+			} else {
+				printf("Unimplemented chunk\n");
 			}
 		}
 		free(chunkdata);
+		free(unknown);
 		if (type == CHUNK_TYPE_IEND) {
 			break;
 		}
@@ -876,6 +880,14 @@ parse_sPLT(uint8_t *data, size_t dataz)
 	}
 	free(splt.entries);
 	splt.entries = NULL;
+}
+
+bool
+is_chunk_public(const char *type)
+{
+	if (islower(type[1]))
+		return(false);
+	return(true);
 }
 
 void
