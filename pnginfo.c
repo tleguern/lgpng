@@ -245,7 +245,7 @@ struct sBIT {
 
 bool		is_png(FILE *);
 int32_t		read_next_chunk_len(FILE *);
-enum chunktype	read_next_chunk_type(FILE *);
+enum chunktype	read_next_chunk_type(FILE *, char **);
 int		read_next_chunk_data(FILE *, uint8_t **, int32_t);
 uint32_t	read_next_chunk_crc(FILE *);
 void		parse_IHDR(uint8_t *, size_t);
@@ -336,12 +336,22 @@ main(int argc, char *argv[])
 		int32_t		 chunkz;
 		uint32_t	 chunkcrc;
 		uint8_t		*chunkdata;
+		char		*unknown;
 
 		chunkdata = NULL;
+		unknown = NULL;
 		if (-1 == (chunkz = read_next_chunk_len(fflag)))
 			errx(EXIT_FAILURE, "Invalid chunk len");
-		if (CHUNK_TYPE__MAX == (type = read_next_chunk_type(fflag)))
-			errx(EXIT_FAILURE, "Invalid chunk type");
+		type = read_next_chunk_type(fflag, &unknown);
+		if (CHUNK_TYPE__MAX == type) {
+			if (NULL != unknown) {
+				errx(EXIT_FAILURE, "Invalid chunk type %s",
+				    unknown);
+				free(unknown);
+			} else {
+				errx(EXIT_FAILURE, "Invalid chunk type");
+			}
+		}
 		if (-1 == read_next_chunk_data(fflag, &chunkdata, chunkz))
 			errx(EXIT_FAILURE, "Invalid chunk data");
 		if (0 == (chunkcrc = read_next_chunk_crc(fflag)))
@@ -392,7 +402,7 @@ read_next_chunk_crc(FILE *f)
 }
 
 enum chunktype
-read_next_chunk_type(FILE *f)
+read_next_chunk_type(FILE *f, char **unknown)
 {
 	size_t	i;
 	char	chunk[4] = {0, 0, 0, 0};
@@ -408,6 +418,10 @@ read_next_chunk_type(FILE *f)
 	for (i = 0; i < CHUNK_TYPE__MAX; i++) {
 		if (memcmp(chunk, chunktypemap[i].name, sizeof(chunk)) == 0)
 			return(i);
+	}
+	if (NULL != unknown) {
+		if (NULL == (*unknown = strndup(chunk, sizeof(chunk))))
+			return(CHUNK_TYPE__MAX); /* Bof */
 	}
 	return(CHUNK_TYPE__MAX);
 }
