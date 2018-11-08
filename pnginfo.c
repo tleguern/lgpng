@@ -227,6 +227,22 @@ struct bKGD {
 	struct rgb16	rgb;
 };
 
+enum sBIT_type {
+	sBIT_TYPE_0,
+	sBIT_TYPE_23,
+	sBIT_TYPE_4,
+	sBIT_TYPE_6,
+};
+
+struct sBIT {
+	enum sBIT_type	type;
+	uint8_t	sgreyscale;
+	uint8_t	sred;
+	uint8_t	sgreen;
+	uint8_t	sblue;
+	uint8_t	salpha;
+};
+
 bool		is_png(FILE *);
 int32_t		read_next_chunk_len(FILE *);
 enum chunktype	read_next_chunk_type(FILE *);
@@ -238,6 +254,7 @@ void		parse_cHRM(uint8_t *, size_t);
 void		parse_gAMA(uint8_t *, size_t);
 void		parse_sRGB(uint8_t *, size_t);
 void		parse_bKGD(uint8_t *, size_t);
+void		parse_sBIT(uint8_t *, size_t);
 void		parse_hIST(uint8_t *, size_t);
 void		parse_pHYs(uint8_t *, size_t);
 void		parse_IEND(uint8_t *, size_t);
@@ -258,7 +275,7 @@ struct chunktypemap {
 	{ "cHRM", parse_cHRM },
 	{ "gAMA", parse_gAMA },
 	{ "iCCP", NULL },
-	{ "sBIT", NULL },
+	{ "sBIT", parse_sBIT },
 	{ "sRGB", parse_sRGB },
 	{ "iTXt", NULL },
 	{ "tEXt", parse_tEXt },
@@ -625,6 +642,54 @@ parse_bKGD(uint8_t *data, size_t dataz)
 		    bkgd.rgb.red, bkgd.rgb.green, bkgd.rgb.blue);
 	} else {
 		errx(EXIT_FAILURE, "bKGD: Invalid chunk size");
+	}
+}
+
+void
+parse_sBIT(uint8_t *data, size_t dataz)
+{
+	struct sBIT	sbit;
+
+	if (1 == dataz) {
+		sbit.type = sBIT_TYPE_0;
+		sbit.sgreyscale = (uint8_t)data;
+		printf("sBIT: significant greyscale bits: %i\n",
+		    sbit.sgreyscale);
+	} else if (2 == dataz) {
+		sbit.type = sBIT_TYPE_4;
+		sbit.sgreyscale = (uint8_t)data[0];
+		sbit.salpha = (uint8_t)data[1];
+		printf("sBIT: significant greyscale bits: %i\n",
+		    sbit.sgreyscale);
+		printf("sBIT: significant alpha bits: %i\n",
+		    sbit.salpha);
+	} else if (3 == dataz) {
+		sbit.type = sBIT_TYPE_23;
+		sbit.sred = (uint8_t)data[0];
+		sbit.sgreen = (uint8_t)data[1];
+		sbit.sblue = (uint8_t)data[2];
+		printf("sBIT: significant red bits: %i\n",
+		    sbit.sred);
+		printf("sBIT: significant green bits: %i\n",
+		    sbit.sgreen);
+		printf("sBIT: significant blue bits: %i\n",
+		    sbit.sblue);
+	} else if (4 == dataz) {
+		sbit.type = sBIT_TYPE_6;
+		sbit.sred = (uint8_t)data[0];
+		sbit.sgreen = (uint8_t)data[1];
+		sbit.sblue = (uint8_t)data[2];
+		sbit.salpha = (uint8_t)data[3];
+		printf("sBIT: significant red bits: %i\n",
+		    sbit.sred);
+		printf("sBIT: significant green bits: %i\n",
+		    sbit.sgreen);
+		printf("sBIT: significant blue bits: %i\n",
+		    sbit.sblue);
+		printf("sBIT: significant alpha bits: %i\n",
+		    sbit.salpha);
+	} else {
+		errx(EXIT_FAILURE, "sBIT: Invalid chunk size");
 	}
 }
 
