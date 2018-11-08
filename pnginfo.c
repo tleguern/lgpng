@@ -250,17 +250,22 @@ int		read_next_chunk_data(FILE *, uint8_t **, int32_t);
 uint32_t	read_next_chunk_crc(FILE *);
 void		parse_IHDR(uint8_t *, size_t);
 void		parse_PLTE(uint8_t *, size_t);
+/* void		parse_IDAT(uint8_t *, size_t); */
+void		parse_IEND(uint8_t *, size_t);
+/* void		parse_tRNS(uint8_t *, size_t); */
 void		parse_cHRM(uint8_t *, size_t);
 void		parse_gAMA(uint8_t *, size_t);
-void		parse_sRGB(uint8_t *, size_t);
-void		parse_bKGD(uint8_t *, size_t);
+/* void		parse_iCCP(uint8_t *, size_t); */
 void		parse_sBIT(uint8_t *, size_t);
+void		parse_sRGB(uint8_t *, size_t);
+void		parse_tEXt(uint8_t *, size_t);
+/* void		parse_zTXt(uint8_t *, size_t); */
+/* void		parse_iTXt(uint8_t *, size_t); */
+void		parse_bKGD(uint8_t *, size_t);
 void		parse_hIST(uint8_t *, size_t);
 void		parse_pHYs(uint8_t *, size_t);
-void		parse_IEND(uint8_t *, size_t);
-void		parse_tIME(uint8_t *, size_t);
-void		parse_tEXt(uint8_t *, size_t);
 void		parse_sPLT(uint8_t *, size_t);
+void		parse_tIME(uint8_t *, size_t);
 bool		is_chunk_public(const char *);
 void		usage(void);
 
@@ -560,6 +565,16 @@ parse_PLTE(uint8_t *data, size_t dataz)
 }
 
 void
+parse_IEND(uint8_t *data, size_t dataz)
+{
+	(void)data;
+	if (0 != dataz) {
+		errx(EXIT_FAILURE, "IEND: invalid chunk size");
+	}
+
+}
+
+void
 parse_cHRM(uint8_t *data, size_t dataz)
 {
 	struct cHRM	*chrm;
@@ -614,56 +629,6 @@ parse_gAMA(uint8_t *data, size_t dataz)
 }
 
 void
-parse_sRGB(uint8_t *data, size_t dataz)
-{
-	struct sRGB	*srgb;
-
-	if (sizeof(struct sRGB) != dataz) {
-		errx(EXIT_FAILURE, "sRGB: invalid chunk size");
-	}
-	srgb = (struct sRGB *)data;
-	if (srgb->intent >= RENDERING_INTENT__MAX) {
-		errx(EXIT_FAILURE, "sRGB: invalid rendering intent value");
-	}
-	printf("sRGB: rendering intent: %s\n",
-	    rendering_intentmap[srgb->intent]);
-}
-
-void
-parse_bKGD(uint8_t *data, size_t dataz)
-{
-	struct bKGD	bkgd;
-
-	bkgd.greyscale= 0;
-	bkgd.paletteindex = 0;
-	bkgd.rgb.red = 0;
-	bkgd.rgb.green = 0;
-	bkgd.rgb.blue = 0;
-	if (1 == dataz) {
-		bkgd.paletteindex = data[0];
-		printf("bKGD: palette index %u\n", bkgd.paletteindex);
-	} else if (2 == dataz) {
-		bkgd.greyscale = (uint16_t)data;
-		bkgd.greyscale = ntohs(bkgd.greyscale);
-		printf("bKGD: greyscale %u\n", bkgd.greyscale);
-	} else if (6 == dataz) {
-		struct rgb16	*rgb;
-
-		rgb = (struct rgb16 *)data;
-		rgb->red = htons(rgb->red);
-		rgb->green = htons(rgb->green);
-		rgb->blue = htons(rgb->blue);
-		bkgd.rgb.red = rgb->red;
-		bkgd.rgb.green = rgb->green;
-		bkgd.rgb.blue = rgb->blue;
-		printf("bKGD: rgb value 0x%x%x%x\n",
-		    bkgd.rgb.red, bkgd.rgb.green, bkgd.rgb.blue);
-	} else {
-		errx(EXIT_FAILURE, "bKGD: Invalid chunk size");
-	}
-}
-
-void
 parse_sBIT(uint8_t *data, size_t dataz)
 {
 	struct sBIT	sbit;
@@ -712,6 +677,73 @@ parse_sBIT(uint8_t *data, size_t dataz)
 }
 
 void
+parse_sRGB(uint8_t *data, size_t dataz)
+{
+	struct sRGB	*srgb;
+
+	if (sizeof(struct sRGB) != dataz) {
+		errx(EXIT_FAILURE, "sRGB: invalid chunk size");
+	}
+	srgb = (struct sRGB *)data;
+	if (srgb->intent >= RENDERING_INTENT__MAX) {
+		errx(EXIT_FAILURE, "sRGB: invalid rendering intent value");
+	}
+	printf("sRGB: rendering intent: %s\n",
+	    rendering_intentmap[srgb->intent]);
+}
+
+void
+parse_tEXt(uint8_t *data, size_t dataz)
+{
+	struct tEXt	text;
+
+	(void)dataz;
+	text.keyword = data;
+	if (strlen(text.keyword) >= 80) {
+		errx(EXIT_FAILURE, "tEXt: Invalid keyword size");
+	}
+	text.text = data + strlen(data) + 1;
+	if ('\n' == text.text[strlen(text.text) - 1]) {
+		text.text[strlen(text.text) - 1] = '\0';
+	}
+	printf("%s: %s\n", text.keyword, text.text);
+}
+
+void
+parse_bKGD(uint8_t *data, size_t dataz)
+{
+	struct bKGD	bkgd;
+
+	bkgd.greyscale= 0;
+	bkgd.paletteindex = 0;
+	bkgd.rgb.red = 0;
+	bkgd.rgb.green = 0;
+	bkgd.rgb.blue = 0;
+	if (1 == dataz) {
+		bkgd.paletteindex = data[0];
+		printf("bKGD: palette index %u\n", bkgd.paletteindex);
+	} else if (2 == dataz) {
+		bkgd.greyscale = (uint16_t)data;
+		bkgd.greyscale = ntohs(bkgd.greyscale);
+		printf("bKGD: greyscale %u\n", bkgd.greyscale);
+	} else if (6 == dataz) {
+		struct rgb16	*rgb;
+
+		rgb = (struct rgb16 *)data;
+		rgb->red = htons(rgb->red);
+		rgb->green = htons(rgb->green);
+		rgb->blue = htons(rgb->blue);
+		bkgd.rgb.red = rgb->red;
+		bkgd.rgb.green = rgb->green;
+		bkgd.rgb.blue = rgb->blue;
+		printf("bKGD: rgb value 0x%x%x%x\n",
+		    bkgd.rgb.red, bkgd.rgb.green, bkgd.rgb.blue);
+	} else {
+		errx(EXIT_FAILURE, "bKGD: Invalid chunk size");
+	}
+}
+
+void
 parse_hIST(uint8_t *data, size_t dataz)
 {
 	size_t		 elemz;
@@ -753,63 +785,6 @@ parse_pHYs(uint8_t *data, size_t dataz)
 	printf("pHYs: pixel per unit, Y axis: %i\n", phys->ppuy);
 	printf("pHYs: unit specifier: %s\n",
 	    unitspecifiermap[phys->unitspecifier]);
-}
-
-void
-parse_IEND(uint8_t *data, size_t dataz)
-{
-	(void)data;
-	if (0 != dataz) {
-		errx(EXIT_FAILURE, "IEND: invalid chunk size");
-	}
-
-}
-
-void
-parse_tIME(uint8_t *data, size_t dataz)
-{
-	struct tIME	*time;
-
-	if (sizeof(struct tIME) != dataz) {
-		errx(EXIT_FAILURE, "tIME: invalid chunk size");
-	}
-	time = (struct tIME *)data;
-	time->year = htons(time->year);
-	if (time->month <= 0 || time->month > 12) {
-		errx(EXIT_FAILURE, "tIME: invalid month value");
-	}
-	if (time->day <= 0 || time->day > 31) {
-		errx(EXIT_FAILURE, "tIME: invalid day value");
-	}
-	if (time->hour < 0 || time->hour > 23) {
-		errx(EXIT_FAILURE, "tIME: invalid hour value");
-	}
-	if (time->minute < 0 || time->minute > 59) {
-		errx(EXIT_FAILURE, "tIME: invalid minute value");
-	}
-	if (time->second < 0 || time->second > 60) {
-		errx(EXIT_FAILURE, "tIME: invalid second value");
-	}
-	printf("tIME: %i-%i-%i %i:%i:%i\n",
-	    time->year, time->month, time->day,
-	    time->hour, time->minute, time->second);
-}
-
-void
-parse_tEXt(uint8_t *data, size_t dataz)
-{
-	struct tEXt	text;
-
-	(void)dataz;
-	text.keyword = data;
-	if (strlen(text.keyword) >= 80) {
-		errx(EXIT_FAILURE, "tEXt: Invalid keyword size");
-	}
-	text.text = data + strlen(data) + 1;
-	if ('\n' == text.text[strlen(text.text) - 1]) {
-		text.text[strlen(text.text) - 1] = '\0';
-	}
-	printf("%s: %s\n", text.keyword, text.text);
 }
 
 void
@@ -880,6 +855,36 @@ parse_sPLT(uint8_t *data, size_t dataz)
 	}
 	free(splt.entries);
 	splt.entries = NULL;
+}
+
+void
+parse_tIME(uint8_t *data, size_t dataz)
+{
+	struct tIME	*time;
+
+	if (sizeof(struct tIME) != dataz) {
+		errx(EXIT_FAILURE, "tIME: invalid chunk size");
+	}
+	time = (struct tIME *)data;
+	time->year = htons(time->year);
+	if (time->month <= 0 || time->month > 12) {
+		errx(EXIT_FAILURE, "tIME: invalid month value");
+	}
+	if (time->day <= 0 || time->day > 31) {
+		errx(EXIT_FAILURE, "tIME: invalid day value");
+	}
+	if (time->hour < 0 || time->hour > 23) {
+		errx(EXIT_FAILURE, "tIME: invalid hour value");
+	}
+	if (time->minute < 0 || time->minute > 59) {
+		errx(EXIT_FAILURE, "tIME: invalid minute value");
+	}
+	if (time->second < 0 || time->second > 60) {
+		errx(EXIT_FAILURE, "tIME: invalid second value");
+	}
+	printf("tIME: %i-%i-%i %i:%i:%i\n",
+	    time->year, time->month, time->day,
+	    time->hour, time->minute, time->second);
 }
 
 bool
