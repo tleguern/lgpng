@@ -62,6 +62,8 @@ Only the following chunks are implemented right now:
 
 Chunks that are not part of the 2003 PNG specification, either because they are custom made or part of an extension, are still listed but can't be queried.
 
+The `-s` option can be handy if garbage is placed at the begining of a file. `pnginfo -s` will try to skip said garbage until it finds an acceptable PNG signature.
+
 ## License
 
 All the code is licensed under the ISC License.
