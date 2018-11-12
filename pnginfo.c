@@ -59,17 +59,19 @@ int
 main(int argc, char *argv[])
 {
 	int		 ch;
-	bool		 lflag;
+	long		 offset;
+	bool		 lflag, sflag;
 	enum chunktype	 cflag;
 	FILE		*fflag;
 
-	lflag = true;
-	fflag = stdin;
 	cflag = CHUNK_TYPE__MAX;
+	fflag = stdin;
+	lflag = true;
+	sflag = false;
 #ifdef HAVE_PLEDGE
 	pledge("stdio rpath", NULL);
 #endif
-	while (-1 != (ch = getopt(argc, argv, "c:lf:")))
+	while (-1 != (ch = getopt(argc, argv, "c:f:ls")))
 		switch (ch) {
 		case 'c':
 			for (int i = 0; i < CHUNK_TYPE__MAX; i++) {
@@ -82,13 +84,16 @@ main(int argc, char *argv[])
 				errx(EXIT_FAILURE, "%s: invalid chunk", optarg);
 			lflag = false;
 			break;
-		case 'l':
-			lflag = true;
-			break;
 		case 'f':
 			if (NULL == (fflag = fopen(optarg, "r"))) {
 				err(EXIT_FAILURE, "%s", optarg);
 			}
+			break;
+		case 'l':
+			lflag = true;
+			break;
+		case 's':
+			sflag = true;
 			break;
 		default:
 			usage();
@@ -96,8 +101,21 @@ main(int argc, char *argv[])
 	argc -= optind;
 	argv += optind;
 
-	if (! is_png(fflag)) {
-		errx(EXIT_FAILURE, "not a PNG file");
+	offset = 0;
+	if (false == sflag) {
+		if (false == is_png(fflag)) {
+			errx(EXIT_FAILURE, "not a PNG file");
+		}
+	} else {
+		do {
+			if (0 != feof(fflag) || 0 != ferror(fflag)) {
+				errx(EXIT_FAILURE, "not a PNG file");
+			}
+			if (0 != fseek(fflag, offset, SEEK_SET)) {
+				errx(EXIT_FAILURE, "not a PNG file");
+			}
+			offset += 1;
+		} while (false == is_png(fflag));
 	}
 	do {
 		enum chunktype	 type;
