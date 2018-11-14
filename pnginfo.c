@@ -650,19 +650,19 @@ parse_tIME(uint8_t *data, size_t dataz)
 	}
 	time = (struct tIME *)data;
 	time->year = htons(time->year);
-	if (time->month <= 0 || time->month > 12) {
+	if (time->month == 0 || time->month > 12) {
 		errx(EXIT_FAILURE, "tIME: invalid month value");
 	}
-	if (time->day <= 0 || time->day > 31) {
+	if (time->day == 0 || time->day > 31) {
 		errx(EXIT_FAILURE, "tIME: invalid day value");
 	}
-	if (time->hour < 0 || time->hour > 23) {
+	if (time->hour > 23) {
 		errx(EXIT_FAILURE, "tIME: invalid hour value");
 	}
-	if (time->minute < 0 || time->minute > 59) {
+	if (time->minute > 59) {
 		errx(EXIT_FAILURE, "tIME: invalid minute value");
 	}
-	if (time->second < 0 || time->second > 60) {
+	if (time->second > 60) {
 		errx(EXIT_FAILURE, "tIME: invalid second value");
 	}
 	printf("tIME: %i-%i-%i %i:%i:%i\n",
