@@ -415,7 +415,7 @@ parse_sBIT(uint8_t *data, size_t dataz)
 
 	if (1 == dataz) {
 		sbit.type = sBIT_TYPE_0;
-		sbit.sgreyscale = (uint8_t)data;
+		sbit.sgreyscale = (uint8_t)data[0];
 		printf("sBIT: significant greyscale bits: %i\n",
 		    sbit.sgreyscale);
 	} else if (2 == dataz) {
@@ -478,11 +478,11 @@ parse_tEXt(uint8_t *data, size_t dataz)
 	struct tEXt	text;
 
 	(void)dataz;
-	text.keyword = data;
+	text.keyword = (char *)data;
 	if (strlen(text.keyword) >= 80) {
 		errx(EXIT_FAILURE, "tEXt: Invalid keyword size");
 	}
-	text.text = data + strlen(data) + 1;
+	text.text = (char *)data + strlen((char *)data) + 1;
 	if ('\n' == text.text[strlen(text.text) - 1]) {
 		text.text[strlen(text.text) - 1] = '\0';
 	}
@@ -503,7 +503,10 @@ parse_bKGD(uint8_t *data, size_t dataz)
 		bkgd.paletteindex = data[0];
 		printf("bKGD: palette index %u\n", bkgd.paletteindex);
 	} else if (2 == dataz) {
-		bkgd.greyscale = (uint16_t)data;
+		uint16_t *tmp;
+
+		tmp = (uint16_t *)data;
+		bkgd.greyscale = *tmp;
 		bkgd.greyscale = ntohs(bkgd.greyscale);
 		printf("bKGD: greyscale %u\n", bkgd.greyscale);
 	} else if (6 == dataz) {
@@ -574,7 +577,7 @@ parse_sPLT(uint8_t *data, size_t dataz)
 	size_t		palettenamez;
 	int		offset;
 
-	splt.palettename = data;
+	splt.palettename = (char *)data;
 	palettenamez = strlen(splt.palettename);
 	if (palettenamez >= 80) {
 		errx(EXIT_FAILURE, "sPLT: Invalid palette name size");
