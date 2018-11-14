@@ -68,7 +68,7 @@ main(int argc, char *argv[])
 	fflag = stdin;
 	lflag = true;
 	sflag = false;
-#ifdef HAVE_PLEDGE
+#if HAVE_PLEDGE
 	pledge("stdio rpath", NULL);
 #endif
 	while (-1 != (ch = getopt(argc, argv, "c:f:ls")))
