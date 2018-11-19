@@ -29,7 +29,7 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "pnginfo.h"
+#include "lgpng.h"
 
 struct chunktypemap {
 	const char *const name;

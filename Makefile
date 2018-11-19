@@ -1,11 +1,10 @@
 include Makefile.configure
 
-PROG= pnginfo
-SRCS= pnginfo.c compats.c
+SRCS= lgpng.c compats.c
 OBJS= ${SRCS:.c=.o}
 
-LDADD?= 
-LDFLAGS?=
+LDADD+= -lz
+LDFLAGS+=
 CFLAGS+= -std=c99
 
 .SUFFIXES: .c .o
@@ -14,11 +13,16 @@ CFLAGS+= -std=c99
 .c.o:
 	${CC} ${CFLAGS} -c $<
 
-${PROG}: ${OBJS}
-	${CC} ${LDFLAGS} -o $@ ${OBJS} ${LDADD}
+all: pnginfo pngblank
+
+pnginfo: pnginfo.o ${OBJS}
+	${CC} ${LDFLAGS} -o $@ $> ${LDADD}
+
+pngblank: pngblank.o ${OBJS}
+	${CC} ${LDFLAGS} -o $@ $> ${LDADD}
 
 clean:
-	rm -f -- ${PROG} ${OBJS} ${DEPS}
+	rm -f -- ${OBJS} pngblank.o pnginfo.o pngblank pnginfo
 
 install:
 	mkdir -p ${PREFIX}/bin/

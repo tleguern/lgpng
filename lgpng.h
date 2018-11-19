@@ -14,8 +14,12 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#ifndef PNGINFO_H__
-#define PNGINFO_H__
+#ifndef LGPNG_H__
+#define LGPNG_H__
+
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
 
 enum chunktype {
 	CHUNK_TYPE_IHDR,
@@ -51,33 +55,21 @@ enum colourtype {
 	COLOUR_TYPE__MAX,
 };
 
-const char *colourtypemap[COLOUR_TYPE__MAX] = {
-	"greyscale",
-	"error",
-	"truecolour",
-	"indexed",
-	"greyscale + alpha",
-	"error",
-	"truecolour + alpha",
-};
+extern const char *colourtypemap[COLOUR_TYPE__MAX];
 
 enum compressiontype {
 	COMPRESSION_TYPE_DEFLATE,
 	COMPRESSION_TYPE__MAX,
 };
 
-const char *compressiontypemap[COMPRESSION_TYPE__MAX] = {
-	"deflate",
-};
+extern const char *compressiontypemap[COMPRESSION_TYPE__MAX];
 
 enum filtertype {
 	FILTER_TYPE_ADAPTIVE,
 	FILTER_TYPE__MAX,
 };
 
-const char *filtertypemap[FILTER_TYPE__MAX] = {
-	"adaptive",
-};
+extern const char *filtertypemap[FILTER_TYPE__MAX];
 
 enum interlace_method {
 	INTERLACE_METHOD_STANDARD,
@@ -85,10 +77,7 @@ enum interlace_method {
 	INTERLACE_METHOD__MAX,
 };
 
-const char *interlacemap[INTERLACE_METHOD__MAX] = {
-	"standard",
-	"adam7",
-};
+extern const char *interlacemap[INTERLACE_METHOD__MAX];
 
 struct IHDR {
 	uint32_t	width;
@@ -101,12 +90,15 @@ struct IHDR {
 } __attribute__((packed));
 
 /* PLTE chunk */
+struct rgb8 {
+	uint8_t	red;
+	uint8_t	green;
+	uint8_t	blue;
+};
+
 struct PLTE {
-	struct {
-		uint8_t		red;
-		uint8_t		green;
-		uint8_t		blue;
-	} entries[256];
+	size_t		 entriesz;
+	struct rgb8	*entries;
 };
 
 /* cHRM chunk */
@@ -152,12 +144,7 @@ enum rendering_intent {
 	RENDERING_INTENT__MAX,
 };
 
-const char *rendering_intentmap[RENDERING_INTENT__MAX] = {
-	"perceptual",
-	"relative colorimetric",
-	"saturation",
-	"absolute colorimetric",
-};
+extern const char *rendering_intentmap[RENDERING_INTENT__MAX];
 
 struct sRGB {
 	uint8_t		intent;
@@ -196,10 +183,7 @@ enum unitspecifier {
 	UNITSPECIFIER__MAX,
 };
 
-const char *unitspecifiermap[UNITSPECIFIER__MAX] = {
-	"unknown",
-	"metre",
-};
+extern const char *unitspecifiermap[UNITSPECIFIER__MAX];
 
 struct pHYs {
 	uint32_t	ppux;
@@ -244,10 +228,13 @@ struct tIME {
 } __attribute__((packed));
 
 bool		is_png(FILE *);
+bool		is_chunk_public(const char *);
+
 int32_t		read_next_chunk_len(FILE *);
 enum chunktype	read_next_chunk_type(FILE *, char **);
 int		read_next_chunk_data(FILE *, uint8_t **, int32_t);
 uint32_t	read_next_chunk_crc(FILE *);
+
 void		parse_IHDR(uint8_t *, size_t);
 void		parse_PLTE(uint8_t *, size_t);
 /* void		parse_IDAT(uint8_t *, size_t); */
@@ -266,7 +253,11 @@ void		parse_hIST(uint8_t *, size_t);
 void		parse_pHYs(uint8_t *, size_t);
 void		parse_sPLT(uint8_t *, size_t);
 void		parse_tIME(uint8_t *, size_t);
-bool		is_chunk_public(const char *);
+
+size_t		write_png_sig(uint8_t *);
+size_t		write_IHDR(uint8_t *, size_t, int, enum colourtype);
+size_t		write_IEND(uint8_t *);
+
 void		usage(void);
 
 #endif
