@@ -14,6 +14,8 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+const char *malloc_options = "GCFJR<<";
+
 #include "config.h"
 
 #include <arpa/inet.h>
@@ -31,28 +33,42 @@
 
 #include "lgpng.h"
 
+void info_IHDR(struct lgpng *, uint8_t *, size_t);
+void info_PLTE(struct lgpng *, uint8_t *, size_t);
+void info_tRNS(struct lgpng *, uint8_t *, size_t);
+void info_cHRM(struct lgpng *, uint8_t *, size_t);
+void info_gAMA(struct lgpng *, uint8_t *, size_t);
+void info_sBIT(struct lgpng *, uint8_t *, size_t);
+void info_sRGB(struct lgpng *, uint8_t *, size_t);
+void info_tEXt(struct lgpng *, uint8_t *, size_t);
+void info_bKGD(struct lgpng *, uint8_t *, size_t);
+void info_hIST(struct lgpng *, uint8_t *, size_t);
+void info_pHYs(struct lgpng *, uint8_t *, size_t);
+void info_sPLT(struct lgpng *, uint8_t *, size_t);
+void info_tIME(struct lgpng *, uint8_t *, size_t);
+
 struct chunktypemap {
 	const char *const name;
-	void (*fn)(uint8_t *, size_t);
+	void (*fn)(struct lgpng *, uint8_t *, size_t);
 } chunktypemap[CHUNK_TYPE__MAX] = {
-	{ "IHDR", parse_IHDR },
-	{ "PLTE", parse_PLTE },
+	{ "IHDR", lgpng_parse_IHDR },
+	{ "PLTE", lgpng_parse_PLTE },
 	{ "IDAT", NULL },
-	{ "IEND", parse_IEND },
-	{ "tRNS", NULL },
-	{ "cHRM", parse_cHRM },
-	{ "gAMA", parse_gAMA },
+	{ "IEND", NULL },
+	{ "tRNS", lgpng_parse_tRNS },
+	{ "cHRM", lgpng_parse_cHRM },
+	{ "gAMA", lgpng_parse_gAMA },
 	{ "iCCP", NULL },
-	{ "sBIT", parse_sBIT },
-	{ "sRGB", parse_sRGB },
+	{ "sBIT", lgpng_parse_sBIT },
+	{ "sRGB", lgpng_parse_sRGB },
 	{ "iTXt", NULL },
-	{ "tEXt", parse_tEXt },
+	{ "tEXt", lgpng_parse_tEXt },
 	{ "zTXt", NULL },
-	{ "bKGD", parse_bKGD },
-	{ "hIST", parse_hIST },
-	{ "pHYs", parse_pHYs },
-	{ "sPLT", parse_sPLT },
-	{ "tIME", parse_tIME },
+	{ "bKGD", lgpng_parse_bKGD },
+	{ "hIST", lgpng_parse_hIST },
+	{ "pHYs", lgpng_parse_pHYs },
+	{ "sPLT", lgpng_parse_sPLT },
+	{ "tIME", lgpng_parse_tIME },
 };
 
 int
@@ -63,6 +79,7 @@ main(int argc, char *argv[])
 	bool		 lflag, sflag;
 	enum chunktype	 cflag;
 	FILE		*fflag;
+	struct lgpng	*lgpng;
 
 	cflag = CHUNK_TYPE__MAX;
 	fflag = stdin;
@@ -101,6 +118,52 @@ main(int argc, char *argv[])
 	argc -= optind;
 	argv += optind;
 
+	switch (cflag) {
+	case CHUNK_TYPE_IHDR:
+		chunktypemap[cflag].fn = info_IHDR;
+		break;
+	case CHUNK_TYPE_PLTE:
+		chunktypemap[cflag].fn = info_PLTE;
+		break;
+	case CHUNK_TYPE_tRNS:
+		chunktypemap[cflag].fn = info_tRNS;
+		break;
+	case CHUNK_TYPE_cHRM:
+		chunktypemap[cflag].fn = info_cHRM;
+		break;
+	case CHUNK_TYPE_gAMA:
+		chunktypemap[cflag].fn = info_gAMA;
+		break;
+	case CHUNK_TYPE_sBIT:
+		chunktypemap[cflag].fn = info_sBIT;
+		break;
+	case CHUNK_TYPE_sRGB:
+		chunktypemap[cflag].fn = info_sRGB;
+		break;
+	case CHUNK_TYPE_tEXt:
+		chunktypemap[cflag].fn = info_tEXt;
+		break;
+	case CHUNK_TYPE_bKGD:
+		chunktypemap[cflag].fn = info_bKGD;
+		break;
+	case CHUNK_TYPE_hIST:
+		chunktypemap[cflag].fn = info_hIST;
+		break;
+	case CHUNK_TYPE_pHYs:
+		chunktypemap[cflag].fn = info_pHYs;
+		break;
+	case CHUNK_TYPE_sPLT:
+		chunktypemap[cflag].fn = info_sPLT;
+		break;
+	case CHUNK_TYPE_tIME:
+		chunktypemap[cflag].fn = info_tIME;
+		break;
+	case CHUNK_TYPE__MAX:
+		break;
+	default:
+		errx(EXIT_FAILURE, "Unsupported chunk type");
+	}
+
 	offset = 0;
 	if (false == sflag) {
 		if (false == is_png(fflag)) {
@@ -116,6 +179,10 @@ main(int argc, char *argv[])
 			}
 			offset += 1;
 		} while (false == is_png(fflag));
+	}
+	if (NULL == (lgpng = lgpng_new())) {
+		fclose(fflag);
+		errx(EXIT_FAILURE, "malloc");
 	}
 	do {
 		enum chunktype	 type;
@@ -144,11 +211,9 @@ main(int argc, char *argv[])
 			} else {
 				printf("%s\n", chunktypemap[type].name);
 			}
-		} else if (cflag == type) {
+		} else {
 			if (NULL != chunktypemap[type].fn) {
-				chunktypemap[type].fn(chunkdata, chunkz);
-			} else {
-				printf("Unimplemented chunk\n");
+				chunktypemap[type].fn(lgpng, chunkdata, chunkz);
 			}
 		}
 		free(chunkdata);
@@ -158,6 +223,7 @@ main(int argc, char *argv[])
 		}
 	} while(1);
 	fclose(fflag);
+	lgpng_free(lgpng);
 	return(EXIT_SUCCESS);
 }
 
@@ -241,32 +307,25 @@ is_png(FILE *f)
 }
 
 void
-parse_IHDR(uint8_t *data, size_t dataz)
+info_IHDR(struct lgpng *ctx, uint8_t *data, size_t dataz)
 {
 	struct IHDR	*ihdr;
-	(void)dataz;
 
-	if (sizeof(struct IHDR) != dataz) {
-		errx(EXIT_FAILURE, "IHDR: invalid chunk size");
-	}
-	ihdr = (struct IHDR *)data;
-	ihdr->width = ntohl(ihdr->width);
-	ihdr->height = ntohl(ihdr->height);
+	lgpng_parse_IHDR(ctx, data, dataz);
+	ihdr = ctx->ihdr;
 
 	if (0 == ihdr->width) {
-		errx(EXIT_FAILURE, "IHDR: Invalid width 0\n");
+		warnx("IHDR: Invalid width 0\n");
 	}
 	if (0 == ihdr->height) {
-		errx(EXIT_FAILURE, "IHDR: Invalid height 0\n");
+		warnx("IHDR: Invalid height 0\n");
 	}
 	switch (ihdr->colourtype) {
 	case COLOUR_TYPE_GREYSCALE:
 		if (1 != ihdr->bitdepth && 2 != ihdr->bitdepth
 		    && 4 != ihdr->bitdepth && 8 != ihdr->bitdepth
 		    && 16 != ihdr->bitdepth) {
-			errx(EXIT_FAILURE,
-			    "IHDR: Invalid bit depth %i, should be 1, 2, 4, 8 or 16",
-			    ihdr->bitdepth);
+			warnx("IHDR: Invalid bit depth %i, should be 1, 2, 4, 8 or 16", ihdr->bitdepth);
 		}
 		break;
 	case COLOUR_TYPE_TRUECOLOUR_ALPHA:
@@ -275,38 +334,31 @@ parse_IHDR(uint8_t *data, size_t dataz)
 		/* FALLTHROUGH */
 	case COLOUR_TYPE_TRUECOLOUR:
 		if ( 8 != ihdr->bitdepth && 16 != ihdr->bitdepth) {
-			errx(EXIT_FAILURE,
-			    "IHDR: Invalid bit depth %i, should be 8 or 16",
+			warnx("IHDR: Invalid bit depth %i, should be 8 or 16",
 			    ihdr->bitdepth);
 		}
 		break;
 	case COLOUR_TYPE_INDEXED:
 		if (1 != ihdr->bitdepth && 2 != ihdr->bitdepth
 		    && 4 != ihdr->bitdepth && 8 != ihdr->bitdepth) {
-			errx(EXIT_FAILURE,
-			    "IHDR: Invalid bit depth %i, should be 1, 2, 4 or 8",
-			    ihdr->bitdepth);
+			warnx("IHDR: Invalid bit depth %i, should be 1, 2, 4 or 8", ihdr->bitdepth);
 		}
 		break;
 	case COLOUR_TYPE_FILLER1:
 	case COLOUR_TYPE_FILLER5:
 	case COLOUR_TYPE__MAX:
 	default:
-		errx(EXIT_FAILURE, "IHDR: Invalid colour type %i\n",
-		    ihdr->colourtype);
+		warnx("IHDR: Invalid colour type %i\n", ihdr->colourtype);
 	}
 	if (COMPRESSION_TYPE_DEFLATE != ihdr->compression) {
-		errx(EXIT_FAILURE, "IHDR: Invalid compression type %i\n",
-		    ihdr->compression);
+		warnx("IHDR: Invalid compression type %i\n", ihdr->compression);
 	}
 	if (FILTER_TYPE_ADAPTIVE != ihdr->filter) {
-		errx(EXIT_FAILURE, "IHDR: Invalid filter type %i\n",
-		    ihdr->filter);
+		warnx("IHDR: Invalid filter type %i\n", ihdr->filter);
 	}
 	if (INTERLACE_METHOD_STANDARD != ihdr->interlace
 	    && INTERLACE_METHOD_ADAM7 != ihdr->interlace) {
-		errx(EXIT_FAILURE, "IHDR: Invalid interlace method %i\n",
-		    ihdr->interlace);
+		warnx("IHDR: Invalid interlace method %i\n", ihdr->interlace);
 	}
 	printf("IHDR: width: %u\n", ihdr->width);
 	printf("IHDR: height: %u\n", ihdr->height);
@@ -319,59 +371,53 @@ parse_IHDR(uint8_t *data, size_t dataz)
 }
 
 void
-parse_PLTE(uint8_t *data, size_t dataz)
+info_PLTE(struct lgpng *lgpng, uint8_t *data, size_t dataz)
 {
-	size_t		 elemz;
 	struct PLTE	*plte;
 
-	/*
-	 * TODO:
-	 * - colour type should only be 2, 3 or 6 ;
-	 * - check if struct png doesn't already contain a PLTE ;
-	 * - elemz should not be greater than pow(2, bitdepth).
-	 */
-	elemz = dataz / 3;
-	if (0 != dataz % 3 || 256 < elemz) {
-		errx(EXIT_FAILURE, "PLTE: Invalid chunk size");
-	}
-	plte = (struct PLTE *)data;
-	printf("PLTE: %zu entries\n", elemz);
-	for (size_t i = 0; i < elemz; i++) {
+	lgpng_parse_PLTE(lgpng, data, dataz);
+	plte = lgpng->plte;
+	printf("PLTE: %zu entries\n", plte->entries);
+	for (size_t i = 0; i < plte->entries; i++) {
 		printf("PLTE: entry %zu: 0x%x%x%x\n", i,
-		    plte->entries[i].red,
-		    plte->entries[i].green,
-		    plte->entries[i].blue);
+		    plte->entry[i].red,
+		    plte->entry[i].green,
+		    plte->entry[i].blue);
 	}
 }
 
 void
-parse_IEND(uint8_t *data, size_t dataz)
+info_tRNS(struct lgpng *lgpng, uint8_t *data, size_t dataz)
 {
-	(void)data;
-	if (0 != dataz) {
-		errx(EXIT_FAILURE, "IEND: invalid chunk size");
-	}
+	struct tRNS	*trns;
 
+	lgpng_parse_tRNS(lgpng, data, dataz);
+	trns = lgpng->trns;
+	switch(lgpng->ihdr->colourtype) {
+	case COLOUR_TYPE_GREYSCALE:
+		printf("tRNS: gray: %u\n", lgpng->trns->gray);
+		break;
+	case COLOUR_TYPE_TRUECOLOUR:
+		printf("tRNS: red: %u\n", lgpng->trns->red);
+		printf("tRNS: green: %u\n", lgpng->trns->green);
+		printf("tRNS: blue: %u\n", lgpng->trns->blue);
+		break;
+	case COLOUR_TYPE_INDEXED:
+		for (size_t i = 0; i < lgpng->plte->entries; i++) {
+			printf("tRNS: palette index %zu: %u\n", i, lgpng->trns->palette[i]);
+		}
+		break;
+	}
 }
 
 void
-parse_cHRM(uint8_t *data, size_t dataz)
+info_cHRM(struct lgpng *lgpng, uint8_t *data, size_t dataz)
 {
 	struct cHRM	*chrm;
 	double whitex, whitey, redx, redy, greenx, greeny, bluex, bluey;
 
-	if (sizeof(struct cHRM) != dataz) {
-		errx(EXIT_FAILURE, "cHRM: invalid chunk size");
-	}
-	chrm = (struct cHRM *)data;
-	chrm->whitex = ntohl(chrm->whitex);
-	chrm->whitey = ntohl(chrm->whitey);
-	chrm->redx = ntohl(chrm->redx);
-	chrm->redy = ntohl(chrm->redy);
-	chrm->greenx = ntohl(chrm->greenx);
-	chrm->greeny = ntohl(chrm->greeny);
-	chrm->bluex = ntohl(chrm->bluex);
-	chrm->bluey = ntohl(chrm->bluey);
+	lgpng_parse_cHRM(lgpng, data, dataz);
+	chrm = lgpng->chrm;
 	whitex = (double)chrm->whitex / 100000.0;
 	whitey = (double)chrm->whitey / 100000.0;
 	redx = (double)chrm->redx / 100000.0;
@@ -391,179 +437,130 @@ parse_cHRM(uint8_t *data, size_t dataz)
 }
 
 void
-parse_gAMA(uint8_t *data, size_t dataz)
+info_gAMA(struct lgpng *lgpng, uint8_t *data, size_t dataz)
 {
 	struct gAMA	*gama;
 	double		 imagegama;
 
-	if (sizeof(struct gAMA) != dataz) {
-		errx(EXIT_FAILURE, "gAMA: invalid chunk size");
-	}
-	gama = (struct gAMA *)data;
-	gama->gama = ntohl(gama->gama);
+	lgpng_parse_gAMA(lgpng, data, dataz);
+	gama = lgpng->gama;
 	imagegama = (double)gama->gama / 100000.0;
 	if (0 == imagegama) {
-		errx(EXIT_FAILURE, "gAMA: invalid value of 0");
+		warnx("gAMA: invalid value of 0");
 	}
 	printf("gAMA: image gama: %f\n", imagegama);
 }
 
 void
-parse_sBIT(uint8_t *data, size_t dataz)
+info_sBIT(struct lgpng *lgpng, uint8_t *data, size_t dataz)
 {
-	struct sBIT	sbit;
+	struct sBIT	*sbit;
 
-	if (1 == dataz) {
-		sbit.type = sBIT_TYPE_0;
-		sbit.sgreyscale = (uint8_t)data[0];
+	lgpng_parse_sBIT(lgpng, data, dataz);
+	sbit = lgpng->sbit;
+	switch (sbit->type) {
+	case sBIT_TYPE_0:
 		printf("sBIT: significant greyscale bits: %i\n",
-		    sbit.sgreyscale);
-	} else if (2 == dataz) {
-		sbit.type = sBIT_TYPE_4;
-		sbit.sgreyscale = (uint8_t)data[0];
-		sbit.salpha = (uint8_t)data[1];
+		    sbit->sgreyscale);
+		break;
+	case sBIT_TYPE_4:
 		printf("sBIT: significant greyscale bits: %i\n",
-		    sbit.sgreyscale);
+		    sbit->sgreyscale);
 		printf("sBIT: significant alpha bits: %i\n",
-		    sbit.salpha);
-	} else if (3 == dataz) {
-		sbit.type = sBIT_TYPE_23;
-		sbit.sred = (uint8_t)data[0];
-		sbit.sgreen = (uint8_t)data[1];
-		sbit.sblue = (uint8_t)data[2];
+		    sbit->salpha);
+		break;
+	case sBIT_TYPE_23:
 		printf("sBIT: significant red bits: %i\n",
-		    sbit.sred);
+		    sbit->sred);
 		printf("sBIT: significant green bits: %i\n",
-		    sbit.sgreen);
+		    sbit->sgreen);
 		printf("sBIT: significant blue bits: %i\n",
-		    sbit.sblue);
-	} else if (4 == dataz) {
-		sbit.type = sBIT_TYPE_6;
-		sbit.sred = (uint8_t)data[0];
-		sbit.sgreen = (uint8_t)data[1];
-		sbit.sblue = (uint8_t)data[2];
-		sbit.salpha = (uint8_t)data[3];
+		    sbit->sblue);
+		break;
+	case sBIT_TYPE_6:
 		printf("sBIT: significant red bits: %i\n",
-		    sbit.sred);
+		    sbit->sred);
 		printf("sBIT: significant green bits: %i\n",
-		    sbit.sgreen);
+		    sbit->sgreen);
 		printf("sBIT: significant blue bits: %i\n",
-		    sbit.sblue);
+		    sbit->sblue);
 		printf("sBIT: significant alpha bits: %i\n",
-		    sbit.salpha);
-	} else {
-		errx(EXIT_FAILURE, "sBIT: Invalid chunk size");
+		    sbit->salpha);
+		break;
 	}
 }
 
 void
-parse_sRGB(uint8_t *data, size_t dataz)
+info_sRGB(struct lgpng *ctx, uint8_t *data, size_t dataz)
 {
 	struct sRGB	*srgb;
 
-	if (sizeof(struct sRGB) != dataz) {
-		errx(EXIT_FAILURE, "sRGB: invalid chunk size");
-	}
-	srgb = (struct sRGB *)data;
+	lgpng_parse_sRGB(ctx, data, dataz);
+	srgb = ctx->srgb;
 	if (srgb->intent >= RENDERING_INTENT__MAX) {
-		errx(EXIT_FAILURE, "sRGB: invalid rendering intent value");
+		warnx("sRGB: invalid rendering intent value");
+		return;
 	}
 	printf("sRGB: rendering intent: %s\n",
 	    rendering_intentmap[srgb->intent]);
 }
 
 void
-parse_tEXt(uint8_t *data, size_t dataz)
+info_tEXt(struct lgpng *lgpng, uint8_t *data, size_t dataz)
 {
-	struct tEXt	text;
+	struct tEXt	*text;
 
-	(void)dataz;
-	text.keyword = (char *)data;
-	if (strlen(text.keyword) >= 80) {
-		errx(EXIT_FAILURE, "tEXt: Invalid keyword size");
-	}
-	text.text = (char *)data + strlen((char *)data) + 1;
-	if ('\n' == text.text[strlen(text.text) - 1]) {
-		text.text[strlen(text.text) - 1] = '\0';
-	}
-	printf("%s: %s\n", text.keyword, text.text);
+	lgpng_parse_tEXt(lgpng, data, dataz);
+	text = lgpng->text[lgpng->textz - 1];
+	printf("%s: %s\n", text->keyword, text->text);
 }
 
 void
-parse_bKGD(uint8_t *data, size_t dataz)
+info_bKGD(struct lgpng *lgpng, uint8_t *data, size_t dataz)
 {
-	struct bKGD	bkgd;
+	struct bKGD	*bkgd;
 
-	bkgd.greyscale= 0;
-	bkgd.paletteindex = 0;
-	bkgd.rgb.red = 0;
-	bkgd.rgb.green = 0;
-	bkgd.rgb.blue = 0;
-	if (1 == dataz) {
-		bkgd.paletteindex = data[0];
-		printf("bKGD: palette index %u\n", bkgd.paletteindex);
-	} else if (2 == dataz) {
-		uint16_t *tmp;
-
-		tmp = (uint16_t *)data;
-		bkgd.greyscale = *tmp;
-		bkgd.greyscale = ntohs(bkgd.greyscale);
-		printf("bKGD: greyscale %u\n", bkgd.greyscale);
-	} else if (6 == dataz) {
-		struct rgb16	*rgb;
-
-		rgb = (struct rgb16 *)data;
-		rgb->red = htons(rgb->red);
-		rgb->green = htons(rgb->green);
-		rgb->blue = htons(rgb->blue);
-		bkgd.rgb.red = rgb->red;
-		bkgd.rgb.green = rgb->green;
-		bkgd.rgb.blue = rgb->blue;
+	lgpng_parse_bKGD(lgpng, data, dataz);
+	bkgd = lgpng->bkgd;
+	switch (lgpng->ihdr->colourtype) {
+	case COLOUR_TYPE_GREYSCALE:
+		/* FALLTHROUGH */
+	case COLOUR_TYPE_GREYSCALE_ALPHA:
+		printf("bKGD: greyscale %u\n", bkgd->greyscale);
+		break;
+	case COLOUR_TYPE_TRUECOLOUR:
+		/* FALLTHROUGH */
+	case COLOUR_TYPE_TRUECOLOUR_ALPHA:
 		printf("bKGD: rgb value 0x%x%x%x\n",
-		    bkgd.rgb.red, bkgd.rgb.green, bkgd.rgb.blue);
-	} else {
-		errx(EXIT_FAILURE, "bKGD: Invalid chunk size");
+		    bkgd->rgb.red, bkgd->rgb.green, bkgd->rgb.blue);
+		break;
+	case COLOUR_TYPE_INDEXED:
+		printf("bKGD: palette index %u\n", bkgd->paletteindex);
+		break;
 	}
 }
 
 void
-parse_hIST(uint8_t *data, size_t dataz)
+info_hIST(struct lgpng *lgpng, uint8_t *data, size_t dataz)
 {
-	size_t		 elemz;
 	struct hIST	*hist;
 
-	/*
-	 * TODO:
-	 * - probably the same restrictions as in PLTE
-	 * - can only appear if PLTE is defined
-	 * - should be of the same size a PLTE
-	 */
-	elemz = dataz / 3;
-	if (0 != dataz % 3 || 256 < elemz) {
-		errx(EXIT_FAILURE, "hIST: Invalid chunk size");
-	}
-	hist = (struct hIST *)data;
-	printf("hIST: %zu entries\n", elemz);
-	for (size_t i = 0; i < elemz; i++) {
+	lgpng_parse_hIST(lgpng, data, dataz);
+	hist = lgpng->hist;
+	printf("hIST: %zu entries\n", lgpng->plte->entries);
+	for (size_t i = 0; i < lgpng->plte->entries; i++) {
 		printf("hIST: entry %zu: %i\n", i,
-		    hist->entries[i].frequency);
+		    hist->frequency[i]);
 	}
 }
 
 void
-parse_pHYs(uint8_t *data, size_t dataz)
+info_pHYs(struct lgpng *lgpng, uint8_t *data, size_t dataz)
 {
 	struct pHYs	*phys;
 
-	if (sizeof(struct pHYs) != dataz) {
-		errx(EXIT_FAILURE, "pHYs: invalid chunk size");
-	}
-	phys = (struct pHYs *)data;
-	phys->ppux = ntohl(phys->ppux);
-	phys->ppuy = ntohl(phys->ppuy);
-	if (phys->unitspecifier >= UNITSPECIFIER__MAX ) {
-		errx(EXIT_FAILURE, "pHYs: invalid unit specifier");
-	}
+	lgpng_parse_pHYs(lgpng, data, dataz);
+	phys = lgpng->phys;
 	printf("pHYs: pixel per unit, X axis: %i\n", phys->ppux);
 	printf("pHYs: pixel per unit, Y axis: %i\n", phys->ppuy);
 	printf("pHYs: unit specifier: %s\n",
@@ -571,99 +568,61 @@ parse_pHYs(uint8_t *data, size_t dataz)
 }
 
 void
-parse_sPLT(uint8_t *data, size_t dataz)
+info_sPLT(struct lgpng *lgpng, uint8_t *data, size_t dataz)
 {
-	struct sPLT	splt;
-	size_t		palettenamez;
-	int		offset;
+	struct sPLT	*splt;
 
-	splt.palettename = (char *)data;
-	palettenamez = strlen(splt.palettename);
-	if (palettenamez >= 80) {
-		errx(EXIT_FAILURE, "sPLT: Invalid palette name size");
-	}
-	offset = palettenamez + 1;
-	splt.sampledepth = data[offset];
-	if (8 != splt.sampledepth && 16 != splt.sampledepth) {
-		errx(EXIT_FAILURE, "sPLT: Invalid sample depth");
-	}
-	offset += 1;
-	splt.entriesz = (dataz - offset) / splt.sampledepth;
-	splt.entries = calloc(splt.entriesz, sizeof(*(splt.entries)));
-	for (size_t i = 0; i < splt.entriesz; i++) {
-		splt.entries[i] = calloc(1, sizeof(**(splt.entries)));
-		if (8 == splt.sampledepth) {
-			memcpy(splt.entries[i], data + offset, 6);
-			offset += 6;
-			splt.entries[i]->depth8.frequency =
-			    ntohs(splt.entries[i]->depth8.frequency);
-		} else {
-			memcpy(splt.entries[i], data + offset, 10);
-			offset += 10;
-			splt.entries[i]->depth16.red =
-			    ntohs(splt.entries[i]->depth16.red);
-			splt.entries[i]->depth16.green =
-			    ntohs(splt.entries[i]->depth16.green);
-			splt.entries[i]->depth16.blue =
-			    ntohs(splt.entries[i]->depth16.blue);
-			splt.entries[i]->depth16.alpha =
-			    ntohs(splt.entries[i]->depth16.alpha);
-			splt.entries[i]->depth16.frequency =
-			    ntohs(splt.entries[i]->depth16.frequency);
+	lgpng_parse_sPLT(lgpng, data, dataz);
+	for (size_t i = 0; i < lgpng->spltz; i++) {
+		splt = lgpng->splt[i];
+		printf("sPLT: palette name: %s\n", splt->palettename);
+		printf("sPLT: sample depth: %i\n", splt->sampledepth);
+		printf("sPLT: %zu entries\n", splt->entries);
+		for (size_t j = 0; j < splt->entries; j++) {
+			if (8 == splt->sampledepth) {
+				printf("sPLT: entry %3zu: red: 0x%02X, "
+				    "green 0x%02X, blue: 0x%02X, "
+				    "alpha: 0x%02X, frequency: %hi\n", j,
+				    splt->entry[j].depth8.red,
+				    splt->entry[j].depth8.green,
+				    splt->entry[j].depth8.blue,
+				    splt->entry[j].depth8.alpha,
+				    splt->entry[j].depth8.frequency);
+			} else {
+				printf("sPLT: entry %3zu: red: 0x%04X, "
+				    "green 0x%04X, blue: 0x%04X, "
+				    "alpha: 0x%04X, frequency: %hi\n", j,
+				    splt->entry[j].depth16.red,
+				    splt->entry[j].depth16.green,
+				    splt->entry[j].depth16.blue,
+				    splt->entry[j].depth16.alpha,
+				    splt->entry[j].depth16.frequency);
+			}
 		}
 	}
-	printf("sPLT: palette name: %s\n", splt.palettename);
-	printf("sPLT: sample depth: %i\n", splt.sampledepth);
-	printf("sPLT: %zu entries\n", splt.entriesz);
-	for (size_t i = 0; i < splt.entriesz; i++) {
-		if (8 == splt.sampledepth) {
-			printf("sPLT: entry %3zu: red: 0x%02X, green 0x%02X, "
-			  "blue: 0x%02X, alpha: 0x%02X, frequency: %hi\n", i,
-			     splt.entries[i]->depth8.red,
-			     splt.entries[i]->depth8.green,
-			     splt.entries[i]->depth8.blue,
-			     splt.entries[i]->depth8.alpha,
-			     splt.entries[i]->depth8.frequency);
-		} else {
-			printf("sPLT: entry %3zu: red: 0x%04X, green 0x%04X, "
-			  "blue: 0x%04X, alpha: 0x%04X, frequency: %hi\n", i,
-			     splt.entries[i]->depth16.red,
-			     splt.entries[i]->depth16.green,
-			     splt.entries[i]->depth16.blue,
-			     splt.entries[i]->depth16.alpha,
-			     splt.entries[i]->depth16.frequency);
-		}
-		free(splt.entries[i]);
-		splt.entries[i] = NULL;
-	}
-	free(splt.entries);
-	splt.entries = NULL;
 }
 
 void
-parse_tIME(uint8_t *data, size_t dataz)
+info_tIME(struct lgpng *lgpng, uint8_t *data, size_t dataz)
 {
 	struct tIME	*time;
 
-	if (sizeof(struct tIME) != dataz) {
-		errx(EXIT_FAILURE, "tIME: invalid chunk size");
-	}
-	time = (struct tIME *)data;
-	time->year = htons(time->year);
+	lgpng_parse_tIME(lgpng, data, dataz);
+	time = lgpng->time;
 	if (time->month == 0 || time->month > 12) {
-		errx(EXIT_FAILURE, "tIME: invalid month value");
+		warnx("tIME: invalid month value");
 	}
 	if (time->day == 0 || time->day > 31) {
-		errx(EXIT_FAILURE, "tIME: invalid day value");
+		warnx("tIME: invalid day value");
 	}
 	if (time->hour > 23) {
-		errx(EXIT_FAILURE, "tIME: invalid hour value");
+		warnx("tIME: invalid hour value");
 	}
 	if (time->minute > 59) {
-		errx(EXIT_FAILURE, "tIME: invalid minute value");
+		warnx("tIME: invalid minute value");
 	}
 	if (time->second > 60) {
-		errx(EXIT_FAILURE, "tIME: invalid second value");
+		warnx("tIME: invalid second value");
 	}
 	printf("tIME: %i-%i-%i %i:%i:%i\n",
 	    time->year, time->month, time->day,
