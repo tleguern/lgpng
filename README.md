@@ -48,6 +48,7 @@ Only the following chunks are implemented right now:
 
 * IHDR ;
 * PLTE ;
+* tRNS ;
 * IEND ;
 * cHRM ;
 * gAMA ;
