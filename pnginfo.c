@@ -315,10 +315,10 @@ info_IHDR(struct lgpng *ctx, uint8_t *data, size_t dataz)
 	ihdr = ctx->ihdr;
 
 	if (0 == ihdr->width) {
-		warnx("IHDR: Invalid width 0\n");
+		warnx("IHDR: Invalid width 0");
 	}
 	if (0 == ihdr->height) {
-		warnx("IHDR: Invalid height 0\n");
+		warnx("IHDR: Invalid height 0");
 	}
 	switch (ihdr->colourtype) {
 	case COLOUR_TYPE_GREYSCALE:
@@ -348,17 +348,17 @@ info_IHDR(struct lgpng *ctx, uint8_t *data, size_t dataz)
 	case COLOUR_TYPE_FILLER5:
 	case COLOUR_TYPE__MAX:
 	default:
-		warnx("IHDR: Invalid colour type %i\n", ihdr->colourtype);
+		warnx("IHDR: Invalid colour type %i", ihdr->colourtype);
 	}
 	if (COMPRESSION_TYPE_DEFLATE != ihdr->compression) {
-		warnx("IHDR: Invalid compression type %i\n", ihdr->compression);
+		warnx("IHDR: Invalid compression type %i", ihdr->compression);
 	}
 	if (FILTER_TYPE_ADAPTIVE != ihdr->filter) {
-		warnx("IHDR: Invalid filter type %i\n", ihdr->filter);
+		warnx("IHDR: Invalid filter type %i", ihdr->filter);
 	}
 	if (INTERLACE_METHOD_STANDARD != ihdr->interlace
 	    && INTERLACE_METHOD_ADAM7 != ihdr->interlace) {
-		warnx("IHDR: Invalid interlace method %i\n", ihdr->interlace);
+		warnx("IHDR: Invalid interlace method %i", ihdr->interlace);
 	}
 	printf("IHDR: width: %u\n", ihdr->width);
 	printf("IHDR: height: %u\n", ihdr->height);
