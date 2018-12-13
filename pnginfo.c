@@ -542,10 +542,12 @@ info_tEXt(struct lgpng *lgpng, uint8_t *data, size_t dataz)
 	struct tEXt	*text;
 
 	lgpng_parse_tEXt(lgpng, data, dataz);
-	if (NULL == (text = lgpng->text[lgpng->textz - 1])) {
+	if (NULL == lgpng->text) {
 		return(-1);
 	}
-	printf("%s: %s\n", text->keyword, text->text);
+	text = lgpng->text[lgpng->textz - 1];
+	printf("tEXt: keyword: %s\n", text->keyword);
+	printf("tEXt: text: %s\n", text->text);
 	return(0);
 }
 
