@@ -14,7 +14,9 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+#if DEBUG
 const char *malloc_options = "GCFJR<<";
+#endif
 
 #include "config.h"
 
@@ -33,23 +35,23 @@ const char *malloc_options = "GCFJR<<";
 
 #include "lgpng.h"
 
-void info_IHDR(struct lgpng *, uint8_t *, size_t);
-void info_PLTE(struct lgpng *, uint8_t *, size_t);
-void info_tRNS(struct lgpng *, uint8_t *, size_t);
-void info_cHRM(struct lgpng *, uint8_t *, size_t);
-void info_gAMA(struct lgpng *, uint8_t *, size_t);
-void info_sBIT(struct lgpng *, uint8_t *, size_t);
-void info_sRGB(struct lgpng *, uint8_t *, size_t);
-void info_tEXt(struct lgpng *, uint8_t *, size_t);
-void info_bKGD(struct lgpng *, uint8_t *, size_t);
-void info_hIST(struct lgpng *, uint8_t *, size_t);
-void info_pHYs(struct lgpng *, uint8_t *, size_t);
-void info_sPLT(struct lgpng *, uint8_t *, size_t);
-void info_tIME(struct lgpng *, uint8_t *, size_t);
+int info_IHDR(struct lgpng *, uint8_t *, size_t);
+int info_PLTE(struct lgpng *, uint8_t *, size_t);
+int info_tRNS(struct lgpng *, uint8_t *, size_t);
+int info_cHRM(struct lgpng *, uint8_t *, size_t);
+int info_gAMA(struct lgpng *, uint8_t *, size_t);
+int info_sBIT(struct lgpng *, uint8_t *, size_t);
+int info_sRGB(struct lgpng *, uint8_t *, size_t);
+int info_tEXt(struct lgpng *, uint8_t *, size_t);
+int info_bKGD(struct lgpng *, uint8_t *, size_t);
+int info_hIST(struct lgpng *, uint8_t *, size_t);
+int info_pHYs(struct lgpng *, uint8_t *, size_t);
+int info_sPLT(struct lgpng *, uint8_t *, size_t);
+int info_tIME(struct lgpng *, uint8_t *, size_t);
 
 struct chunktypemap {
 	const char *const name;
-	void (*fn)(struct lgpng *, uint8_t *, size_t);
+	int (*fn)(struct lgpng *, uint8_t *, size_t);
 } chunktypemap[CHUNK_TYPE__MAX] = {
 	{ "IHDR", lgpng_parse_IHDR },
 	{ "PLTE", lgpng_parse_PLTE },
@@ -212,8 +214,12 @@ main(int argc, char *argv[])
 				printf("%s\n", chunktypemap[type].name);
 			}
 		} else {
-			if (NULL != chunktypemap[type].fn) {
-				chunktypemap[type].fn(lgpng, chunkdata, chunkz);
+			int (*fn)(struct lgpng *, uint8_t *, size_t);
+
+			fn = chunktypemap[type].fn;
+			if (NULL != fn) {
+				if (fn(lgpng, chunkdata, chunkz) == -1)
+					warnx("Chunk was invalid");
 			}
 		}
 		free(chunkdata);
@@ -306,14 +312,15 @@ is_png(FILE *f)
 	return(false);
 }
 
-void
+int
 info_IHDR(struct lgpng *ctx, uint8_t *data, size_t dataz)
 {
 	struct IHDR	*ihdr;
 
 	lgpng_parse_IHDR(ctx, data, dataz);
-	ihdr = ctx->ihdr;
-
+	if (NULL == (ihdr = ctx->ihdr)) {
+		return(-1);
+	}
 	if (0 == ihdr->width) {
 		warnx("IHDR: Invalid width 0");
 	}
@@ -349,34 +356,42 @@ info_IHDR(struct lgpng *ctx, uint8_t *data, size_t dataz)
 	case COLOUR_TYPE__MAX:
 	default:
 		warnx("IHDR: Invalid colour type %i", ihdr->colourtype);
-	}
-	if (COMPRESSION_TYPE_DEFLATE != ihdr->compression) {
-		warnx("IHDR: Invalid compression type %i", ihdr->compression);
-	}
-	if (FILTER_TYPE_ADAPTIVE != ihdr->filter) {
-		warnx("IHDR: Invalid filter type %i", ihdr->filter);
-	}
-	if (INTERLACE_METHOD_STANDARD != ihdr->interlace
-	    && INTERLACE_METHOD_ADAM7 != ihdr->interlace) {
-		warnx("IHDR: Invalid interlace method %i", ihdr->interlace);
+		ihdr->colourtype = COLOUR_TYPE_FILLER1;
 	}
 	printf("IHDR: width: %u\n", ihdr->width);
 	printf("IHDR: height: %u\n", ihdr->height);
 	printf("IHDR: bitdepth: %i\n", ihdr->bitdepth);
 	printf("IHDR: colourtype: %s\n", colourtypemap[ihdr->colourtype]);
-	printf("IHDR: compression: %s\n",
-	    compressiontypemap[ihdr->compression]);
-	printf("IHDR: filter: %s\n", filtertypemap[ihdr->filter]);
-	printf("IHDR: interlace method: %s\n", interlacemap[ihdr->interlace]);
+	if (COMPRESSION_TYPE_DEFLATE != ihdr->compression) {
+		warnx("IHDR: Invalid compression type %i", ihdr->compression);
+	} else {
+		printf("IHDR: compression: %s\n",
+		    compressiontypemap[ihdr->compression]);
+	}
+	if (FILTER_TYPE_ADAPTIVE != ihdr->filter) {
+		warnx("IHDR: Invalid filter type %i", ihdr->filter);
+	} else {
+		printf("IHDR: filter: %s\n", filtertypemap[ihdr->filter]);
+	}
+	if (INTERLACE_METHOD_STANDARD != ihdr->interlace
+	    && INTERLACE_METHOD_ADAM7 != ihdr->interlace) {
+		warnx("IHDR: Invalid interlace method %i", ihdr->interlace);
+	} else {
+		printf("IHDR: interlace method: %s\n",
+		    interlacemap[ihdr->interlace]);
+	}
+	return(0);
 }
 
-void
+int
 info_PLTE(struct lgpng *lgpng, uint8_t *data, size_t dataz)
 {
 	struct PLTE	*plte;
 
 	lgpng_parse_PLTE(lgpng, data, dataz);
-	plte = lgpng->plte;
+	if (NULL == (plte = lgpng->plte)) {
+		return(-1);
+	}
 	printf("PLTE: %zu entries\n", plte->entries);
 	for (size_t i = 0; i < plte->entries; i++) {
 		printf("PLTE: entry %zu: 0x%x%x%x\n", i,
@@ -384,15 +399,18 @@ info_PLTE(struct lgpng *lgpng, uint8_t *data, size_t dataz)
 		    plte->entry[i].green,
 		    plte->entry[i].blue);
 	}
+	return(0);
 }
 
-void
+int
 info_tRNS(struct lgpng *lgpng, uint8_t *data, size_t dataz)
 {
 	struct tRNS	*trns;
 
 	lgpng_parse_tRNS(lgpng, data, dataz);
-	trns = lgpng->trns;
+	if (NULL == (trns = lgpng->trns)) {
+		return(-1);
+	}
 	switch(lgpng->ihdr->colourtype) {
 	case COLOUR_TYPE_GREYSCALE:
 		printf("tRNS: gray: %u\n", lgpng->trns->gray);
@@ -408,16 +426,19 @@ info_tRNS(struct lgpng *lgpng, uint8_t *data, size_t dataz)
 		}
 		break;
 	}
+	return(0);
 }
 
-void
+int
 info_cHRM(struct lgpng *lgpng, uint8_t *data, size_t dataz)
 {
 	struct cHRM	*chrm;
 	double whitex, whitey, redx, redy, greenx, greeny, bluex, bluey;
 
 	lgpng_parse_cHRM(lgpng, data, dataz);
-	chrm = lgpng->chrm;
+	if (NULL == (chrm = lgpng->chrm)) {
+		return(-1);
+	}
 	whitex = (double)chrm->whitex / 100000.0;
 	whitey = (double)chrm->whitey / 100000.0;
 	redx = (double)chrm->redx / 100000.0;
@@ -434,30 +455,36 @@ info_cHRM(struct lgpng *lgpng, uint8_t *data, size_t dataz)
 	printf("cHRM: green y: %f\n", greeny);
 	printf("cHRM: blue x: %f\n", bluex);
 	printf("cHRM: blue y: %f\n", bluey);
+	return(0);
 }
 
-void
+int
 info_gAMA(struct lgpng *lgpng, uint8_t *data, size_t dataz)
 {
 	struct gAMA	*gama;
 	double		 imagegama;
 
 	lgpng_parse_gAMA(lgpng, data, dataz);
-	gama = lgpng->gama;
+	if (NULL == (gama = lgpng->gama)) {
+		return(-1);
+	}
 	imagegama = (double)gama->gama / 100000.0;
 	if (0 == imagegama) {
 		warnx("gAMA: invalid value of 0");
 	}
 	printf("gAMA: image gama: %f\n", imagegama);
+	return(0);
 }
 
-void
+int
 info_sBIT(struct lgpng *lgpng, uint8_t *data, size_t dataz)
 {
 	struct sBIT	*sbit;
 
 	lgpng_parse_sBIT(lgpng, data, dataz);
-	sbit = lgpng->sbit;
+	if (NULL == (sbit = lgpng->sbit)) {
+		return(-1);
+	}
 	switch (sbit->type) {
 	case sBIT_TYPE_0:
 		printf("sBIT: significant greyscale bits: %i\n",
@@ -488,40 +515,49 @@ info_sBIT(struct lgpng *lgpng, uint8_t *data, size_t dataz)
 		    sbit->salpha);
 		break;
 	}
+	return(0);
 }
 
-void
+int
 info_sRGB(struct lgpng *ctx, uint8_t *data, size_t dataz)
 {
 	struct sRGB	*srgb;
 
 	lgpng_parse_sRGB(ctx, data, dataz);
-	srgb = ctx->srgb;
+	if (NULL == (srgb = ctx->srgb)) {
+		return(-1);
+	}
 	if (srgb->intent >= RENDERING_INTENT__MAX) {
 		warnx("sRGB: invalid rendering intent value");
-		return;
+		return(-1);
 	}
 	printf("sRGB: rendering intent: %s\n",
 	    rendering_intentmap[srgb->intent]);
+	return(0);
 }
 
-void
+int
 info_tEXt(struct lgpng *lgpng, uint8_t *data, size_t dataz)
 {
 	struct tEXt	*text;
 
 	lgpng_parse_tEXt(lgpng, data, dataz);
-	text = lgpng->text[lgpng->textz - 1];
+	if (NULL == (text = lgpng->text[lgpng->textz - 1])) {
+		return(-1);
+	}
 	printf("%s: %s\n", text->keyword, text->text);
+	return(0);
 }
 
-void
+int
 info_bKGD(struct lgpng *lgpng, uint8_t *data, size_t dataz)
 {
 	struct bKGD	*bkgd;
 
 	lgpng_parse_bKGD(lgpng, data, dataz);
-	bkgd = lgpng->bkgd;
+	if (NULL == (bkgd = lgpng->bkgd)) {
+		return(-1);
+	}
 	switch (lgpng->ihdr->colourtype) {
 	case COLOUR_TYPE_GREYSCALE:
 		/* FALLTHROUGH */
@@ -538,41 +574,51 @@ info_bKGD(struct lgpng *lgpng, uint8_t *data, size_t dataz)
 		printf("bKGD: palette index %u\n", bkgd->paletteindex);
 		break;
 	}
+	return(0);
 }
 
-void
+int
 info_hIST(struct lgpng *lgpng, uint8_t *data, size_t dataz)
 {
 	struct hIST	*hist;
 
 	lgpng_parse_hIST(lgpng, data, dataz);
-	hist = lgpng->hist;
+	if (NULL == (hist = lgpng->hist)) {
+		return(-1);
+	}
 	printf("hIST: %zu entries\n", lgpng->plte->entries);
 	for (size_t i = 0; i < lgpng->plte->entries; i++) {
 		printf("hIST: entry %zu: %i\n", i,
 		    hist->frequency[i]);
 	}
+	return(0);
 }
 
-void
+int
 info_pHYs(struct lgpng *lgpng, uint8_t *data, size_t dataz)
 {
 	struct pHYs	*phys;
 
 	lgpng_parse_pHYs(lgpng, data, dataz);
-	phys = lgpng->phys;
+	if (NULL == (phys = lgpng->phys)) {
+		return(-1);
+	}
 	printf("pHYs: pixel per unit, X axis: %i\n", phys->ppux);
 	printf("pHYs: pixel per unit, Y axis: %i\n", phys->ppuy);
 	printf("pHYs: unit specifier: %s\n",
 	    unitspecifiermap[phys->unitspecifier]);
+	return(0);
 }
 
-void
+int
 info_sPLT(struct lgpng *lgpng, uint8_t *data, size_t dataz)
 {
 	struct sPLT	*splt;
 
 	lgpng_parse_sPLT(lgpng, data, dataz);
+	if (NULL == lgpng->splt) {
+		return(-1);
+	}
 	for (size_t i = 0; i < lgpng->spltz; i++) {
 		splt = lgpng->splt[i];
 		printf("sPLT: palette name: %s\n", splt->palettename);
@@ -600,15 +646,18 @@ info_sPLT(struct lgpng *lgpng, uint8_t *data, size_t dataz)
 			}
 		}
 	}
+	return(0);
 }
 
-void
+int
 info_tIME(struct lgpng *lgpng, uint8_t *data, size_t dataz)
 {
 	struct tIME	*time;
 
 	lgpng_parse_tIME(lgpng, data, dataz);
-	time = lgpng->time;
+	if (NULL == (time = lgpng->time)) {
+		return(-1);
+	}
 	if (time->month == 0 || time->month > 12) {
 		warnx("tIME: invalid month value");
 	}
@@ -627,6 +676,7 @@ info_tIME(struct lgpng *lgpng, uint8_t *data, size_t dataz)
 	printf("tIME: %i-%i-%i %i:%i:%i\n",
 	    time->year, time->month, time->day,
 	    time->hour, time->minute, time->second);
+	return(0);
 }
 
 bool

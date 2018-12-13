@@ -103,23 +103,26 @@ lgpng_free(struct lgpng *lgpng)
 	free(lgpng);
 }
 
-void
+int
 lgpng_parse_IHDR(struct lgpng *ctx, uint8_t *data, size_t dataz)
 {
 	struct IHDR	*ihdr;
 	(void)dataz;
 
 	if (NULL != ctx->ihdr) {
-		errx(EXIT_FAILURE, "IHDR: IHDR can not appear multiple times");
+		warnx("IHDR: IHDR can not appear multiple times");
+		return(-1);
 	}
 	if (sizeof(struct IHDR) != dataz) {
-		errx(EXIT_FAILURE, "IHDR: invalid chunk size");
+		warnx("IHDR: invalid chunk size");
+		return(-1);
 	}
 	ihdr = (struct IHDR *)data;
 	ihdr->width = ntohl(ihdr->width);
 	ihdr->height = ntohl(ihdr->height);
 	if (NULL == (ctx->ihdr = calloc(1, sizeof(struct IHDR)))) {
-		err(EXIT_FAILURE, "calloc");
+		warn("calloc");
+		return(-1);
 	}
 	ctx->ihdr->width = ihdr->width;
 	ctx->ihdr->height = ihdr->height;
@@ -128,28 +131,33 @@ lgpng_parse_IHDR(struct lgpng *ctx, uint8_t *data, size_t dataz)
 	ctx->ihdr->compression = ihdr->compression;
 	ctx->ihdr->filter = ihdr->filter;
 	ctx->ihdr->interlace = ihdr->interlace;
+	return(0);
 }
 
-void
+int
 lgpng_parse_PLTE(struct lgpng *ctx, uint8_t *data, size_t dataz)
 {
 	size_t		 elemz;
 	struct rgb8	*rgb8;
 
 	if (NULL == ctx->ihdr) {
-		errx(EXIT_FAILURE, "PLTE: IHDR chunk is missing");
+		warnx("PLTE: IHDR chunk is missing");
+		return(-1);
 	}
 	if (NULL != ctx->plte) {
-		errx(EXIT_FAILURE, "PLTE: PLTE can not appear multiple times");
+		warnx("PLTE: PLTE can not appear multiple times");
+		return(-1);
 	}
 	if (ctx->ihdr)
 	elemz = dataz / 3;
 	if (0 != dataz % 3 || 256 < elemz) {
-		errx(EXIT_FAILURE, "PLTE: Invalid chunk size");
+		warnx("PLTE: Invalid chunk size");
+		return(-1);
 	}
 	rgb8 = (struct rgb8 *)data;
 	if (NULL == (ctx->plte = calloc(1, sizeof(struct PLTE)))) {
-		err(EXIT_FAILURE, "calloc");
+		warn("calloc");
+		return(-1);
 	}
 	for (size_t i = 0; i < elemz; i++) {
 		ctx->plte->entry[i].red = rgb8[i].red;
@@ -157,36 +165,43 @@ lgpng_parse_PLTE(struct lgpng *ctx, uint8_t *data, size_t dataz)
 		ctx->plte->entry[i].blue = rgb8[i].blue;
 	}
 	ctx->plte->entries = elemz;
+	return(0);
 }
 
-void
+int
 lgpng_parse_tRNS(struct lgpng *ctx, uint8_t *data, size_t dataz)
 {
 	struct tRNS	*trns;
 
 	if (NULL == ctx->ihdr) {
-		errx(EXIT_FAILURE, "tRNS: IHDR chunk is missing");
+		warnx("tRNS: IHDR chunk is missing");
+		return(-1);
 	}
 	if (ctx->ihdr->colourtype == COLOUR_TYPE_INDEXED && NULL == ctx->plte) {
-		errx(EXIT_FAILURE, "tRNS: PLTE chunk is missing");
+		warnx("tRNS: PLTE chunk is missing");
+		return(-1);
 	}
 	if (NULL != ctx->trns) {
-		errx(EXIT_FAILURE, "tRNS: tRNS can not appear multiple times");
+		warnx("tRNS: tRNS can not appear multiple times");
+		return(-1);
 	}
 	if (NULL == (ctx->trns = calloc(1, sizeof(struct tRNS)))) {
-		err(EXIT_FAILURE, "calloc");
+		warn("calloc");
+		return(-1);
 	}
 	trns = (struct tRNS *)data;
 	switch(ctx->ihdr->colourtype) {
 	case COLOUR_TYPE_GREYSCALE:
 		if (2 != dataz) {
-			errx(EXIT_FAILURE, "tRNS: Invalid chunk size");
+			warnx("tRNS: Invalid chunk size");
+			return(-1);
 		}
 		ctx->trns->gray = ntohs(trns->gray);
 		break;
 	case COLOUR_TYPE_TRUECOLOUR:
 		if (6 != dataz) {
-			errx(EXIT_FAILURE, "tRNS: Invalid chunk size");
+			warnx("tRNS: Invalid chunk size");
+			return(-1);
 		}
 		ctx->trns->red = ntohs(trns->gray); /* Yes. */
 		ctx->trns->green = ntohs(trns->red);
@@ -194,10 +209,12 @@ lgpng_parse_tRNS(struct lgpng *ctx, uint8_t *data, size_t dataz)
 		break;
 	case COLOUR_TYPE_INDEXED:
 		if (NULL == ctx->plte) {
-			errx(EXIT_FAILURE, "tRNS: Invalid chunk position");
+			warnx("tRNS: Invalid chunk position");
+			return(-1);
 		}
 		if (ctx->plte->entries != dataz) {
-			errx(EXIT_FAILURE, "tRNS: Invalid chunk size");
+			warnx("tRNS: Invalid chunk size");
+			return(-1);
 		}
 		memset(ctx->trns->palette, 255, sizeof(ctx->trns->palette));
 		for (size_t i = 0; i < ctx->plte->entries; i++) {
@@ -205,24 +222,29 @@ lgpng_parse_tRNS(struct lgpng *ctx, uint8_t *data, size_t dataz)
 		}
 		break;
 	}
+	return(0);
 }
 
-void
+int
 lgpng_parse_sBIT(struct lgpng *ctx, uint8_t *data, size_t dataz)
 {
 	if (NULL == ctx->ihdr) {
-		errx(EXIT_FAILURE, "sBIT: IHDR chunk is missing");
+		warnx("sBIT: IHDR chunk is missing");
+		return(-1);
 	}
 	if (NULL != ctx->sbit) {
-		errx(EXIT_FAILURE, "sBIT: sBIT can not appear multiple times");
+		warnx("sBIT: sBIT can not appear multiple times");
+		return(-1);
 	}
 	if (NULL == (ctx->sbit = calloc(1, sizeof(struct sBIT)))) {
-		err(EXIT_FAILURE, "calloc");
+		warn("calloc");
+		return(-1);
 	}
 	switch(ctx->ihdr->colourtype) {
 	case COLOUR_TYPE_GREYSCALE:
 		if (1 != dataz) {
-			errx(EXIT_FAILURE, "sBIT: Invalid chunk size");
+			warnx("sBIT: Invalid chunk size");
+			return(-1);
 		}
 		ctx->sbit->type = sBIT_TYPE_0;
 		ctx->sbit->sgreyscale = (uint8_t)data[0];
@@ -231,7 +253,8 @@ lgpng_parse_sBIT(struct lgpng *ctx, uint8_t *data, size_t dataz)
 		/* FALLTHROUGH */
 	case COLOUR_TYPE_INDEXED:
 		if (3 != dataz) {
-			errx(EXIT_FAILURE, "sBIT: Invalid chunk size");
+			warnx("sBIT: Invalid chunk size");
+			return(-1);
 		}
 		ctx->sbit->type = sBIT_TYPE_23;
 		ctx->sbit->sred = (uint8_t)data[0];
@@ -240,7 +263,8 @@ lgpng_parse_sBIT(struct lgpng *ctx, uint8_t *data, size_t dataz)
 		break;
 	case COLOUR_TYPE_GREYSCALE_ALPHA:
 		if (2 != dataz) {
-			errx(EXIT_FAILURE, "sBIT: Invalid chunk size");
+			warnx("sBIT: Invalid chunk size");
+			return(-1);
 		}
 		ctx->sbit->type = sBIT_TYPE_4;
 		ctx->sbit->sgreyscale = (uint8_t)data[0];
@@ -248,7 +272,8 @@ lgpng_parse_sBIT(struct lgpng *ctx, uint8_t *data, size_t dataz)
 		break;
 	case COLOUR_TYPE_TRUECOLOUR_ALPHA:
 		if (4 != dataz) {
-			errx(EXIT_FAILURE, "sBIT: Invalid chunk size");
+			warnx("sBIT: Invalid chunk size");
+			return(-1);
 		}
 		ctx->sbit->type = sBIT_TYPE_6;
 		ctx->sbit->sred = (uint8_t)data[0];
@@ -257,22 +282,26 @@ lgpng_parse_sBIT(struct lgpng *ctx, uint8_t *data, size_t dataz)
 		ctx->sbit->salpha = (uint8_t)data[3];
 		break;
 	}
+	return(0);
 }
 
-void
+int
 lgpng_parse_cHRM(struct lgpng *ctx, uint8_t *data, size_t dataz)
 {
 	struct cHRM	*chrm;
 
 	if (NULL != ctx->chrm) {
-		errx(EXIT_FAILURE, "cHRM: cHRM can not appear multiple times");
+		warnx("cHRM: cHRM can not appear multiple times");
+		return(-1);
 	}
 	if (sizeof(struct cHRM) != dataz) {
-		errx(EXIT_FAILURE, "cHRM: invalid chunk size");
+		warnx("cHRM: invalid chunk size");
+		return(-1);
 	}
 	chrm = (struct cHRM *)data;
 	if (NULL == (ctx->chrm = calloc(1, sizeof(struct cHRM)))) {
-		err(EXIT_FAILURE, "calloc");
+		warn("calloc");
+		return(-1);
 	}
 	ctx->chrm->whitex = ntohl(chrm->whitex);
 	ctx->chrm->whitey = ntohl(chrm->whitey);
@@ -282,46 +311,55 @@ lgpng_parse_cHRM(struct lgpng *ctx, uint8_t *data, size_t dataz)
 	ctx->chrm->greeny = ntohl(chrm->greeny);
 	ctx->chrm->bluex = ntohl(chrm->bluex);
 	ctx->chrm->bluey = ntohl(chrm->bluey);
+	return(0);
 }
 
-void
+int
 lgpng_parse_gAMA(struct lgpng *ctx, uint8_t *data, size_t dataz)
 {
 	struct gAMA	*gama;
 
 	if (NULL != ctx->gama) {
-		errx(EXIT_FAILURE, "gAMA: gAMA can not appear multiple times");
+		warnx("gAMA: gAMA can not appear multiple times");
+		return(-1);
 	}
 	if (sizeof(struct gAMA) != dataz) {
-		errx(EXIT_FAILURE, "gAMA: invalid chunk size");
+		warnx("gAMA: invalid chunk size");
+		return(-1);
 	}
 	gama = (struct gAMA *)data;
 	gama->gama = ntohl(gama->gama);
 	if (NULL == (ctx->gama = calloc(1, sizeof(struct gAMA)))) {
-		err(EXIT_FAILURE, "calloc");
+		warn("calloc");
+		return(-1);
 	}
 	ctx->gama->gama = gama->gama;
+	return(0);
 }
 
-void
+int
 lgpng_parse_sRGB(struct lgpng *ctx, uint8_t *data, size_t dataz)
 {
 	struct sRGB	*srgb;
 
 	if (NULL != ctx->srgb) {
-		errx(EXIT_FAILURE, "sRGB: sRGB can not appear multiple times");
+		warnx("sRGB: sRGB can not appear multiple times");
+		return(-1);
 	}
 	if (sizeof(struct sRGB) != dataz) {
-		errx(EXIT_FAILURE, "sRGB: invalid chunk size");
+		warnx("sRGB: invalid chunk size");
+		return(-1);
 	}
 	srgb = (struct sRGB *)data;
 	if (NULL == (ctx->srgb = calloc(1, sizeof(struct sRGB)))) {
-		err(EXIT_FAILURE, "calloc");
+		warn("calloc");
+		return(-1);
 	}
 	ctx->srgb->intent = srgb->intent;
+	return(0);
 }
 
-void
+int
 lgpng_parse_tEXt(struct lgpng *ctx, uint8_t *data, size_t dataz)
 {
 	struct tEXt	  text;
@@ -330,7 +368,8 @@ lgpng_parse_tEXt(struct lgpng *ctx, uint8_t *data, size_t dataz)
 	(void)dataz;
 	text.keyword = (char *)data;
 	if (strlen(text.keyword) >= 80) {
-		errx(EXIT_FAILURE, "tEXt: Invalid keyword size");
+		warnx("tEXt: Invalid keyword size");
+		return(-1);
 	}
 	text.text = (char *)data + strlen((char *)data) + 1;
 	if ('\n' == text.text[strlen(text.text) - 1]) {
@@ -341,41 +380,49 @@ lgpng_parse_tEXt(struct lgpng *ctx, uint8_t *data, size_t dataz)
 		free(ctx->text);
 		ctx->text = NULL;
 		ctx->textz = 0;
-		err(EXIT_FAILURE, "reallocarray");
+		warn("reallocarray");
+		return(-1);
 	}
 	ctx->text = textpp;
 	if (NULL == (ctx->text[ctx->textz] = calloc(1, sizeof(struct tEXt)))) {
-		err(EXIT_FAILURE, "calloc");
+		warn("calloc");
+		return(-1);
 	}
 	ctx->text[ctx->textz]->keyword = text.keyword;
 	ctx->text[ctx->textz]->text = text.text;
 	ctx->textz = ctx->textz + 1;
+	return(0);
 }
 
-void
+int
 lgpng_parse_bKGD(struct lgpng *ctx, uint8_t *data, size_t dataz)
 {
 	uint16_t *tmp;
 	struct rgb16	*rgb;
 
 	if (NULL == ctx->ihdr) {
-		errx(EXIT_FAILURE, "bKGD: IHDR chunk is missing");
+		warnx("bKGD: IHDR chunk is missing");
+		return(-1);
 	}
 	if (ctx->ihdr->colourtype == COLOUR_TYPE_INDEXED && NULL == ctx->plte) {
-		errx(EXIT_FAILURE, "bKGD: PLTE chunk is missing");
+		warnx("bKGD: PLTE chunk is missing");
+		return(-1);
 	}
 	if (NULL != ctx->phys) {
-		errx(EXIT_FAILURE, "bKGD: bKGD can not appear multiple times");
+		warnx("bKGD: bKGD can not appear multiple times");
+		return(-1);
 	}
 	if (NULL == (ctx->bkgd = calloc(1, sizeof(struct bKGD)))) {
-		err(EXIT_FAILURE, "calloc");
+		warn("calloc");
+		return(-1);
 	}
 	switch (ctx->ihdr->colourtype) {
 	case COLOUR_TYPE_GREYSCALE:
 		/* FALLTHROUGH */
 	case COLOUR_TYPE_GREYSCALE_ALPHA:
 		if (2 != dataz) {
-			errx(EXIT_FAILURE, "bKGD: Invalid chunk size");
+			warnx("bKGD: Invalid chunk size");
+			return(-1);
 		}
 		tmp = (uint16_t *)data;
 		ctx->bkgd->greyscale = *tmp;
@@ -385,7 +432,8 @@ lgpng_parse_bKGD(struct lgpng *ctx, uint8_t *data, size_t dataz)
 		/* FALLTHROUGH */
 	case COLOUR_TYPE_TRUECOLOUR_ALPHA:
 		if (6 != dataz) {
-			errx(EXIT_FAILURE, "bKGD: Invalid chunk size");
+			warnx("bKGD: Invalid chunk size");
+			return(-1);
 		}
 		rgb = (struct rgb16 *)data;
 		rgb->red = htons(rgb->red);
@@ -397,65 +445,78 @@ lgpng_parse_bKGD(struct lgpng *ctx, uint8_t *data, size_t dataz)
 		break;
 	case COLOUR_TYPE_INDEXED:
 		if (1 != dataz) {
-			errx(EXIT_FAILURE, "bKGD: Invalid chunk size");
+			warnx("bKGD: Invalid chunk size");
+			return(-1);
 		}
 		if (data[0] >= ctx->plte->entries) {
-			errx(EXIT_FAILURE, "bKGD: Colour not in PLTE");
+			warnx("bKGD: Colour not in PLTE");
+			return(-1);
 		}
 		ctx->bkgd->paletteindex = data[0];
 		break;
 	}
+	return(0);
 }
 
-void
+int
 lgpng_parse_hIST(struct lgpng *ctx, uint8_t *data, size_t dataz)
 {
 	uint16_t	*frequency;
 	size_t		 elemz;
 
 	if (NULL == ctx->plte) {
-		errx(EXIT_FAILURE, "hIST: PLTE chunk is missing");
+		warnx("hIST: PLTE chunk is missing");
+		return(-1);
 	}
 	if (NULL != ctx->hist) {
-		errx(EXIT_FAILURE, "hIST: hIST can not appear multiple times");
+		warnx("hIST: hIST can not appear multiple times");
+		return(-1);
 	}
 	elemz = dataz / 2;
 	if (0 != dataz % 2 || 256 < elemz) {
-		errx(EXIT_FAILURE, "hIST: Invalid chunk size");
+		warnx("hIST: Invalid chunk size");
+		return(-1);
 	}
 	if (elemz != ctx->plte->entries) {
-		errx(EXIT_FAILURE, "hIST: Number of entries differ from PLTE");
+		warnx("hIST: Number of entries differ from PLTE");
+		return(-1);
 	}
 	frequency = (uint16_t *)data;
 	if (NULL == (ctx->hist = calloc(1, sizeof(struct hIST)))) {
-		err(EXIT_FAILURE, "calloc");
+		warn("calloc");
+		return(-1);
 	}
 	for (size_t i = 0; i < elemz; i++) {
 		ctx->hist->frequency[i] = frequency[i];
 	}
+	return(0);
 }
 
-void
+int
 lgpng_parse_pHYs(struct lgpng *ctx, uint8_t *data, size_t dataz)
 {
 	struct pHYs	*phys;
 
 	if (NULL != ctx->phys) {
-		errx(EXIT_FAILURE, "pHYs: pHYs can not appear multiple times");
+		warnx("pHYs: pHYs can not appear multiple times");
+		return(-1);
 	}
 	if (sizeof(struct pHYs) != dataz) {
-		errx(EXIT_FAILURE, "pHYs: invalid chunk size");
+		warnx("pHYs: invalid chunk size");
+		return(-1);
 	}
 	phys = (struct pHYs *)data;
 	if (NULL == (ctx->phys = calloc(1, sizeof(struct pHYs)))) {
-		err(EXIT_FAILURE, "calloc");
+		warn("calloc");
+		return(-1);
 	}
 	ctx->phys->ppux = ntohl(phys->ppux);
 	ctx->phys->ppuy = ntohl(phys->ppuy);
 	ctx->phys->unitspecifier = phys->unitspecifier;
+	return(0);
 }
 
-void
+int
 lgpng_parse_sPLT(struct lgpng *ctx, uint8_t *data, size_t dataz)
 {
 	struct sPLT	  splt;
@@ -467,26 +528,30 @@ lgpng_parse_sPLT(struct lgpng *ctx, uint8_t *data, size_t dataz)
 	splt.palettename = (char *)data;
 	palettenamez = strlen(splt.palettename);
 	if (palettenamez > 80) {
-		errx(EXIT_FAILURE, "sPLT: Invalid palette name size");
+		warnx("sPLT: Invalid palette name size");
+		return(-1);
 	}
 	offset = palettenamez + 1;
 	splt.sampledepth = data[offset];
 	if (8 != splt.sampledepth && 16 != splt.sampledepth) {
-		errx(EXIT_FAILURE, "sPLT: Invalid sample depth");
+		warnx("sPLT: Invalid sample depth");
+		return(-1);
 	}
 	offset += 1;
 	if (8 == splt.sampledepth) {
 		splt.entries = (dataz - offset) / 6;
 		if ((dataz - offset) % 6 != 0) {
-			errx(EXIT_FAILURE, "sPLT: Invalid palette size -- %zu",
+			warnx("sPLT: Invalid palette size -- %zu",
 			    splt.entries);
+			return(-1);
 		}
 	}
 	if (16 == splt.sampledepth) {
 		splt.entries = (dataz - offset) / 10;
 		if ((dataz - offset) % 10 != 0) {
-			errx(EXIT_FAILURE, "sPLT: Invalid palette size -- %zu",
+			warnx("sPLT: Invalid palette size -- %zu",
 			    splt.entries);
+			return(-1);
 		}
 	}
 
@@ -495,11 +560,13 @@ lgpng_parse_sPLT(struct lgpng *ctx, uint8_t *data, size_t dataz)
 		free(ctx->splt);
 		ctx->splt = NULL;
 		ctx->spltz = 0;
-		err(EXIT_FAILURE, "reallocarray");
+		warn("reallocarray");
+		return(-1);
 	}
 	ctx->splt = spltpp;
 	if (NULL == (ctx->splt[ctx->spltz] = calloc(1, sizeof(struct sPLT)))) {
-		err(EXIT_FAILURE, "calloc");
+		warn("calloc");
+		return(-1);
 	}
 	ctx->splt[ctx->spltz]->palettename = splt.palettename;
 	ctx->splt[ctx->spltz]->sampledepth = splt.sampledepth;
@@ -530,23 +597,27 @@ lgpng_parse_sPLT(struct lgpng *ctx, uint8_t *data, size_t dataz)
 
 	ctx->splt[ctx->spltz]->entry = splt.entry;
 	ctx->spltz = ctx->spltz + 1;
+	return(0);
 }
 
-void
+int
 lgpng_parse_tIME(struct lgpng *ctx, uint8_t *data, size_t dataz)
 {
 	struct tIME	*time;
 
 	if (NULL != ctx->time) {
-		errx(EXIT_FAILURE, "tIME: tIME can not appear multiple times");
+		warnx("tIME: tIME can not appear multiple times");
+		return(-1);
 	}
 	if (sizeof(struct tIME) != dataz) {
-		errx(EXIT_FAILURE, "tIME: invalid chunk size");
+		warnx("tIME: invalid chunk size");
+		return(-1);
 	}
 	time = (struct tIME *)data;
 	time->year = htons(time->year);
 	if (NULL == (ctx->time = calloc(1, sizeof(struct tIME)))) {
-		err(EXIT_FAILURE, "calloc");
+		warn("calloc");
+		return(-1);
 	}
 	ctx->time->year = time->year;
 	ctx->time->month = time->month;
@@ -554,6 +625,7 @@ lgpng_parse_tIME(struct lgpng *ctx, uint8_t *data, size_t dataz)
 	ctx->time->hour = time->hour;
 	ctx->time->minute = time->minute;
 	ctx->time->second = time->second;
+	return(0);
 }
 
 size_t

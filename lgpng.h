@@ -266,24 +266,24 @@ enum chunktype	read_next_chunk_type(FILE *, char **);
 int		read_next_chunk_data(FILE *, uint8_t **, int32_t);
 uint32_t	read_next_chunk_crc(FILE *);
 
-void		lgpng_parse_IHDR(struct lgpng *, uint8_t *, size_t);
-void		lgpng_parse_PLTE(struct lgpng *, uint8_t *, size_t);
-/* void		lgpng_parse_IDAT(struct lgpng *, uint8_t *, size_t); */
-void		lgpng_parse_IEND(struct lgpng *, uint8_t *, size_t);
-void		lgpng_parse_tRNS(struct lgpng *, uint8_t *, size_t);
-void		lgpng_parse_cHRM(struct lgpng *, uint8_t *, size_t);
-void		lgpng_parse_gAMA(struct lgpng *, uint8_t *, size_t);
-/* void		lgpng_parse_iCCP(struct lgpng *, uint8_t *, size_t); */
-void		lgpng_parse_sBIT(struct lgpng *, uint8_t *, size_t);
-void		lgpng_parse_sRGB(struct lgpng *, uint8_t *, size_t);
-void		lgpng_parse_tEXt(struct lgpng *, uint8_t *, size_t);
-/* void		lgpng_parse_zTXt(struct lgpng *, uint8_t *, size_t); */
-/* void		lgpng_parse_iTXt(struct lgpng *, uint8_t *, size_t); */
-void		lgpng_parse_bKGD(struct lgpng *, uint8_t *, size_t);
-void		lgpng_parse_hIST(struct lgpng *, uint8_t *, size_t);
-void		lgpng_parse_pHYs(struct lgpng *, uint8_t *, size_t);
-void		lgpng_parse_sPLT(struct lgpng *, uint8_t *, size_t);
-void		lgpng_parse_tIME(struct lgpng *, uint8_t *, size_t);
+int		lgpng_parse_IHDR(struct lgpng *, uint8_t *, size_t);
+int		lgpng_parse_PLTE(struct lgpng *, uint8_t *, size_t);
+/* int		lgpng_parse_IDAT(struct lgpng *, uint8_t *, size_t); */
+int		lgpng_parse_IEND(struct lgpng *, uint8_t *, size_t);
+int		lgpng_parse_tRNS(struct lgpng *, uint8_t *, size_t);
+int		lgpng_parse_cHRM(struct lgpng *, uint8_t *, size_t);
+int		lgpng_parse_gAMA(struct lgpng *, uint8_t *, size_t);
+/* int		lgpng_parse_iCCP(struct lgpng *, uint8_t *, size_t); */
+int		lgpng_parse_sBIT(struct lgpng *, uint8_t *, size_t);
+int		lgpng_parse_sRGB(struct lgpng *, uint8_t *, size_t);
+int		lgpng_parse_tEXt(struct lgpng *, uint8_t *, size_t);
+/* int		lgpng_parse_zTXt(struct lgpng *, uint8_t *, size_t); */
+/* int		lgpng_parse_iTXt(struct lgpng *, uint8_t *, size_t); */
+int		lgpng_parse_bKGD(struct lgpng *, uint8_t *, size_t);
+int		lgpng_parse_hIST(struct lgpng *, uint8_t *, size_t);
+int		lgpng_parse_pHYs(struct lgpng *, uint8_t *, size_t);
+int		lgpng_parse_sPLT(struct lgpng *, uint8_t *, size_t);
+int		lgpng_parse_tIME(struct lgpng *, uint8_t *, size_t);
 
 size_t		write_png_sig(uint8_t *);
 size_t		write_IHDR(uint8_t *, size_t, int, enum colourtype);
