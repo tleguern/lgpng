@@ -32,6 +32,7 @@ const char *malloc_options = "GCFJR<<";
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <zlib.h>
 
 #include "lgpng.h"
 
@@ -43,6 +44,7 @@ int info_gAMA(struct lgpng *, uint8_t *, size_t);
 int info_sBIT(struct lgpng *, uint8_t *, size_t);
 int info_sRGB(struct lgpng *, uint8_t *, size_t);
 int info_tEXt(struct lgpng *, uint8_t *, size_t);
+int info_zTXt(struct lgpng *, uint8_t *, size_t);
 int info_bKGD(struct lgpng *, uint8_t *, size_t);
 int info_hIST(struct lgpng *, uint8_t *, size_t);
 int info_pHYs(struct lgpng *, uint8_t *, size_t);
@@ -65,7 +67,7 @@ struct chunktypemap {
 	{ "sRGB", lgpng_parse_sRGB },
 	{ "iTXt", NULL },
 	{ "tEXt", lgpng_parse_tEXt },
-	{ "zTXt", NULL },
+	{ "zTXt", lgpng_parse_zTXt },
 	{ "bKGD", lgpng_parse_bKGD },
 	{ "hIST", lgpng_parse_hIST },
 	{ "pHYs", lgpng_parse_pHYs },
@@ -144,6 +146,9 @@ main(int argc, char *argv[])
 		break;
 	case CHUNK_TYPE_tEXt:
 		chunktypemap[cflag].fn = info_tEXt;
+		break;
+	case CHUNK_TYPE_zTXt:
+		chunktypemap[cflag].fn = info_zTXt;
 		break;
 	case CHUNK_TYPE_bKGD:
 		chunktypemap[cflag].fn = info_bKGD;
@@ -548,6 +553,55 @@ info_tEXt(struct lgpng *lgpng, uint8_t *data, size_t dataz)
 	text = lgpng->text[lgpng->textz - 1];
 	printf("tEXt: keyword: %s\n", text->keyword);
 	printf("tEXt: text: %s\n", text->text);
+	return(0);
+}
+
+int
+info_zTXt(struct lgpng *lgpng, uint8_t *data, size_t dataz)
+{
+	struct zTXt	*ztxt;
+	uint8_t		*out, *outtmp;
+	size_t		 ztxtz, outz, outztmp;
+	int		 retry, zret;
+
+	lgpng_parse_zTXt(lgpng, data, dataz);
+	if (NULL == lgpng->ztxt) {
+		return(-1);
+	}
+	ztxt = lgpng->ztxt[lgpng->ztxtz - 1];
+	ztxtz = dataz - strlen(ztxt->keyword) - 1;
+	out = NULL;
+	retry = 2;
+	do {
+		outztmp = ztxtz * retry;
+		outtmp = realloc(out, outztmp);
+		if (NULL == outtmp) {
+			free(out);
+			out = NULL;
+			outz = 0;
+			return(-1);
+		}
+		out = outtmp;
+		outz = outztmp;
+		zret = uncompress(out, &outz, ztxt->text, ztxtz);
+		if (Z_BUF_ERROR != zret && Z_OK != zret) {
+			if (Z_MEM_ERROR == zret) {
+				warn("uncompress");
+			} else if (Z_DATA_ERROR == zret) {
+				warnx("Invalid input data");
+			}
+			free(out);
+			out = NULL;
+			outz = 0;
+			return(-1);
+		}
+		retry += 1;
+	} while (Z_OK != zret);
+	printf("zTXt: keyword: %s\n", ztxt->keyword);
+	printf("zTXt: compression method: %s\n",
+	    compressiontypemap[ztxt->compression]);
+	printf("zTXt: text: %s\n", out);
+	free(out);
 	return(0);
 }
 

@@ -38,6 +38,8 @@ struct lgpng {
 	struct tIME	 *time;
 	size_t		  textz;
 	struct tEXt	**text;
+	size_t		  ztxtz;
+	struct zTXt	**ztxt;
 };
 
 enum chunktype {
@@ -184,6 +186,13 @@ struct tEXt {
 	char	*text;
 };
 
+/* zTXt chunk */
+struct zTXt {
+	char	*keyword;
+	uint8_t	compression;
+	char	*text;
+};
+
 /* bKGD chunk */
 struct rgb16 {
 	uint16_t	red;
@@ -277,7 +286,7 @@ int		lgpng_parse_gAMA(struct lgpng *, uint8_t *, size_t);
 int		lgpng_parse_sBIT(struct lgpng *, uint8_t *, size_t);
 int		lgpng_parse_sRGB(struct lgpng *, uint8_t *, size_t);
 int		lgpng_parse_tEXt(struct lgpng *, uint8_t *, size_t);
-/* int		lgpng_parse_zTXt(struct lgpng *, uint8_t *, size_t); */
+int		lgpng_parse_zTXt(struct lgpng *, uint8_t *, size_t);
 /* int		lgpng_parse_iTXt(struct lgpng *, uint8_t *, size_t); */
 int		lgpng_parse_bKGD(struct lgpng *, uint8_t *, size_t);
 int		lgpng_parse_hIST(struct lgpng *, uint8_t *, size_t);

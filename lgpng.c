@@ -100,6 +100,12 @@ lgpng_free(struct lgpng *lgpng)
 	}
 	free(lgpng->text);
 	lgpng->text = NULL;
+	for (size_t i = 0; i < lgpng->ztxtz; i++) {
+		free(lgpng->ztxt[i]);
+		lgpng->ztxt[i] = NULL;
+	}
+	free(lgpng->ztxt);
+	lgpng->ztxt = NULL;
 	free(lgpng);
 }
 
@@ -391,6 +397,48 @@ lgpng_parse_tEXt(struct lgpng *ctx, uint8_t *data, size_t dataz)
 	ctx->text[ctx->textz]->keyword = text.keyword;
 	ctx->text[ctx->textz]->text = text.text;
 	ctx->textz = ctx->textz + 1;
+	return(0);
+}
+
+int
+lgpng_parse_zTXt(struct lgpng *ctx, uint8_t *data, size_t dataz)
+{
+	struct zTXt	  ztxt;
+	struct zTXt	**ztxtpp;
+
+	(void)dataz;
+	ztxt.keyword = (char *)data;
+	if (strlen(ztxt.keyword) >= 80) {
+		warnx("zTXt: Invalid keyword size");
+		return(-1);
+	}
+	ztxt.compression = ((char *)data)[strlen((char *)data) + 1];
+	if (COMPRESSION_TYPE_DEFLATE != ztxt.compression) {
+		warnx("zTXt: Invalid compression type -- %hhu",
+		    ztxt.compression);
+		return(-1);
+	}
+	ztxt.text = (char *)data + strlen((char *)data) + 2;
+	if ('\n' == ztxt.text[strlen(ztxt.text) - 1]) {
+		ztxt.text[strlen(ztxt.text) - 1] = '\0';
+	}
+	ztxtpp = reallocarray(ctx->ztxt, ctx->ztxtz + 1, sizeof(struct zTXt *));
+	if (NULL == ztxtpp) {
+		free(ctx->ztxt);
+		ctx->ztxt = NULL;
+		ctx->ztxtz = 0;
+		warn("reallocarray");
+		return(-1);
+	}
+	ctx->ztxt = ztxtpp;
+	if (NULL == (ctx->ztxt[ctx->ztxtz] = calloc(1, sizeof(struct zTXt)))) {
+		warn("calloc");
+		return(-1);
+	}
+	ctx->ztxt[ctx->ztxtz]->keyword = ztxt.keyword;
+	ctx->ztxt[ctx->ztxtz]->compression = ztxt.compression;
+	ctx->ztxt[ctx->ztxtz]->text = ztxt.text;
+	ctx->ztxtz = ctx->ztxtz + 1;
 	return(0);
 }
 
