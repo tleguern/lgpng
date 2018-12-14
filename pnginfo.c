@@ -207,9 +207,11 @@ main(int argc, char *argv[])
 			errx(EXIT_FAILURE, "Invalid chunk type");
 		}
 		if (-1 == read_next_chunk_data(fflag, &chunkdata, chunkz))
-			errx(EXIT_FAILURE, "Invalid chunk data");
+			errx(EXIT_FAILURE, "Invalid chunk data for %s",
+			    unknown ? unknown : chunktypemap[type].name);
 		if (0 == (chunkcrc = read_next_chunk_crc(fflag)))
-			errx(EXIT_FAILURE, "Invalid chunk crc");
+			errx(EXIT_FAILURE, "Invalid chunk crc for %s",
+			    unknown ? unknown : chunktypemap[type].name);
 		if (lflag) {
 			if (NULL != unknown) {
 				printf("%s (unknown %s chunk)\n", unknown,
@@ -221,6 +223,9 @@ main(int argc, char *argv[])
 		} else {
 			int (*fn)(struct lgpng *, uint8_t *, size_t);
 
+			if (NULL != unknown) {
+				continue;
+			}
 			fn = chunktypemap[type].fn;
 			if (NULL != fn) {
 				if (fn(lgpng, chunkdata, chunkz) == -1)
