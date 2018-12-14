@@ -372,11 +372,11 @@ lgpng_parse_tEXt(struct lgpng *ctx, uint8_t *data, size_t dataz)
 	struct tEXt	**textpp;
 
 	(void)dataz;
-	text.keyword = (char *)data;
-	if (strlen(text.keyword) >= 80) {
+	if (NULL == memchr(data, '\0', 80)) {
 		warnx("tEXt: Invalid keyword size");
 		return(-1);
 	}
+	text.keyword = (char *)data;
 	text.text = (char *)data + strlen((char *)data) + 1;
 	if ('\n' == text.text[strlen(text.text) - 1]) {
 		text.text[strlen(text.text) - 1] = '\0';
@@ -407,11 +407,11 @@ lgpng_parse_zTXt(struct lgpng *ctx, uint8_t *data, size_t dataz)
 	struct zTXt	**ztxtpp;
 
 	(void)dataz;
-	ztxt.keyword = (char *)data;
-	if (strlen(ztxt.keyword) >= 80) {
+	if (NULL == memchr(data, '\0', 80)) {
 		warnx("zTXt: Invalid keyword size");
 		return(-1);
 	}
+	ztxt.keyword = (char *)data;
 	ztxt.compression = ((char *)data)[strlen((char *)data) + 1];
 	if (COMPRESSION_TYPE_DEFLATE != ztxt.compression) {
 		warnx("zTXt: Invalid compression type -- %hhu",
