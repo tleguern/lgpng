@@ -14,9 +14,13 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+#include "config.h"
+
 #include <arpa/inet.h>
 
-#include <err.h>
+#if HAVE_ERR
+# include <err.h>
+#endif
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
