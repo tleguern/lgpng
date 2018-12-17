@@ -423,16 +423,17 @@ info_tRNS(struct lgpng *lgpng, uint8_t *data, size_t dataz)
 	}
 	switch(lgpng->ihdr->colourtype) {
 	case COLOUR_TYPE_GREYSCALE:
-		printf("tRNS: gray: %u\n", lgpng->trns->gray);
+		printf("tRNS: gray: %u\n", trns->gray);
 		break;
 	case COLOUR_TYPE_TRUECOLOUR:
-		printf("tRNS: red: %u\n", lgpng->trns->red);
-		printf("tRNS: green: %u\n", lgpng->trns->green);
-		printf("tRNS: blue: %u\n", lgpng->trns->blue);
+		printf("tRNS: red: %u\n", trns->red);
+		printf("tRNS: green: %u\n", trns->green);
+		printf("tRNS: blue: %u\n", trns->blue);
 		break;
 	case COLOUR_TYPE_INDEXED:
 		for (size_t i = 0; i < lgpng->plte->entries; i++) {
-			printf("tRNS: palette index %zu: %u\n", i, lgpng->trns->palette[i]);
+			printf("tRNS: palette index %zu: %u\n",
+			    i, trns->palette[i]);
 		}
 		break;
 	}
