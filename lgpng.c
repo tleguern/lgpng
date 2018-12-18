@@ -42,7 +42,7 @@ const char *compressiontypemap[COMPRESSION_TYPE__MAX] = {
 	"deflate",
 };
 
-const char *filtertypemap[FILTER_TYPE__MAX] = {
+const char *filtermethodmap[FILTER_METHOD__MAX] = {
 	"adaptive",
 };
 

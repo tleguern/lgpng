@@ -85,12 +85,12 @@ enum compressiontype {
 
 extern const char *compressiontypemap[COMPRESSION_TYPE__MAX];
 
-enum filtertype {
-	FILTER_TYPE_ADAPTIVE,
-	FILTER_TYPE__MAX,
+enum filtermethod {
+	FILTER_METHOD_ADAPTIVE,
+	FILTER_METHOD__MAX,
 };
 
-extern const char *filtertypemap[FILTER_TYPE__MAX];
+extern const char *filtermethodmap[FILTER_METHOD__MAX];
 
 enum interlace_method {
 	INTERLACE_METHOD_STANDARD,

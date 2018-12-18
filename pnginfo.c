@@ -378,10 +378,10 @@ info_IHDR(struct lgpng *ctx, uint8_t *data, size_t dataz)
 		printf("IHDR: compression: %s\n",
 		    compressiontypemap[ihdr->compression]);
 	}
-	if (FILTER_TYPE_ADAPTIVE != ihdr->filter) {
-		warnx("IHDR: Invalid filter type %i", ihdr->filter);
+	if (FILTER_METHOD_ADAPTIVE != ihdr->filter) {
+		warnx("IHDR: Invalid filter method %i", ihdr->filter);
 	} else {
-		printf("IHDR: filter: %s\n", filtertypemap[ihdr->filter]);
+		printf("IHDR: filter: %s\n", filtermethodmap[ihdr->filter]);
 	}
 	if (INTERLACE_METHOD_STANDARD != ihdr->interlace
 	    && INTERLACE_METHOD_ADAM7 != ihdr->interlace) {
