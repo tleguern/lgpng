@@ -310,18 +310,6 @@ read_next_chunk_len(FILE *f)
 	return((int32_t)len);
 }
 
-bool
-is_png(FILE *f)
-{
-	char sig[8] = {  0,  0,  0,  0,  0,  0,  0,  0};
-	char png[8] = {137, 80, 78, 71, 13, 10, 26, 10};
-
-	fread(sig, 1, sizeof(sig), f);
-	if (memcmp(sig, png, sizeof(sig)) == 0)
-		return(true);
-	return(false);
-}
-
 int
 info_IHDR(struct lgpng *ctx, uint8_t *data, size_t dataz)
 {
@@ -739,14 +727,6 @@ info_tIME(struct lgpng *lgpng, uint8_t *data, size_t dataz)
 	    time->year, time->month, time->day,
 	    time->hour, time->minute, time->second);
 	return(0);
-}
-
-bool
-is_chunk_public(const char *type)
-{
-	if (islower(type[1]))
-		return(false);
-	return(true);
 }
 
 void

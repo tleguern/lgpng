@@ -21,6 +21,7 @@
 #if HAVE_ERR
 # include <err.h>
 #endif
+#include <ctype.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -111,6 +112,26 @@ lgpng_free(struct lgpng *lgpng)
 	free(lgpng->ztxt);
 	lgpng->ztxt = NULL;
 	free(lgpng);
+}
+
+bool
+is_png(FILE *f)
+{
+	char sig[8] = {  0,  0,  0,  0,  0,  0,  0,  0};
+	char png[8] = {137, 80, 78, 71, 13, 10, 26, 10};
+
+	fread(sig, 1, sizeof(sig), f);
+	if (memcmp(sig, png, sizeof(sig)) == 0)
+		return(true);
+	return(false);
+}
+
+bool
+is_chunk_public(const char *type)
+{
+	if (islower(type[1]))
+		return(false);
+	return(true);
 }
 
 int
