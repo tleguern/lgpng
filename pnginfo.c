@@ -568,7 +568,7 @@ info_zTXt(struct lgpng *lgpng, uint8_t *data, size_t dataz)
 	retry = 2;
 	do {
 		outztmp = ztxtz * retry;
-		outtmp = realloc(out, outztmp);
+		outtmp = realloc(out, outztmp + 1);
 		if (NULL == outtmp) {
 			free(out);
 			out = NULL;
@@ -589,6 +589,7 @@ info_zTXt(struct lgpng *lgpng, uint8_t *data, size_t dataz)
 			outz = 0;
 			return(-1);
 		}
+		out[outz] = '\0';
 		retry += 1;
 	} while (Z_OK != zret);
 	printf("zTXt: keyword: %s\n", ztxt->keyword);
