@@ -1,0 +1,10 @@
+image: freebsd
+sources:
+  - https://github.com/Aversiste/pnginfo.git
+tasks:
+  - setup: |
+      cd pnginfo
+      ./configure
+  - build: |
+      cd pnginfo
+      make

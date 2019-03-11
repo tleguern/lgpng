@@ -1,0 +1,13 @@
+image: debian/stable
+packages:
+  - gcc
+  - zlib1g-dev
+sources:
+  - https://github.com/Aversiste/pnginfo.git
+tasks:
+  - setup: |
+      cd pnginfo
+      ./configure
+  - build: |
+      cd pnginfo
+      make
