@@ -443,9 +443,9 @@ lgpng_parse_zTXt(struct lgpng *ctx, uint8_t *data, size_t dataz)
 		    ztxt.compression);
 		return(-1);
 	}
-	ztxt.text = (char *)data + strlen((char *)data) + 2;
-	if ('\n' == ztxt.text[strlen(ztxt.text) - 1]) {
-		ztxt.text[strlen(ztxt.text) - 1] = '\0';
+	ztxt.text = data + strlen((char *)data) + 2;
+	if ('\n' == ztxt.text[strlen((char *)ztxt.text) - 1]) {
+		ztxt.text[strlen((char *)ztxt.text) - 1] = '\0';
 	}
 	ztxtpp = reallocarray(ctx->ztxt, ctx->ztxtz + 1, sizeof(struct zTXt *));
 	if (NULL == ztxtpp) {

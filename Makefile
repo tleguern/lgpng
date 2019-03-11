@@ -5,7 +5,7 @@ OBJS= ${SRCS:.c=.o}
 
 LDADD+= -lz
 LDFLAGS+=
-CFLAGS+= -std=c99
+CFLAGS+= -std=c99 -Wpointer-sign
 
 .SUFFIXES: .c .o
 .PHONY: clean

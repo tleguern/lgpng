@@ -188,9 +188,9 @@ struct tEXt {
 
 /* zTXt chunk */
 struct zTXt {
-	char	*keyword;
-	uint8_t	compression;
-	char	*text;
+	char		*keyword;
+	uint8_t		 compression;
+	unsigned char	*text;
 };
 
 /* bKGD chunk */
