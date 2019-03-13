@@ -270,6 +270,7 @@ runtest getprogname	GETPROGNAME			  || true
 runtest pledge		PLEDGE				  || true
 runtest program_invocation_short_name	PROGRAM_INVOCATION_SHORT_NAME || true
 runtest reallocarray	REALLOCARRAY			  || true
+runtest strndup		STRNDUP				  || true
 runtest __progname	__PROGNAME			  || true
 
 #----------------------------------------------------------------------
@@ -304,7 +305,8 @@ __HEREDOC__
 
 # For the function declaration variables...
 
-[ ${HAVE_REALLOCARRAY} -eq 0 ] \
+[ ${HAVE_REALLOCARRAY} -eq 0 -o \
+  ${HAVE_STRNDUP} -eq 0 ] \
 	&& echo "#include <sys/types.h>"
 
 [ ${HAVE_ERR} -eq 0 ] \
@@ -319,6 +321,7 @@ cat << __HEREDOC__
 #define HAVE_PLEDGE ${HAVE_PLEDGE}
 #define HAVE_PROGRAM_INVOCATION_SHORT_NAME ${HAVE_PROGRAM_INVOCATION_SHORT_NAME}
 #define HAVE_REALLOCARRAY ${HAVE_REALLOCARRAY}
+#define HAVE_STRNDUP ${HAVE_STRNDUP}
 #define HAVE___PROGNAME ${HAVE___PROGNAME}
 __HEREDOC__
 
@@ -339,6 +342,10 @@ fi
 
 if [ ${HAVE_REALLOCARRAY} -eq 0 ]; then
 	echo "extern void *reallocarray(void *, size_t, size_t);"
+fi
+
+if [ ${HAVE_STRNDUP} -eq 0 ]; then
+	echo "extern char *strndup(const char *, size_t);"
 fi
 
 echo "config.h: written" 1>&2
