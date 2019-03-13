@@ -136,6 +136,7 @@ HAVE_GETPROGNAME=
 HAVE_PLEDGE=
 HAVE_PROGRAM_INVOCATION_SHORT_NAME=
 HAVE_REALLOCARRAY=
+HAVE_STRTONUM=
 HAVE___PROGNAME=
 
 #----------------------------------------------------------------------
@@ -271,6 +272,7 @@ runtest pledge		PLEDGE				  || true
 runtest program_invocation_short_name	PROGRAM_INVOCATION_SHORT_NAME || true
 runtest reallocarray	REALLOCARRAY			  || true
 runtest strndup		STRNDUP				  || true
+runtest strtonum	STRTONUM			  || true
 runtest __progname	__PROGNAME			  || true
 
 #----------------------------------------------------------------------
@@ -322,6 +324,7 @@ cat << __HEREDOC__
 #define HAVE_PROGRAM_INVOCATION_SHORT_NAME ${HAVE_PROGRAM_INVOCATION_SHORT_NAME}
 #define HAVE_REALLOCARRAY ${HAVE_REALLOCARRAY}
 #define HAVE_STRNDUP ${HAVE_STRNDUP}
+#define HAVE_STRTONUM ${HAVE_STRTONUM}
 #define HAVE___PROGNAME ${HAVE___PROGNAME}
 __HEREDOC__
 
@@ -346,6 +349,10 @@ fi
 
 if [ ${HAVE_STRNDUP} -eq 0 ]; then
 	echo "extern char *strndup(const char *, size_t);"
+fi
+
+if [ ${HAVE_STRTONUM} -eq 0 ]; then
+	echo "extern long long strtonum(const char *, long long, long long, const char **);"
 fi
 
 echo "config.h: written" 1>&2
