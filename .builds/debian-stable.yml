@@ -3,7 +3,7 @@ packages:
   - gcc
   - zlib1g-dev
 sources:
-  - https://github.com/Aversiste/pnginfo.git
+  - https://github.com/Aversiste/pnginfo
 tasks:
   - setup: |
       cd pnginfo
