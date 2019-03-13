@@ -135,6 +135,7 @@ HAVE_ERR=
 HAVE_GETPROGNAME=
 HAVE_PLEDGE=
 HAVE_PROGRAM_INVOCATION_SHORT_NAME=
+HAVE_REALLOCARRAY=
 HAVE___PROGNAME=
 
 #----------------------------------------------------------------------
@@ -268,6 +269,7 @@ runtest err		ERR				  || true
 runtest getprogname	GETPROGNAME			  || true
 runtest pledge		PLEDGE				  || true
 runtest program_invocation_short_name	PROGRAM_INVOCATION_SHORT_NAME || true
+runtest reallocarray	REALLOCARRAY			  || true
 runtest __progname	__PROGNAME			  || true
 
 #----------------------------------------------------------------------
@@ -302,6 +304,9 @@ __HEREDOC__
 
 # For the function declaration variables...
 
+[ ${HAVE_REALLOCARRAY} -eq 0 ] \
+	&& echo "#include <sys/types.h>"
+
 [ ${HAVE_ERR} -eq 0 ] \
 	&& echo "#include <stdarg.h>"
 
@@ -313,6 +318,7 @@ cat << __HEREDOC__
 #define HAVE_GETPROGNAME ${HAVE_GETPROGNAME}
 #define HAVE_PLEDGE ${HAVE_PLEDGE}
 #define HAVE_PROGRAM_INVOCATION_SHORT_NAME ${HAVE_PROGRAM_INVOCATION_SHORT_NAME}
+#define HAVE_REALLOCARRAY ${HAVE_REALLOCARRAY}
 #define HAVE___PROGNAME ${HAVE___PROGNAME}
 __HEREDOC__
 
@@ -329,6 +335,10 @@ fi
 
 if [ ${HAVE_GETPROGNAME} -eq 0 ]; then
 	echo "extern const char *getprogname(void);"
+fi
+
+if [ ${HAVE_REALLOCARRAY} -eq 0 ]; then
+	echo "extern void *reallocarray(void *, size_t, size_t);"
 fi
 
 echo "config.h: written" 1>&2
