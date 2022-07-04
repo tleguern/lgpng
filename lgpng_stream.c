@@ -38,8 +38,6 @@ lgpng_is_stream_png(FILE *src)
 int
 lgpng_get_next_chunk_from_stream(FILE *src, struct unknown_chunk *dst, uint8_t **data)
 {
-	size_t	i;
-
 	/* Read the first four bytes to gather the length of the data part */
 	if (1 != fread(&(dst->length), 4, 1, src)) {
 		fprintf(stderr, "Not enough data to read chunk's length\n");
@@ -56,7 +54,7 @@ lgpng_get_next_chunk_from_stream(FILE *src, struct unknown_chunk *dst, uint8_t *
 		return(-1);
 	}
 	dst->type[4] = '\0';
-	for (i = 0; i < 4; i++) {
+	for (size_t i = 0; i < 4; i++) {
 		if (isalpha(dst->type[i]) == 0) {
 			fprintf(stderr, "Invalid chunk type\n");
 			return(-1);
