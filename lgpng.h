@@ -14,6 +14,7 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 
@@ -350,6 +351,7 @@ int		lgpng_create_sPLT_from_data(struct sPLT *, uint8_t *, size_t);
 int		lgpng_create_tIME_from_data(struct tIME *, uint8_t *, size_t);
 
 /* stream */
+bool	lgpng_is_stream_png(FILE *);
 int	lgpng_get_next_chunk_from_stream(FILE *, struct unknown_chunk *, uint8_t **);
 
 /* helper macro */

@@ -35,18 +35,6 @@ print_position(FILE *file)
 	fprintf(stderr, "Position is %lld\n", pos);
 }
 
-bool
-is_png(FILE *f)
-{
-	char sig[8] = {  0,  0,  0,  0,  0,  0,  0,  0};
-	char png[8] = {137, 80, 78, 71, 13, 10, 26, 10};
-
-	fread(sig, 1, sizeof(sig), f);
-	if (memcmp(sig, png, sizeof(sig)) == 0)
-		return(true);
-	return(false);
-}
-
 int
 main(int argc, char *argv[])
 {
@@ -101,7 +89,7 @@ main(int argc, char *argv[])
 	/* Read the file byte by byte until the PNG signature is found */
 	offset = 0;
 	if (false == sflag) {
-		if (false == is_png(source)) {
+		if (false == lgpng_is_stream_png(source)) {
 			errx(EXIT_FAILURE, "not a PNG file");
 		}
 	} else {
@@ -113,7 +101,7 @@ main(int argc, char *argv[])
 				errx(EXIT_FAILURE, "not a PNG file");
 			}
 			offset += 1;
-		} while (false == is_png(source));
+		} while (false == lgpng_is_stream_png(source));
 	}
 
 	do {
