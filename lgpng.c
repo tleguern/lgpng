@@ -92,6 +92,45 @@ lgpng_identify_chunk(struct unknown_chunk *chunk)
 }
 
 int
+lgpng_get_next_chunk_from_bytes(uint8_t *src, struct unknown_chunk *dst, uint8_t **data)
+{
+	int offset = 0;
+
+	/* Read the first four bytes to gather the length of the data part */
+	(void)memcpy(&(dst->length), src, 4);
+	dst->length = ntohl(dst->length);
+	if (dst->length > INT32_MAX) {
+		fprintf(stderr, "Chunk length is too big (%d)\n", dst->length);
+		return(-1);
+	}
+	offset += 4;
+	/* Read the chunk type */
+	(void)memcpy(&(dst->type), src + offset, 4);
+	dst->type[4] = '\0';
+	for (size_t i = 0; i < 4; i++) {
+		if (isalpha(dst->type[i]) == 0) {
+			fprintf(stderr, "Invalid chunk type\n");
+			return(-1);
+		}
+	}
+	offset += 4;
+	/* Read the chunk data */
+	if (0 != dst->length) {
+		if (NULL == ((*data) = malloc(dst->length + 1))) {
+			fprintf(stderr, "malloc(dst->length)\n");
+			return(-1);
+		}
+		(void)memcpy(*data, src + offset, dst->length);
+		(*data)[dst->length] = '\0';
+	}
+	offset += dst->length;
+	/* Read the CRC */
+	(void)memcpy(&(dst->crc), src + offset, 4);
+	dst->crc = ntohl(dst->crc);
+	return(0);
+}
+
+int
 lgpng_create_IHDR_from_data(struct IHDR *ihdr, uint8_t *data, size_t dataz)
 {
 	if (13 != dataz) {

@@ -332,6 +332,7 @@ struct tIME {
 
 /* main lib */
 enum chunktype	lgpng_identify_chunk(struct unknown_chunk *);
+int		lgpng_get_next_chunk_from_bytes(uint8_t *, struct unknown_chunk *, uint8_t **);
 int		lgpng_create_IHDR_from_data(struct IHDR *, uint8_t *, size_t);
 int		lgpng_create_PLTE_from_data(struct PLTE *, uint8_t *, size_t);
 /*int		lgpng_create_IDAT_from_data(struct IDAT *, uint8_t *, size_t);*/
