@@ -15,6 +15,7 @@
  */
 
 #include <stdint.h>
+#include <stdio.h>
 
 #ifndef LGPNG_H__
 #define LGPNG_H__
@@ -109,8 +110,250 @@ struct IHDR {
 	} __attribute__((packed)) data;
 };
 
-int	lgpng_parse_IHDR_data(struct IHDR *, uint8_t *);
+/* PLTE chunk */
+struct rgb8 {
+	uint8_t	red;
+	uint8_t	green;
+	uint8_t	blue;
+} __attribute__((packed));
 
-void	lgpng_init_IHDR(struct IHDR *, uint32_t);
+struct PLTE {
+	uint32_t         length;
+	enum chunktype   type;
+	uint32_t         crc;
+	struct {
+		size_t		entries;
+		struct rgb8	entry[256];
+	} __attribute__((packed)) data;
+};
+
+/* tRNS chunk */
+struct tRNS {
+	uint32_t         length;
+	enum chunktype   type;
+	uint32_t         crc;
+	struct {
+		uint16_t	gray;
+		uint16_t	red;
+		uint16_t	green;
+		uint16_t	blue;
+		uint8_t		palette[256];
+	} __attribute__((packed)) data;
+};
+
+/* cHRM chunk */
+struct cHRM {
+	uint32_t         length;
+	enum chunktype   type;
+	uint32_t         crc;
+	struct {
+		uint32_t	whitex;
+		uint32_t	whitey;
+		uint32_t	redx;
+		uint32_t	redy;
+		uint32_t	greenx;
+		uint32_t	greeny;
+		uint32_t	bluex;
+		uint32_t	bluey;
+	} __attribute__((packed)) data;
+};
+
+/* gAMA chunk */
+struct gAMA {
+	uint32_t         length;
+	enum chunktype   type;
+	uint32_t         crc;
+	struct {
+		uint32_t	gamma;
+	} __attribute__((packed)) data;
+};
+
+/* sBIT type */
+enum sBIT_type {
+	sBIT_TYPE_0,
+	sBIT_TYPE_23,
+	sBIT_TYPE_4,
+	sBIT_TYPE_6,
+};
+
+struct sBIT {
+	uint32_t         length;
+	enum chunktype   type;
+	uint32_t         crc;
+	struct {
+		enum sBIT_type	type;
+		uint8_t	sgreyscale;
+		uint8_t	sred;
+		uint8_t	sgreen;
+		uint8_t	sblue;
+		uint8_t	salpha;
+	} __attribute__((packed)) data;
+};
+
+/* sRGB chunk */
+enum rendering_intent {
+	RENDERING_INTENT_PERCEPTUAL,
+	RENDERING_INTENT_RELATIVE,
+	RENDERING_INTENT_SATURATION,
+	RENDERING_INTENT_ABSOLUTE,
+	RENDERING_INTENT__MAX,
+};
+
+extern const char *rendering_intentmap[RENDERING_INTENT__MAX];
+
+struct sRGB {
+	uint32_t         length;
+	enum chunktype   type;
+	uint32_t         crc;
+	struct {
+		uint8_t		intent;
+	} __attribute__((packed)) data;
+};
+
+/* tEXt chunk */
+struct tEXt {
+	uint32_t         length;
+	enum chunktype   type;
+	uint32_t         crc;
+	struct {
+		char	*keyword;
+		char	*text;
+	} __attribute__((packed)) data;
+};
+
+/* zTXt chunk */
+struct zTXt {
+	uint32_t         length;
+	enum chunktype   type;
+	uint32_t         crc;
+	struct {
+		char		*keyword;
+		uint8_t		 compression;
+		unsigned char	*text;
+	} __attribute__((packed)) data;
+};
+
+/* bKGD chunk */
+struct rgb16 {
+	uint16_t	red;
+	uint16_t	green;
+	uint16_t	blue;
+};
+
+struct bKGD {
+	uint32_t         length;
+	enum chunktype   type;
+	uint32_t         crc;
+	struct {
+		uint16_t	greyscale;
+		uint8_t		paletteindex;
+		struct rgb16	rgb;
+	} __attribute__((packed)) data;
+};
+
+/* hIST chunk */
+struct hIST {
+	uint32_t         length;
+	enum chunktype   type;
+	uint32_t         crc;
+	struct {
+		uint16_t	frequency[256];
+	} __attribute__((packed)) data;
+};
+
+/* pHYs chunk */
+enum unitspecifier {
+	UNITSPECIFIER_UNKNOWN,
+	UNITSPECIFIER_METRE,
+	UNITSPECIFIER__MAX,
+};
+
+extern const char *unitspecifiermap[UNITSPECIFIER__MAX];
+
+struct pHYs {
+	uint32_t         length;
+	enum chunktype   type;
+	uint32_t         crc;
+	struct {
+		uint32_t	ppux;
+		uint32_t	ppuy;
+		uint8_t		unitspecifier;
+	} __attribute__((packed)) data;
+};
+
+/* sPLT chunk */
+struct splt_entry {
+	union {
+		uint8_t raw[10];
+		struct {
+			uint16_t red;
+			uint16_t green;
+			uint16_t blue;
+			uint16_t alpha;
+			uint16_t frequency;
+		} depth16;
+		struct {
+			uint8_t red;
+			uint8_t green;
+			uint8_t blue;
+			uint8_t alpha;
+			uint16_t frequency;
+		} depth8;
+	};
+};
+
+struct sPLT {
+	uint32_t         length;
+	enum chunktype   type;
+	uint32_t         crc;
+	struct {
+		char			*palettename;
+		uint8_t			 sampledepth;
+		size_t			 entries;
+		struct splt_entry	*entry;
+	} __attribute__((packed)) data;
+};
+
+/* tIME chunk */
+struct tIME {
+	uint32_t         length;
+	enum chunktype   type;
+	uint32_t         crc;
+	struct {
+		uint16_t	year;
+		uint8_t		month;
+		uint8_t		day;
+		uint8_t		hour;
+		uint8_t		minute;
+		uint8_t		second;
+	} __attribute__((packed)) data;
+};
+
+/* main lib */
+enum chunktype	lgpng_identify_chunk(struct unknown_chunk *);
+int		lgpng_create_IHDR_from_data(struct IHDR *, uint8_t *, size_t);
+int		lgpng_create_PLTE_from_data(struct PLTE *, uint8_t *, size_t);
+/*int		lgpng_create_IDAT_from_data(struct IDAT *, uint8_t *, size_t);*/
+int		lgpng_create_tRNS_from_data(struct tRNS *, uint8_t *, size_t);
+int		lgpng_create_cHRM_from_data(struct cHRM *, uint8_t *, size_t);
+int		lgpng_create_gAMA_from_data(struct gAMA *, uint8_t *, size_t);
+/*int		lgpng_create_iCCP_from_data(struct iCCP *, uint8_t *, size_t);*/
+int		lgpng_create_sBIT_from_data(struct sBIT *, uint8_t *, size_t);
+int		lgpng_create_sRGB_from_data(struct sRGB *, uint8_t *, size_t);
+/*int		lgpng_create_iTXt_from_data(struct iTXt *, uint8_t *, size_t);*/
+int		lgpng_create_tEXt_from_data(struct tEXt *, uint8_t *, size_t);
+int		lgpng_create_zTXt_from_data(struct zTXt *, uint8_t *, size_t);
+int		lgpng_create_bKGD_from_data(struct bKGD *, struct IHDR *, struct PLTE *, uint8_t *, size_t);
+int		lgpng_create_hIST_from_data(struct hIST *, struct PLTE *, uint8_t *, size_t);
+int		lgpng_create_pHYs_from_data(struct pHYs *, uint8_t *, size_t);
+int		lgpng_create_sPLT_from_data(struct sPLT *, uint8_t *, size_t);
+int		lgpng_create_tIME_from_data(struct tIME *, uint8_t *, size_t);
+
+/* stream */
+int	lgpng_get_next_chunk_from_stream(FILE *, struct unknown_chunk *, uint8_t **);
+
+/* helper macro */
+#define MSB16(i) (i & 0xFF00)
+#define LSB16(i) (i & 0x00FF)
 
 #endif

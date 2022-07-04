@@ -1,5 +1,5 @@
 LIB= lgpng
-SRCS= lgpng.c
+SRCS= lgpng.c lgpng_stream.c
 OBJS= ${SRCS:.c=.o}
 
 LDADD+=
@@ -9,9 +9,9 @@ CFLAGS+= -std=c99 -Wpointer-sign
 NOMAN= yes
 
 .SUFFIXES: .c .o
-.PHONY: clean
+.PHONY: clean install
 
-all: lib${LIB}.a helper
+all: lib${LIB}.a pnginfo
 
 .c.o:
 	${CC} ${CFLAGS} -c $<
@@ -20,11 +20,11 @@ lib${LIB}.a: ${OBJS}
 	${AR} cqD lib${LIB}.a ${OBJS}
 	${RANLIB} lib${LIB}.a
 
-helper: helper.c
-	${CC} ${CFLAGS} helper.c -o helper -L . -l${LIB}
+pnginfo: pnginfo.c lib${LIB}.a
+	${CC} ${CFLAGS} pnginfo.c -o pnginfo -L . -l${LIB}
 
 clean:
-	rm -f -- ${OBJS} lib${LIB}.a
+	rm -f -- ${OBJS} lib${LIB}.a pnginfo pnginfo.o
 
 install:
 	mkdir -p ${PREFIX}/lib/
