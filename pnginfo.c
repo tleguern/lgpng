@@ -500,7 +500,6 @@ info_tIME(uint8_t *data, size_t dataz)
 	    time.data.hour, time.data.minute, time.data.second);
 }
 
-
 void
 usage(void)
 {
