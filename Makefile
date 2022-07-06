@@ -1,5 +1,5 @@
 LIB= lgpng
-SRCS= lgpng.c lgpng_stream.c
+SRCS= lgpng.c lgpng_crc.c lgpng_stream.c
 OBJS= ${SRCS:.c=.o}
 
 LDADD+=
