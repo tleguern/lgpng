@@ -1,5 +1,7 @@
 a.out
 *.o
 *.a
-pnginfo
-pngdump
+pnginfo/pnginfo
+pngdump/pngdump
+pngexplode/pngexplode
+pngshuffle/pngshuffle
