@@ -14,6 +14,8 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+#include <arpa/inet.h>
+
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
