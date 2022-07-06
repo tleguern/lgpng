@@ -24,6 +24,8 @@
 
 #include "lgpng.h"
 
+char png_sig[8] = {137, 80, 78, 71, 13, 10, 26, 10};
+
 const char *chunktypemap[CHUNK_TYPE__MAX] = {
 	"IHDR",
 	"PLTE",

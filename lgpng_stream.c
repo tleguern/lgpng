@@ -25,12 +25,11 @@ bool
 lgpng_is_stream_png(FILE *src)
 {
 	char sig[8] = {  0,  0,  0,  0,  0,  0,  0,  0};
-	char png[8] = {137, 80, 78, 71, 13, 10, 26, 10};
 
 	if (sizeof(sig) != fread(sig, 1, sizeof(sig), src)) {
 		return(false);
 	}
-	if (memcmp(sig, png, sizeof(sig)) == 0)
+	if (memcmp(sig, png_sig, sizeof(sig)) == 0)
 		return(true);
 	return(false);
 }

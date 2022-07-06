@@ -21,6 +21,9 @@
 #ifndef LGPNG_H__
 #define LGPNG_H__
 
+/* Global variables */
+extern char	png_sig[8];
+
 /* Generic chunk */
 enum chunktype {
 	CHUNK_TYPE_IHDR,
