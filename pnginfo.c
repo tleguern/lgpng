@@ -32,7 +32,7 @@ void info_PLTE(struct PLTE *);
 void info_tRNS(uint8_t *, size_t);
 void info_cHRM(uint8_t *, size_t);
 void info_gAMA(uint8_t *, size_t);
-void info_sBIT(uint8_t *, size_t);
+void info_sBIT(struct IHDR *, uint8_t *, size_t);
 void info_sRGB(uint8_t *, size_t);
 void info_tEXt(uint8_t *, size_t);
 void info_zTXt(uint8_t *, size_t);
@@ -179,7 +179,7 @@ main(int argc, char *argv[])
 				info_gAMA(data, dataz);
 				break;
 			case CHUNK_TYPE_sBIT:
-				info_sBIT(data, dataz);
+				info_sBIT(&ihdr, data, dataz);
 				break;
 			case CHUNK_TYPE_sRGB:
 				info_sRGB(data, dataz);
@@ -337,16 +337,42 @@ info_gAMA(uint8_t *data, size_t dataz)
 {
 	struct gAMA	gama;
 
-	lgpng_create_gAMA_from_data(&gama, data, dataz);
+	if (-1 == lgpng_create_gAMA_from_data(&gama, data, dataz)) {
+		warnx("Bad gAMA chunk, skipping.");
+		return;
+	}
 	printf("gAMA: image gamma: %u\n", gama.data.gamma);
 }
 
 void
-info_sBIT(uint8_t *data, size_t dataz)
+info_sBIT(struct IHDR *ihdr, uint8_t *data, size_t dataz)
 {
 	struct sBIT sbit;
 
-	lgpng_create_sBIT_from_data(&sbit, data, dataz);
+	if (-1 == lgpng_create_sBIT_from_data(&sbit, ihdr, data, dataz)) {
+		warnx("Bad sBIT chunk, skipping.");
+		return;
+	}
+	if (COLOUR_TYPE_GREYSCALE == ihdr->data.colourtype
+	    || COLOUR_TYPE_GREYSCALE_ALPHA == ihdr->data.colourtype) {
+		printf("sBIT: significant greyscale bits: %i\n",
+		    sbit.data.sgreyscale);
+	} else if (COLOUR_TYPE_TRUECOLOUR == ihdr->data.colourtype
+	    || COLOUR_TYPE_INDEXED == ihdr->data.colourtype
+	    || COLOUR_TYPE_TRUECOLOUR_ALPHA == ihdr->data.colourtype) {
+		printf("sBIT: significant red bits: %i\n",
+		    sbit.data.sred);
+		printf("sBIT: significant green bits: %i\n",
+		    sbit.data.sgreen);
+		printf("sBIT: significant blue bits: %i\n",
+		    sbit.data.sblue);
+
+	}
+	if (COLOUR_TYPE_GREYSCALE_ALPHA == ihdr->data.colourtype
+	    || COLOUR_TYPE_TRUECOLOUR_ALPHA == ihdr->data.colourtype) {
+		printf("sBIT: significant alpha bits: %i\n",
+		    sbit.data.salpha);
+	}
 }
 
 void

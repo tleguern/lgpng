@@ -172,20 +172,12 @@ struct gAMA {
 	} __attribute__((packed)) data;
 };
 
-/* sBIT type */
-enum sBIT_type {
-	sBIT_TYPE_0,
-	sBIT_TYPE_23,
-	sBIT_TYPE_4,
-	sBIT_TYPE_6,
-};
-
+/* sBIT chunk */
 struct sBIT {
 	uint32_t         length;
 	enum chunktype   type;
 	uint32_t         crc;
 	struct {
-		enum sBIT_type	type;
 		uint8_t	sgreyscale;
 		uint8_t	sred;
 		uint8_t	sgreen;
@@ -343,7 +335,7 @@ int		lgpng_create_tRNS_from_data(struct tRNS *, uint8_t *, size_t);
 int		lgpng_create_cHRM_from_data(struct cHRM *, uint8_t *, size_t);
 int		lgpng_create_gAMA_from_data(struct gAMA *, uint8_t *, size_t);
 /*int		lgpng_create_iCCP_from_data(struct iCCP *, uint8_t *, size_t);*/
-int		lgpng_create_sBIT_from_data(struct sBIT *, uint8_t *, size_t);
+int		lgpng_create_sBIT_from_data(struct sBIT *, struct IHDR *, uint8_t *, size_t);
 int		lgpng_create_sRGB_from_data(struct sRGB *, uint8_t *, size_t);
 /*int		lgpng_create_iTXt_from_data(struct iTXt *, uint8_t *, size_t);*/
 int		lgpng_create_tEXt_from_data(struct tEXt *, uint8_t *, size_t);

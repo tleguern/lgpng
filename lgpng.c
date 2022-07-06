@@ -182,11 +182,104 @@ lgpng_create_tRNS_from_data(struct tRNS *trns, uint8_t *data, size_t dataz)
 }
 
 int
-lgpng_create_sBIT_from_data(struct sBIT *sbit, uint8_t *data, size_t dataz)
+lgpng_create_sBIT_from_data(struct sBIT *sbit, struct IHDR *ihdr, uint8_t *data, size_t dataz)
 {
+	if (NULL == ihdr) {
+		return(-1);
+	}
 	sbit->length = dataz;
 	sbit->type = CHUNK_TYPE_sBIT;
-	fprintf(stderr, "[sBIT: Needs IHDR]\n");
+	sbit->data.sgreyscale = -1;
+	sbit->data.sred = -1;
+	sbit->data.sgreen = -1;
+	sbit->data.sblue = -1;
+	sbit->data.salpha = -1;
+	/* Reject invalid data size */
+	switch(ihdr->data.colourtype) {
+	case COLOUR_TYPE_GREYSCALE:
+		if (1 != dataz) {
+			return(-1);
+		}
+		break;
+	case COLOUR_TYPE_TRUECOLOUR:
+		/* FALLTHROUGH */
+	case COLOUR_TYPE_INDEXED:
+		if (3 != dataz) {
+			return(-1);
+		}
+		break;
+	case COLOUR_TYPE_GREYSCALE_ALPHA:
+		if (2 != dataz) {
+			return(-1);
+		}
+		break;
+	case COLOUR_TYPE_TRUECOLOUR_ALPHA:
+		if (4 != dataz) {
+			return(-1);
+		}
+		break;
+	default:
+		break;
+	}
+	/* Unpack data according to IHDR */
+	if (COLOUR_TYPE_GREYSCALE == ihdr->data.colourtype
+	    || COLOUR_TYPE_GREYSCALE_ALPHA == ihdr->data.colourtype) {
+		sbit->data.sgreyscale = (uint8_t)data[0];
+	} else if (COLOUR_TYPE_TRUECOLOUR == ihdr->data.colourtype
+	    || COLOUR_TYPE_INDEXED == ihdr->data.colourtype
+	    || COLOUR_TYPE_TRUECOLOUR_ALPHA == ihdr->data.colourtype) {
+		sbit->data.sred = (uint8_t)data[0];
+		sbit->data.sgreen = (uint8_t)data[1];
+		sbit->data.sblue = (uint8_t)data[2];
+	}
+	if (COLOUR_TYPE_GREYSCALE_ALPHA == ihdr->data.colourtype) {
+		sbit->data.salpha = (uint8_t)data[1];
+	} else if (COLOUR_TYPE_TRUECOLOUR_ALPHA == ihdr->data.colourtype) {
+		sbit->data.salpha = (uint8_t)data[3];
+	}
+	/* Reject invalid values */
+	if (COLOUR_TYPE_GREYSCALE == ihdr->data.colourtype
+	    || COLOUR_TYPE_GREYSCALE_ALPHA == ihdr->data.colourtype) {
+		if (sbit->data.sgreyscale <= 0) {
+			return(-1);
+		}
+		if (sbit->data.sgreyscale > ihdr->data.bitdepth) {
+			return(-1);
+		}
+	}
+	if (COLOUR_TYPE_GREYSCALE_ALPHA == ihdr->data.colourtype
+	    || COLOUR_TYPE_TRUECOLOUR_ALPHA == ihdr->data.colourtype) {
+		if (sbit->data.salpha <= 0) {
+			return(-1);
+		}
+		if (sbit->data.salpha > ihdr->data.bitdepth) {
+			return(-1);
+		}
+	}
+	if (COLOUR_TYPE_TRUECOLOUR == ihdr->data.colourtype
+	    || COLOUR_TYPE_TRUECOLOUR_ALPHA == ihdr->data.colourtype) {
+		if (sbit->data.sred <= 0 || sbit->data.sgreen <= 0
+		    || sbit->data.sblue <= 0) {
+			return(-1);
+		}
+		if (sbit->data.sred > ihdr->data.bitdepth
+		    || sbit->data.sgreen > ihdr->data.bitdepth
+		    || sbit->data.sblue > ihdr->data.bitdepth) {
+			return(-1);
+		}
+	}
+	/* Palette based image are restricted to 8-bits */
+	if (COLOUR_TYPE_INDEXED == ihdr->data.colourtype) {
+		if (sbit->data.sred <= 0 || sbit->data.sgreen <= 0
+		    || sbit->data.sblue <= 0) {
+			return(-1);
+		}
+		if (sbit->data.sred > 8
+		    || sbit->data.sgreen > 8
+		    || sbit->data.sblue > 8) {
+			return(-1);
+		}
+	}
 	return(0);
 }
 
