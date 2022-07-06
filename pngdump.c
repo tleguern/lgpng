@@ -100,7 +100,8 @@ main(int argc, char *argv[])
 		/* Save the stream position for later */
 		if (0 != fgetpos(source, &initial_pos)) {
 			warn(NULL);
-			return(-1);
+			loopexit = true;
+			goto stop;
 		}
 		if (-1 == lgpng_get_next_chunk_from_stream(source, &unknown_chunk, &data)) {
 			break;
@@ -109,10 +110,11 @@ main(int argc, char *argv[])
 		if (chunktype == chunk) {
 			size_t full_length = 4 + 4 + unknown_chunk.length + 4;
 
-			/* Rewind the stream at begining of the chunk */
+			/* Rewind the stream at the begining of the chunk */
 			if (0 != fsetpos(source, &initial_pos)) {
 				warn(NULL);
-				return(-1);
+				loopexit = true;
+				goto stop;
 			}
 			if (NULL == (raw_chunk = malloc(full_length))) {
 				fclose(source);
@@ -133,6 +135,7 @@ main(int argc, char *argv[])
 		if (CHUNK_TYPE_IEND == chunktype) {
 			loopexit = true;
 		}
+stop:
 		free(data);
 	} while(! loopexit);
 	fclose(source);
@@ -142,7 +145,7 @@ main(int argc, char *argv[])
 void
 usage(void)
 {
-	fprintf(stderr, "usage: %s [-f file] chunk\n", getprogname());
+	fprintf(stderr, "usage: %s [-s] [-f file] chunk\n", getprogname());
 	exit(EXIT_FAILURE);
 }
 
