@@ -128,12 +128,12 @@ main(int argc, char *argv[])
 		if (-1 == lgpng_get_next_chunk_from_stream(source, &unknown_chunk, &data)) {
 			break;
 		}
-		/* TODO:
-		if (-1 == lgpng_validate_chunk_crc(&unknown_chunk)) {
-			...
-		}
-		 */
 		chunktype = lgpng_identify_chunk(&unknown_chunk);
+		if (false == lgpng_validate_chunk_crc(&unknown_chunk, data)) {
+			warnx("Invalid CRC for chunk %s, skipping",
+			    chunktypemap[chunktype]);
+			goto stop;
+		}
 		if (lflag) {
 			/* Simply list chunks' name */
 			if (CHUNK_TYPE__MAX == chunktype) {
@@ -147,7 +147,11 @@ main(int argc, char *argv[])
 		 * decode other chunks, such as bKGD, sBIT and tRNS.
 		 */
 		if (CHUNK_TYPE_IHDR == chunktype) {
-			lgpng_create_IHDR_from_data(&ihdr, data, unknown_chunk.length);
+			if (-1 == lgpng_create_IHDR_from_data(&ihdr, data, unknown_chunk.length)) {
+				warnx("IHDR: Invalid IHDR chunk");
+				loopexit = true;
+				goto stop;
+			}
 		}
 		/*
 		 * The hIST chunk mirrors the size of the PLTE chunk,
@@ -155,7 +159,9 @@ main(int argc, char *argv[])
 		 */
 		if (CHUNK_TYPE_PLTE == chunktype) {
 			if (-1 == lgpng_create_PLTE_from_data(&plte, data, unknown_chunk.length)) {
+				loopexit = true;
 				warnx("PLTE: Invalid PLTE chunk");
+				goto stop;
 			}
 
 		}
@@ -211,6 +217,7 @@ main(int argc, char *argv[])
 				errx(EXIT_FAILURE, "Unsupported chunk type");
 			}
 		}
+stop:
 		if (CHUNK_TYPE_IEND == chunktype) {
 			loopexit = true;
 		}
@@ -301,7 +308,10 @@ info_tRNS(uint8_t *data, size_t dataz)
 {
 	struct tRNS trns;
 
-	lgpng_create_tRNS_from_data(&trns, data, dataz);
+	if (-1 == lgpng_create_tRNS_from_data(&trns, data, dataz)) {
+		warnx("Bad tRNS chunk, skipping.");
+		return;
+	}
 }
 
 void
@@ -313,7 +323,10 @@ info_cHRM(uint8_t *data, size_t dataz)
 	double		bluex, bluey;
 	struct cHRM	chrm;
 
-	lgpng_create_cHRM_from_data(&chrm, data, dataz);
+	if (-1 == lgpng_create_cHRM_from_data(&chrm, data, dataz)) {
+		warnx("Bad cHRM chunk, skipping.");
+		return;
+	}
 	whitex = (double)chrm.data.whitex / 100000.0;
 	whitey = (double)chrm.data.whitey / 100000.0;
 	redx = (double)chrm.data.redx / 100000.0;
@@ -380,7 +393,10 @@ info_sRGB(uint8_t *data, size_t dataz)
 {
 	struct sRGB srgb;
 
-	lgpng_create_sRGB_from_data(&srgb, data, dataz);
+	if (-1 == lgpng_create_sRGB_from_data(&srgb, data, dataz)) {
+		warnx("Bad sRGB chunk, skipping.");
+		return;
+	}
 	if (srgb.data.intent >= RENDERING_INTENT__MAX) {
 		warnx("sRGB: invalid rendering intent value");
 		return;
@@ -394,7 +410,10 @@ info_tEXt(uint8_t *data, size_t dataz)
 {
 	struct tEXt	text;
 
-	lgpng_create_tEXt_from_data(&text, data, dataz);
+	if (-1 == lgpng_create_tEXt_from_data(&text, data, dataz)) {
+		warnx("Bad sRGB chunk, skipping.");
+		return;
+	}
 
 	/* TODO: Check if keywords are from the registered list or not */
 	printf("tEXt: keyword: %s\n", text.data.keyword);
