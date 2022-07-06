@@ -76,6 +76,9 @@ main(int argc, char *argv[])
 		} while (false == lgpng_is_stream_png(source));
 	}
 
+#if HAVE_ARC4RANDOM
+	srandom(0);
+#endif
 	/* Write the PNG magic bytes */
 	(void)fwrite(png_sig, sizeof(png_sig), 1, stdout);
 	do {
@@ -115,8 +118,13 @@ main(int argc, char *argv[])
 				uint8_t		r, g, b;
 				uint32_t	src, dest;
 
+#if HAVE_ARC4RANDOM
 				src = arc4random_uniform(unknown_chunk.length - 3);
-				dest = arc4random_uniform(unknown_chunk.length- 3);
+				dest = arc4random_uniform(unknown_chunk.length - 3);
+#else
+				src = random() % (unknown_chunk.length - 3);
+				dest = random() % (unknown_chunk.length - 3);
+#endif
 				if (src == dest) {
 					continue;
 				}
