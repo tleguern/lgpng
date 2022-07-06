@@ -1,5 +1,7 @@
+include Makefile.configure
+
 PROG= pngshuffle
-SRCS= ${PROG}.c
+SRCS= ${PROG}.c compats.c
 OBJS= ${SRCS:.c=.o}
 
 LDADD+= -llgpng
