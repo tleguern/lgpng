@@ -350,6 +350,14 @@ int		lgpng_create_tIME_from_data(struct tIME *, uint8_t *, size_t);
 bool	lgpng_is_stream_png(FILE *);
 int	lgpng_get_next_chunk_from_stream(FILE *, struct unknown_chunk *, uint8_t **);
 
+/* crc */
+extern uint32_t	lgpng_crc_table[256];
+uint32_t	lgpng_crc_init(void);
+uint32_t	lgpng_crc_update(uint32_t, uint8_t *, size_t);
+uint32_t	lgpng_crc_finalize(uint32_t);
+uint32_t	lgpng_crc(uint8_t *, size_t);
+bool		lgpng_validate_chunk_crc(struct unknown_chunk *, uint8_t *);
+
 /* helper macro */
 #define MSB16(i) (i & 0xFF00)
 #define LSB16(i) (i & 0x00FF)
