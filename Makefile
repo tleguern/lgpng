@@ -11,7 +11,7 @@ NOMAN= yes
 .SUFFIXES: .c .o
 .PHONY: clean install
 
-all: lib${LIB}.a pnginfo pngdump
+all: lib${LIB}.a pnginfo pngdump pngexplode pngshuffle
 
 .c.o:
 	${CC} ${CFLAGS} -c $<
@@ -20,14 +20,21 @@ lib${LIB}.a: ${OBJS}
 	${AR} cqD lib${LIB}.a ${OBJS}
 	${RANLIB} lib${LIB}.a
 
-pnginfo: pnginfo.c lib${LIB}.a
+pnginfo: lib${LIB}.a pnginfo.c
 	${CC} ${CFLAGS} pnginfo.c -o pnginfo -L . -l${LIB}
 
-pngdump: pngdump.c lib${LIB}.a
+pngdump: lib${LIB}.a pngdump.c
 	${CC} ${CFLAGS} pngdump.c -o pngdump -L . -l${LIB}
 
+pngexplode: lib${LIB}.a pngexplode.c
+	${CC} ${CFLAGS} pngexplode.c -o pngexplode -L . -l${LIB}
+
+pngshuffle: lib${LIB}.a pngshuffle.c
+	${CC} ${CFLAGS} pngshuffle.c -o pngshuffle -L . -l${LIB}
+
+
 clean:
-	rm -f -- ${OBJS} lib${LIB}.a pnginfo pnginfo.o pngdump pngdump.o
+	rm -f -- ${OBJS} lib${LIB}.a pnginfo pnginfo.o pngdump pngdump.o pngexplode pngexplode.o pngshuffle pngshuffle.o
 
 install:
 	mkdir -p ${PREFIX}/lib/
