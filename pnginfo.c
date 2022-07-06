@@ -42,15 +42,6 @@ void info_pHYs(uint8_t *, size_t);
 void info_sPLT(uint8_t *, size_t);
 void info_tIME(uint8_t *, size_t);
 
-void
-print_position(FILE *file)
-{
-	fpos_t		 pos = 0;
-
-	(void)fgetpos(file, &pos);
-	fprintf(stderr, "Position is %lld\n", pos);
-}
-
 int
 main(int argc, char *argv[])
 {
