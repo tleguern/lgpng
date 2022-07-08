@@ -173,11 +173,39 @@ lgpng_create_PLTE_from_data(struct PLTE *plte, uint8_t *data, size_t dataz)
 }
 
 int
-lgpng_create_tRNS_from_data(struct tRNS *trns, uint8_t *data, size_t dataz)
+lgpng_create_tRNS_from_data(struct tRNS *trns, struct IHDR *ihdr, uint8_t *data, size_t dataz)
 {
+	if (NULL == ihdr) {
+		return(-1);
+	}
 	trns->length = dataz;
 	trns->type = CHUNK_TYPE_tRNS;
-	fprintf(stderr, "[tRNS: Needs IHDR]\n");
+	trns->data.gray = -1;
+	trns->data.red = -1;
+	trns->data.green = -1;
+	trns->data.blue = -1;
+	trns->data.entries = -1;
+	(void)memset(&(trns->data.palette), 0, sizeof(trns->data.palette));
+	switch (ihdr->data.colourtype) {
+	case COLOUR_TYPE_GREYSCALE:
+		(void)memcpy(&(trns->data.gray), data, 2);
+		trns->data.gray = ntohs(trns->data.gray);
+		break;
+	case COLOUR_TYPE_TRUECOLOUR:
+		(void)memcpy(&(trns->data.red), data, 2);
+		trns->data.red = ntohs(trns->data.red);
+		(void)memcpy(&(trns->data.green), data, 2);
+		trns->data.green = ntohs(trns->data.green);
+		(void)memcpy(&(trns->data.blue), data, 2);
+		trns->data.blue = ntohs(trns->data.blue);
+		break;
+	case COLOUR_TYPE_INDEXED:
+		trns->data.entries = dataz;
+		(void)memcpy(&(trns->data.palette), data, dataz);
+		break;
+	default:
+		return(-1);
+	}
 	return(0);
 }
 

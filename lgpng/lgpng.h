@@ -141,6 +141,7 @@ struct tRNS {
 		uint16_t	red;
 		uint16_t	green;
 		uint16_t	blue;
+		size_t		entries;
 		uint8_t		palette[256];
 	} __attribute__((packed)) data;
 };
@@ -331,7 +332,7 @@ int		lgpng_get_next_chunk_from_bytes(uint8_t *, struct unknown_chunk *, uint8_t 
 int		lgpng_create_IHDR_from_data(struct IHDR *, uint8_t *, size_t);
 int		lgpng_create_PLTE_from_data(struct PLTE *, uint8_t *, size_t);
 /*int		lgpng_create_IDAT_from_data(struct IDAT *, uint8_t *, size_t);*/
-int		lgpng_create_tRNS_from_data(struct tRNS *, uint8_t *, size_t);
+int		lgpng_create_tRNS_from_data(struct tRNS *, struct IHDR *, uint8_t *, size_t);
 int		lgpng_create_cHRM_from_data(struct cHRM *, uint8_t *, size_t);
 int		lgpng_create_gAMA_from_data(struct gAMA *, uint8_t *, size_t);
 /*int		lgpng_create_iCCP_from_data(struct iCCP *, uint8_t *, size_t);*/
