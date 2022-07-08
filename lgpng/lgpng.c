@@ -157,12 +157,12 @@ lgpng_create_PLTE_from_data(struct PLTE *plte, uint8_t *data, size_t dataz)
 {
 	size_t		 elemz;
 
-	plte->length = dataz;
-	plte->type = CHUNK_TYPE_PLTE;
 	elemz = dataz / 3;
 	if (0 != dataz % 3 || 256 < elemz) {
 		return(-1);
 	}
+	plte->length = elemz;
+	plte->type = CHUNK_TYPE_PLTE;
 	plte->data.entries = elemz;
 	for (size_t i = 0, j = 0; i < elemz; i++, j += 3) {
 		plte->data.entry[i].red = data[j];
