@@ -1,9 +1,10 @@
+---
 image: debian/stable
 packages:
   - gcc
   - zlib1g-dev
 sources:
-  - https://github.com/Aversiste/pnginfo
+  - https://git.sr.ht/~tleguern/pnginfo
 tasks:
   - setup: |
       cd pnginfo

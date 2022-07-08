@@ -1,5 +1,5 @@
 ---
-image: freebsd/latest
+image: openbsd/latest
 sources:
   - https://git.sr.ht/~tleguern/pnginfo
 tasks:
