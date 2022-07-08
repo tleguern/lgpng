@@ -33,7 +33,7 @@
 void usage(void);
 void info_IHDR(struct IHDR *);
 void info_PLTE(struct PLTE *);
-void info_tRNS(uint8_t *, size_t);
+void info_tRNS(struct IHDR *, struct PLTE *, uint8_t *, size_t);
 void info_cHRM(uint8_t *, size_t);
 void info_gAMA(uint8_t *, size_t);
 void info_sBIT(struct IHDR *, uint8_t *, size_t);
@@ -171,7 +171,7 @@ main(int argc, char *argv[])
 				info_PLTE(&plte);
 				break;
 			case CHUNK_TYPE_tRNS:
-				info_tRNS(data, dataz);
+				info_tRNS(&ihdr, &plte, data, dataz);
 				break;
 			case CHUNK_TYPE_cHRM:
 				info_cHRM(data, dataz);
@@ -299,13 +299,34 @@ info_PLTE(struct PLTE *plte)
 }
 
 void
-info_tRNS(uint8_t *data, size_t dataz)
+info_tRNS(struct IHDR *ihdr, struct PLTE *plte, uint8_t *data, size_t dataz)
 {
 	struct tRNS trns;
 
-	if (-1 == lgpng_create_tRNS_from_data(&trns, data, dataz)) {
+	if (-1 == lgpng_create_tRNS_from_data(&trns, ihdr, data, dataz)) {
 		warnx("Bad tRNS chunk, skipping.");
 		return;
+	}
+	switch (ihdr->data.colourtype) {
+	case COLOUR_TYPE_GREYSCALE:
+		printf("tRNS: gray: %u\n", trns.data.gray);
+		break;
+	case COLOUR_TYPE_TRUECOLOUR:
+		printf("tRNS: red: %u\n", trns.data.red);
+		printf("tRNS: green: %u\n", trns.data.green);
+		printf("tRNS: blue: %u\n", trns.data.blue);
+		break;
+	case COLOUR_TYPE_INDEXED:
+		if (trns.data.entries >= plte->data.entries) {
+			warnx("tRNS should not have more entries than PLTE");
+		}
+		for (size_t i = 0; i < trns.data.entries; i++) {
+			printf("tRNS: palette index %zu: %u\n",
+			    i, trns.data.palette[i]);
+		}
+		break;
+	default:
+		errx(EXIT_FAILURE, "%s: wrong call to info_tRNS", getprogname());
 	}
 }
 
