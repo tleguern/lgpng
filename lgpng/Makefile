@@ -16,6 +16,10 @@ all: lib${LIB}.a
 .c.o:
 	${CC} ${CFLAGS} -c $<
 
+lgpng.c: lgpng.h
+lgpng_crc.c: lgpng.h
+lgpng_stream.c: lgpng.h
+
 lib${LIB}.a: ${OBJS}
 	${AR} cqD lib${LIB}.a ${OBJS}
 	ranlib lib${LIB}.a
