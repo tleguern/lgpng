@@ -327,7 +327,6 @@ struct tIME {
 };
 
 /* main lib */
-enum chunktype	lgpng_identify_chunk(struct unknown_chunk *);
 int		lgpng_get_next_chunk_from_bytes(uint8_t *, struct unknown_chunk *, uint8_t **);
 int		lgpng_create_IHDR_from_data(struct IHDR *, uint8_t *, size_t);
 int		lgpng_create_PLTE_from_data(struct PLTE *, uint8_t *, size_t);
@@ -348,8 +347,11 @@ int		lgpng_create_sPLT_from_data(struct sPLT *, uint8_t *, size_t);
 int		lgpng_create_tIME_from_data(struct tIME *, uint8_t *, size_t);
 
 /* stream */
-bool	lgpng_is_stream_png(FILE *);
-int	lgpng_get_next_chunk_from_stream(FILE *, struct unknown_chunk *, uint8_t **);
+bool	lgpng_stream_is_png(FILE *);
+bool	lgpng_stream_get_length(FILE *, uint32_t *);
+bool	lgpng_stream_get_type(FILE *, int *, uint8_t *);
+bool	lgpng_stream_get_data(FILE *, uint32_t, uint8_t **);
+bool	lgpng_stream_get_crc(FILE *, uint32_t *);
 
 /* crc */
 extern uint32_t	lgpng_crc_table[256];
@@ -357,7 +359,7 @@ uint32_t	lgpng_crc_init(void);
 uint32_t	lgpng_crc_update(uint32_t, uint8_t *, size_t);
 uint32_t	lgpng_crc_finalize(uint32_t);
 uint32_t	lgpng_crc(uint8_t *, size_t);
-bool		lgpng_validate_chunk_crc(struct unknown_chunk *, uint8_t *);
+bool		lgpng_chunk_crc(uint32_t, uint8_t [4], uint8_t *, uint32_t *);
 
 /* helper macro */
 #define MSB16(i) (i & 0xFF00)

@@ -97,16 +97,14 @@ lgpng_crc(uint8_t *data, size_t dataz)
 }
 
 bool
-lgpng_validate_chunk_crc(struct unknown_chunk *uchunk, uint8_t *data)
+lgpng_chunk_crc(uint32_t length, uint8_t type[4], uint8_t *data, uint32_t *crc)
 {
-	uint32_t	crc;
-
-	crc = lgpng_crc_init();
-	crc = lgpng_crc_update(crc, (uint8_t *)(uchunk->type), 4);
-	if (0 != uchunk->length) {
-		crc = lgpng_crc_update(crc, data, uchunk->length);
+	(*crc) = lgpng_crc_init();
+	(*crc) = lgpng_crc_update(*crc, (uint8_t *)type, 4);
+	if (0 != length) {
+		(*crc) = lgpng_crc_update(*crc, data, length);
 	}
-	crc = lgpng_crc_finalize(crc);
-	return(crc == uchunk->crc);
+	(*crc) = lgpng_crc_finalize(*crc);
+	return(true);
 }
 

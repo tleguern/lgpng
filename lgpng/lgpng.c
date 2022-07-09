@@ -82,17 +82,6 @@ const char *unitspecifiermap[UNITSPECIFIER__MAX] = {
 	"metre",
 };
 
-enum chunktype
-lgpng_identify_chunk(struct unknown_chunk *chunk)
-{
-	for (int i = 0; i < CHUNK_TYPE__MAX; i++) {
-		if (strncmp(chunk->type, chunktypemap[i], 4) == 0) {
-			return(i);
-		}
-	}
-	return(CHUNK_TYPE__MAX);
-}
-
 int
 lgpng_get_next_chunk_from_bytes(uint8_t *src, struct unknown_chunk *dst, uint8_t **data)
 {

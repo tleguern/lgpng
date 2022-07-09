@@ -24,7 +24,7 @@
 #include "lgpng.h"
 
 bool
-lgpng_is_stream_png(FILE *src)
+lgpng_stream_is_png(FILE *src)
 {
 	char sig[8] = {  0,  0,  0,  0,  0,  0,  0,  0};
 
@@ -36,53 +36,70 @@ lgpng_is_stream_png(FILE *src)
 	return(false);
 }
 
-int
-lgpng_get_next_chunk_from_stream(FILE *src, struct unknown_chunk *dst, uint8_t **data)
+bool
+lgpng_stream_get_length(FILE *src, uint32_t *length)
 {
 	/* Read the first four bytes to gather the length of the data part */
-	if (1 != fread(&(dst->length), 4, 1, src)) {
+	if (1 != fread(length, 4, 1, src)) {
 		fprintf(stderr, "Not enough data to read chunk's length\n");
-		return(-1);
+		return(false);
 	}
-	dst->length = ntohl(dst->length);
-	if (dst->length > INT32_MAX) {
-		fprintf(stderr, "Chunk length is too big (%d)\n", dst->length);
-		return(-1);
+	*length = ntohl(*length);
+	if (*length > INT32_MAX) {
+		fprintf(stderr, "Chunk length is too big (%d)\n", *length);
+		return(false);
 	}
-	/* Read the chunk type */
-	if (4 != fread(&(dst->type), 1, 4, src)) {
+	return(true);
+}
+
+bool
+lgpng_stream_get_type(FILE *src, int *type, uint8_t *name)
+{
+	uint8_t	str_type[4];
+
+	if (4 != fread(str_type, 1, 4, src)) {
 		fprintf(stderr, "Not enough data to read chunk's type\n");
-		return(-1);
+		return(false);
 	}
-	dst->type[4] = '\0';
 	for (size_t i = 0; i < 4; i++) {
-		if (isalpha(dst->type[i]) == 0) {
+		if (isalpha(str_type[i]) == 0) {
 			fprintf(stderr, "Invalid chunk type\n");
-			return(-1);
+			return(false);
 		}
 	}
-	/* Read the chunk data */
-	if (0 != dst->length) {
-		if (NULL == ((*data) = malloc(dst->length + 1))) {
-			fprintf(stderr, "malloc(dst->length)\n");
-			return(-1);
+	for (size_t i = 0; i < 4; i++) {
+		name[i] = str_type[i];
+	}
+	for (int i = 0; i < CHUNK_TYPE__MAX; i++) {
+		if (strncmp((char *)str_type, chunktypemap[i], 4) == 0) {
+			(*type) = i;
+			break;
 		}
-		if (dst->length != fread((*data), 1, dst->length, src)) {
+	}
+	return(true);
+}
+
+bool
+lgpng_stream_get_data(FILE *src, uint32_t length, uint8_t **data)
+{
+	if (0 != length) {
+		if (length != fread(*data, 1, length, src)) {
 			fprintf(stderr, "Not enough data to read chunk's data\n");
-			free(*data);
-			(*data) = NULL;
-			return(-1);
+			return(false);
 		}
-		(*data)[dst->length] = '\0';
+		(*data)[length] = '\0';
 	}
-	/* Read the CRC */
-	if (1 != fread(&(dst->crc), 4, 1, src)) {
+	return(true);
+}
+
+bool
+lgpng_stream_get_crc(FILE *src, uint32_t *crc)
+{
+	if (1 != fread(crc, 4, 1, src)) {
 		fprintf(stderr, "Not enough data to read chunk's CRC\n");
-		free(*data);
-		(*data) = NULL;
-		return(-1);
+		return(false);
 	}
-	dst->crc = ntohl(dst->crc);
-	return(0);
+	*crc = ntohl(*crc);
+	return(true);
 }
 
