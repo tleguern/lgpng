@@ -61,7 +61,7 @@ main(int argc, char *argv[])
 	/* Read the file byte by byte until the PNG signature is found */
 	offset = 0;
 	if (false == sflag) {
-		if (false == lgpng_is_stream_png(source)) {
+		if (false == lgpng_stream_is_png(source)) {
 			errx(EXIT_FAILURE, "not a PNG file");
 		}
 	} else {
@@ -73,7 +73,7 @@ main(int argc, char *argv[])
 				errx(EXIT_FAILURE, "not a PNG file");
 			}
 			offset += 1;
-		} while (false == lgpng_is_stream_png(source));
+		} while (false == lgpng_stream_is_png(source));
 	}
 
 #if HAVE_ARC4RANDOM
@@ -82,48 +82,50 @@ main(int argc, char *argv[])
 	/* Write the PNG magic bytes */
 	(void)fwrite(png_sig, sizeof(png_sig), 1, stdout);
 	do {
-		enum chunktype		 chunktype = CHUNK_TYPE__MAX;
-		fpos_t			 initial_pos;
-		size_t			 full_length;
-		struct unknown_chunk	 unknown_chunk;
-		struct PLTE		 plte;
-		uint8_t			*data = NULL;
-		uint8_t			*raw_chunk = NULL;
+		int		 chunktype = CHUNK_TYPE__MAX;
+		uint32_t	 length = 0, crc = 0;
+		uint8_t		*data = NULL;
+		uint8_t		 str_type[5] = {0, 0, 0, 0, 0};
+		struct PLTE	 plte;
 
-		/* Save the stream position for later */
-		if (0 != fgetpos(source, &initial_pos)) {
-			warn(NULL);
-			loopexit = true;
+		if (false == lgpng_stream_get_length(source, &length)) {
+			break;
+		}
+		if (false == lgpng_stream_get_type(source, &chunktype,
+		    (uint8_t *)str_type)) {
+			break;
+		}
+		if (NULL == (data = malloc(length + 1))) {
+			fprintf(stderr, "malloc(length + 1)\n");
+			break;
+		}
+		if (false == lgpng_stream_get_data(source, length, &data)) {
 			goto stop;
 		}
-		if (-1 == lgpng_get_next_chunk_from_stream(source, &unknown_chunk, &data)) {
-			warnx("Can't get next chunk from stream");
-			loopexit = true;
+		if (false == lgpng_stream_get_crc(source, &crc)) {
 			goto stop;
 		}
-		full_length = 4 + 4 + unknown_chunk.length + 4;
-		chunktype = lgpng_identify_chunk(&unknown_chunk);
 
 		if (CHUNK_TYPE_PLTE == chunktype) {
 			int		permutations;
-			uint32_t	length, crc;
+			uint32_t	nlength, newcrc;
 
-			if (-1 == lgpng_create_PLTE_from_data(&plte, data, unknown_chunk.length)) {
+			if (-1 == lgpng_create_PLTE_from_data(&plte, data, length)) {
 				warnx("PLTE: Invalid PLTE chunk");
 				loopexit = true;
 				goto stop;
 			}
-			permutations = unknown_chunk.length / 2;
+			permutations = length / 2;
 			for (int i = 0; i < permutations; i++) {
 				uint8_t		r, g, b;
 				uint32_t	src, dest;
 
 #if HAVE_ARC4RANDOM
-				src = arc4random_uniform(unknown_chunk.length - 3);
-				dest = arc4random_uniform(unknown_chunk.length - 3);
+				src = arc4random_uniform(length - 3);
+				dest = arc4random_uniform(length - 3);
 #else
-				src = random() % (unknown_chunk.length - 3);
-				dest = random() % (unknown_chunk.length - 3);
+				src = random() % (length - 3);
+				dest = random() % (length - 3);
 #endif
 				if (src == dest) {
 					continue;
@@ -138,43 +140,26 @@ main(int argc, char *argv[])
 				data[src] = g;
 				data[src] = b;
 			}
-			crc = lgpng_crc_init();
-			crc = lgpng_crc_update(crc, (uint8_t *)"PLTE", 4);
-			crc = lgpng_crc_update(crc, data, unknown_chunk.length);
-			crc = lgpng_crc_finalize(crc);
-			crc = htonl(crc);
-			length = htonl(unknown_chunk.length);
-			(void)fwrite((uint8_t *)&length, 4, 1, stdout);
-			(void)fwrite("PLTE", 4, 1, stdout);
-			(void)fwrite(data, unknown_chunk.length, 1, stdout);
-			(void)fwrite((uint8_t *)&crc, 4, 1, stdout);
+			lgpng_chunk_crc(length, (uint8_t *)"PLTE", data, &newcrc);
+			newcrc = htonl(newcrc);
+			nlength = htonl(length);
+			(void)fwrite((uint8_t *)&nlength, 1, 4, stdout);
+			(void)fwrite("PLTE", 1, 4, stdout);
+			(void)fwrite(data, 1, length, stdout);
+			(void)fwrite((uint8_t *)&newcrc, 1, 4, stdout);
 		} else {
-			/* Rewind the stream at the begining of the chunk */
-			if (0 != fsetpos(source, &initial_pos)) {
-				warn(NULL);
-				loopexit = true;
-				goto stop;
-			}
-			if (NULL == (raw_chunk = malloc(full_length))) {
-				warn("malloc(%zu)", full_length);
-				loopexit = true;
-				goto stop;
-			}
-			/* Read the raw chunk */
-			if (full_length != fread(raw_chunk, 1, full_length, source)) {
-				warn("Truncated chunk?");
-				loopexit = true;
-				goto stop;
-			}
-			/* Write the raw chunk in an individual file */
-			(void)fwrite(raw_chunk, full_length, 1, stdout);
+			uint32_t	ncrc = htonl(crc);
+			uint32_t	nlength = htonl(length);
+
+			(void)fwrite((uint8_t *)&nlength, 1, 4, stdout);
+			(void)fwrite((uint8_t *)str_type, 1, 4, stdout);
+			(void)fwrite(data, 1, length, stdout);
+			(void)fwrite((uint8_t *)&ncrc, 1, 4, stdout);
 		}
 stop:
 		if (CHUNK_TYPE_IEND == chunktype) {
 			loopexit = true;
 		}
-		free(raw_chunk);
-		raw_chunk = NULL;
 		free(data);
 		data = NULL;
 	} while(! loopexit);
