@@ -31,12 +31,12 @@ void usage(void);
 int
 main(int argc, char *argv[])
 {
-	int		 ch;
-	long		 offset;
-	bool		 sflag = false;
-	bool		 loopexit = false;
-	enum chunktype	 chunk = CHUNK_TYPE__MAX;
-	FILE		*source = stdin;
+	int	 ch;
+	long	 offset;
+	bool	 sflag = false;
+	bool	 loopexit = false;
+	int	 chunk = CHUNK_TYPE__MAX;
+	FILE	*source = stdin;
 
 #if HAVE_PLEDGE
 	pledge("stdio rpath", NULL);
@@ -72,12 +72,11 @@ main(int argc, char *argv[])
 	if (CHUNK_TYPE__MAX == chunk) {
 		errx(EXIT_FAILURE, "%s: invalid chunk", argv[0]);
 	}
-	
 
 	/* Read the file byte by byte until the PNG signature is found */
 	offset = 0;
 	if (false == sflag) {
-		if (false == lgpng_is_stream_png(source)) {
+		if (false == lgpng_stream_is_png(source)) {
 			errx(EXIT_FAILURE, "not a PNG file");
 		}
 	} else {
@@ -89,55 +88,55 @@ main(int argc, char *argv[])
 				errx(EXIT_FAILURE, "not a PNG file");
 			}
 			offset += 1;
-		} while (false == lgpng_is_stream_png(source));
+		} while (false == lgpng_stream_is_png(source));
 	}
 
 	do {
-		fpos_t			 initial_pos;
-		enum chunktype		 chunktype;
-		struct unknown_chunk	 unknown_chunk;
-		uint8_t			*data = NULL;
-		uint8_t			*raw_chunk = NULL;
+		int		 chunktype = CHUNK_TYPE__MAX;
+		uint32_t	 length = 0, crc = 0;
+		uint8_t		*data = NULL;
+		uint8_t		 str_type[5] = {0, 0, 0, 0, 0};
 
-		/* Save the stream position for later */
-		if (0 != fgetpos(source, &initial_pos)) {
-			warn(NULL);
-			loopexit = true;
-			goto stop;
-		}
-		if (-1 == lgpng_get_next_chunk_from_stream(source, &unknown_chunk, &data)) {
+		if (false == lgpng_stream_get_length(source, &length)) {
 			break;
 		}
-		chunktype = lgpng_identify_chunk(&unknown_chunk);
-		if (chunktype == chunk) {
-			size_t full_length = 4 + 4 + unknown_chunk.length + 4;
-
-			/* Rewind the stream at the begining of the chunk */
-			if (0 != fsetpos(source, &initial_pos)) {
-				warn(NULL);
-				loopexit = true;
-				goto stop;
-			}
-			if (NULL == (raw_chunk = malloc(full_length))) {
-				fclose(source);
-				free(data);
-				err(EXIT_FAILURE, "malloc(%zu)", full_length);
-			}
-			/* Read the raw chunk */
-			if (full_length != fread(raw_chunk, 1, full_length, source)) {
-				fclose(source);
-				free(data);
-				free(raw_chunk);
-				errx(EXIT_FAILURE, "Truncated chunk?");
-			}
-			(void)fwrite(raw_chunk, full_length, 1, stdout);
-			free(raw_chunk);
-			loopexit = true;
+		if (false == lgpng_stream_get_type(source, &chunktype,
+		    (uint8_t *)str_type)) {
+			break;
 		}
-		if (CHUNK_TYPE_IEND == chunktype) {
+		if (NULL == (data = malloc(length + 1))) {
+			fprintf(stderr, "malloc(length + 1)\n");
+			break;
+		}
+		if (false == lgpng_stream_get_data(source, length, &data)) {
+			goto stop;
+		}
+		if (false == lgpng_stream_get_crc(source, &crc)) {
+			goto stop;
+		}
+		/* Ignore invalid CRC */
+		if (chunktype == chunk) {
+			uint32_t nlength = htonl(length);
+			uint32_t ncrc = htonl(crc);
+
+			if (4 != fwrite((uint8_t *)&nlength, 1, 4, stdout)) {
+				warnx("internal error: length is not four bytes long");
+			}
+			if (4 != fwrite(str_type, 1, 4, stdout)) {
+				warnx("internal error: str_type is not four bytes long");
+			}
+			if (length != fwrite(data, 1, length, stdout)) {
+				warnx("internal error: data is not %u bytes long", length);
+			}
+			if (4 != fwrite((uint8_t *)&ncrc, 1, 4, stdout)) {
+				warnx("internal error: crc is not four bytes long");
+			}
 			loopexit = true;
 		}
 stop:
+		if (CHUNK_TYPE_IEND == chunktype) {
+			loopexit = true;
+		}
 		free(data);
 	} while(! loopexit);
 	fclose(source);
