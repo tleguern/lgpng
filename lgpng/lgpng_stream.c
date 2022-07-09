@@ -28,6 +28,9 @@ lgpng_stream_is_png(FILE *src)
 {
 	char sig[8] = {  0,  0,  0,  0,  0,  0,  0,  0};
 
+	if (NULL == src) {
+		return(false);
+	}
 	if (sizeof(sig) != fread(sig, 1, sizeof(sig), src)) {
 		return(false);
 	}
@@ -39,6 +42,12 @@ lgpng_stream_is_png(FILE *src)
 bool
 lgpng_stream_get_length(FILE *src, uint32_t *length)
 {
+	if (NULL == src) {
+		return(false);
+	}
+	if (NULL == length) {
+		return(false);
+	}
 	/* Read the first four bytes to gather the length of the data part */
 	if (1 != fread(length, 4, 1, src)) {
 		fprintf(stderr, "Not enough data to read chunk's length\n");
@@ -57,6 +66,12 @@ lgpng_stream_get_type(FILE *src, int *type, uint8_t *name)
 {
 	uint8_t	str_type[4];
 
+	if (NULL == src) {
+		return(false);
+	}
+	if (NULL == type) {
+		return(false);
+	}
 	if (4 != fread(str_type, 1, 4, src)) {
 		fprintf(stderr, "Not enough data to read chunk's type\n");
 		return(false);
@@ -82,6 +97,12 @@ lgpng_stream_get_type(FILE *src, int *type, uint8_t *name)
 bool
 lgpng_stream_get_data(FILE *src, uint32_t length, uint8_t **data)
 {
+	if (NULL == src) {
+		return(false);
+	}
+	if (NULL == data) {
+		return(false);
+	}
 	if (0 != length) {
 		if (length != fread(*data, 1, length, src)) {
 			fprintf(stderr, "Not enough data to read chunk's data\n");
@@ -95,6 +116,12 @@ lgpng_stream_get_data(FILE *src, uint32_t length, uint8_t **data)
 bool
 lgpng_stream_get_crc(FILE *src, uint32_t *crc)
 {
+	if (NULL == src) {
+		return(false);
+	}
+	if (NULL == crc) {
+		return(false);
+	}
 	if (1 != fread(crc, 4, 1, src)) {
 		fprintf(stderr, "Not enough data to read chunk's CRC\n");
 		return(false);
