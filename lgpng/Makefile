@@ -1,5 +1,5 @@
 LIB= lgpng
-SRCS= lgpng.c lgpng_crc.c lgpng_stream.c
+SRCS= lgpng.c lgpng_crc.c lgpng_data.c lgpng_stream.c
 OBJS= ${SRCS:.c=.o}
 
 LDADD+=
@@ -18,6 +18,7 @@ all: lib${LIB}.a
 
 lgpng.c: lgpng.h
 lgpng_crc.c: lgpng.h
+lgpng_data.c: lgpng.h
 lgpng_stream.c: lgpng.h
 
 lib${LIB}.a: ${OBJS}

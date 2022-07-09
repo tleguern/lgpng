@@ -56,13 +56,6 @@ struct chunk {
 	uint8_t          data[];
 };
 
-/* Unknown chunk */
-struct unknown_chunk {
-	uint32_t	 length;
-	char		 type[5];
-	uint32_t	 crc;
-};
-
 /* IHDR chunk */
 enum colourtype {
 	COLOUR_TYPE_GREYSCALE,
@@ -327,7 +320,6 @@ struct tIME {
 };
 
 /* main lib */
-int		lgpng_get_next_chunk_from_bytes(uint8_t *, struct unknown_chunk *, uint8_t **);
 int		lgpng_create_IHDR_from_data(struct IHDR *, uint8_t *, size_t);
 int		lgpng_create_PLTE_from_data(struct PLTE *, uint8_t *, size_t);
 /*int		lgpng_create_IDAT_from_data(struct IDAT *, uint8_t *, size_t);*/
@@ -345,6 +337,13 @@ int		lgpng_create_hIST_from_data(struct hIST *, struct PLTE *, uint8_t *, size_t
 int		lgpng_create_pHYs_from_data(struct pHYs *, uint8_t *, size_t);
 int		lgpng_create_sPLT_from_data(struct sPLT *, uint8_t *, size_t);
 int		lgpng_create_tIME_from_data(struct tIME *, uint8_t *, size_t);
+
+/* data */
+bool	lgpng_data_is_png(uint8_t *, size_t);
+bool	lgpng_data_get_length(uint8_t *, size_t, uint32_t *);
+bool	lgpng_data_get_type(uint8_t *, size_t, int *, uint8_t *);
+bool	lgpng_data_get_data(uint8_t *, size_t, uint32_t, uint8_t **);
+bool	lgpng_data_get_crc(uint8_t *, size_t, uint32_t *);
 
 /* stream */
 bool	lgpng_stream_is_png(FILE *);
