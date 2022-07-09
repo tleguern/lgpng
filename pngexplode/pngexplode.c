@@ -37,11 +37,10 @@ main(int argc, char *argv[])
 	int		 nchunk = 0;
 	long		 offset;
 	char		 output_file_name[25];
-	char		*source_name = "stdin";
 	FILE		*source = stdin, *output = NULL;
 
 #if HAVE_PLEDGE
-	pledge("stdio rpath", NULL);
+	pledge("stdio wpath cpath", NULL);
 #endif
 	while (-1 != (ch = getopt(argc, argv, "f:s")))
 		switch (ch) {
@@ -49,7 +48,6 @@ main(int argc, char *argv[])
 			if (NULL == (source = fopen(optarg, "r"))) {
 				err(EXIT_FAILURE, "%s", optarg);
 			}
-			source_name = optarg;
 			break;
 		case 's':
 			sflag = true;
@@ -63,7 +61,7 @@ main(int argc, char *argv[])
 	/* Read the file byte by byte until the PNG signature is found */
 	offset = 0;
 	if (false == sflag) {
-		if (false == lgpng_is_stream_png(source)) {
+		if (false == lgpng_stream_is_png(source)) {
 			errx(EXIT_FAILURE, "not a PNG file");
 		}
 	} else {
@@ -75,7 +73,7 @@ main(int argc, char *argv[])
 				errx(EXIT_FAILURE, "not a PNG file");
 			}
 			offset += 1;
-		} while (false == lgpng_is_stream_png(source));
+		} while (false == lgpng_stream_is_png(source));
 	}
 
 	/* Write the PNG magic bytes in a file */
@@ -89,62 +87,52 @@ main(int argc, char *argv[])
 	(void)fclose(output);
 
 	do {
-		enum chunktype		 chunktype;
-		fpos_t			 initial_pos;
-		size_t			 full_length;
-		struct unknown_chunk	 unknown_chunk;
-		uint8_t			*data = NULL;
-		uint8_t			*raw_chunk = NULL;
+		int		 chunktype = CHUNK_TYPE__MAX;
+		uint32_t	 length = 0, crc = 0, nlength = 0, ncrc = 0;
+		uint8_t		*data = NULL;
+		uint8_t		 str_type[5] = {0, 0, 0, 0, 0};
 
-		/* Save the stream position for later */
-		if (0 != fgetpos(source, &initial_pos)) {
-			warn(NULL);
-			loopexit = true;
+		if (false == lgpng_stream_get_length(source, &length)) {
+			break;
+		}
+		if (false == lgpng_stream_get_type(source, &chunktype,
+		    (uint8_t *)str_type)) {
+			break;
+		}
+		if (NULL == (data = malloc(length + 1))) {
+			fprintf(stderr, "malloc(length + 1)\n");
+			break;
+		}
+		if (false == lgpng_stream_get_data(source, length, &data)) {
 			goto stop;
 		}
-		if (-1 == lgpng_get_next_chunk_from_stream(source, &unknown_chunk, &data)) {
-			warnx("Can't get next chunk from stream %s", source_name);
-			loopexit = true;
+		if (false == lgpng_stream_get_crc(source, &crc)) {
 			goto stop;
 		}
-		full_length = 4 + 4 + unknown_chunk.length + 4;
-		chunktype = lgpng_identify_chunk(&unknown_chunk);
-		nchunk += 1;
+		/* Ignore invalid CRC */
 
-		/* Rewind the stream at the begining of the chunk */
-		if (0 != fsetpos(source, &initial_pos)) {
-			warn(NULL);
-			loopexit = true;
-			goto stop;
-		}
-		if (NULL == (raw_chunk = malloc(full_length))) {
-			warn("malloc(%zu)", full_length);
-			loopexit = true;
-			goto stop;
-		}
-		/* Read the raw chunk */
-		if (full_length != fread(raw_chunk, 1, full_length, source)) {
-			warn("Truncated chunk?");
-			loopexit = true;
-			goto stop;
-		}
 		/* Write the raw chunk in an individual file */
+		nchunk += 1;
 		(void)memset(output_file_name, 0, sizeof(output_file_name));
 		(void)snprintf(output_file_name, sizeof(output_file_name),
-		    "__pure_%03d_%s.dat", nchunk, unknown_chunk.type);
+		    "__pure_%03d_%s.dat", nchunk, str_type);
 		if (NULL == (output = fopen(output_file_name, "w"))) {
 			warn("%s", output_file_name);
-			loopexit = true;
-			goto stop;
+			fclose(source);
+			free(data);
+			return(EXIT_FAILURE);
 		}
-		(void)fwrite(raw_chunk, full_length, 1, output);
+		nlength = htonl(length);
+		ncrc = htonl(crc);
+		(void)fwrite((uint8_t *)&nlength, 1, 4, output);
+		(void)fwrite(str_type, 1, 4, output);
+		(void)fwrite(data, 1, length, output);
+		(void)fwrite((uint8_t *)&ncrc, 1, 4, output);
 		(void)fclose(output);
 		if (CHUNK_TYPE_IEND == chunktype) {
 			loopexit = true;
 		}
 stop:
-		free(raw_chunk);
-		raw_chunk = NULL;
 		free(data);
 		data = NULL;
 	} while(! loopexit);
