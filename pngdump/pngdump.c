@@ -119,18 +119,8 @@ main(int argc, char *argv[])
 			uint32_t nlength = htonl(length);
 			uint32_t ncrc = htonl(crc);
 
-			if (4 != fwrite((uint8_t *)&nlength, 1, 4, stdout)) {
-				warnx("internal error: length is not four bytes long");
-			}
-			if (4 != fwrite(str_type, 1, 4, stdout)) {
-				warnx("internal error: str_type is not four bytes long");
-			}
-			if (length != fwrite(data, 1, length, stdout)) {
-				warnx("internal error: data is not %u bytes long", length);
-			}
-			if (4 != fwrite((uint8_t *)&ncrc, 1, 4, stdout)) {
-				warnx("internal error: crc is not four bytes long");
-			}
+			(void)lgpng_stream_write_chunk(stdout, nlength,
+			    str_type, data, ncrc);
 			loopexit = true;
 		}
 stop:

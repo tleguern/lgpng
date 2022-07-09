@@ -130,3 +130,25 @@ lgpng_stream_get_crc(FILE *src, uint32_t *crc)
 	return(true);
 }
 
+bool
+lgpng_stream_write_chunk(FILE *output, uint32_t length, uint8_t *type,
+    uint8_t *data, uint32_t crc)
+{
+	uint32_t nlength = htonl(length);
+	uint32_t ncrc = htonl(crc);
+
+	if (4 != fwrite((uint8_t *)&nlength, 1, 4, output)) {
+		return(false);
+	}
+	if (4 != fwrite(type, 1, 4, output)) {
+		return(false);
+	}
+	if (length != fwrite(data, 1, length, output)) {
+		return(false);
+	}
+	if (4 != fwrite((uint8_t *)&ncrc, 1, 4, output)) {
+		return(false);
+	}
+	return(true);
+}
+

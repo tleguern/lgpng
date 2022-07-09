@@ -351,6 +351,7 @@ bool	lgpng_stream_get_length(FILE *, uint32_t *);
 bool	lgpng_stream_get_type(FILE *, int *, uint8_t *);
 bool	lgpng_stream_get_data(FILE *, uint32_t, uint8_t **);
 bool	lgpng_stream_get_crc(FILE *, uint32_t *);
+bool	lgpng_stream_write_chunk(FILE *, uint32_t, uint8_t *, uint8_t *, uint32_t);
 
 /* crc */
 extern uint32_t	lgpng_crc_table[256];

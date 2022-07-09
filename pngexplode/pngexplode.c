@@ -124,10 +124,8 @@ main(int argc, char *argv[])
 		}
 		nlength = htonl(length);
 		ncrc = htonl(crc);
-		(void)fwrite((uint8_t *)&nlength, 1, 4, output);
-		(void)fwrite(str_type, 1, 4, output);
-		(void)fwrite(data, 1, length, output);
-		(void)fwrite((uint8_t *)&ncrc, 1, 4, output);
+		(void)lgpng_steam_write_chunk(output, nlength, str_type,
+		    data, ncrc);
 		(void)fclose(output);
 		if (CHUNK_TYPE_IEND == chunktype) {
 			loopexit = true;
