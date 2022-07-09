@@ -53,7 +53,7 @@ main(int argc, char *argv[])
 	long		 offset;
 	bool		 cflag = false, lflag = true, sflag = false;
 	bool		 loopexit = false;
-	enum chunktype	 chunk = CHUNK_TYPE__MAX;
+	int		 chunk = CHUNK_TYPE__MAX;
 	struct IHDR	 ihdr;
 	struct PLTE	 plte;
 	FILE		*source = stdin;
@@ -100,7 +100,7 @@ main(int argc, char *argv[])
 	/* Read the file byte by byte until the PNG signature is found */
 	offset = 0;
 	if (false == sflag) {
-		if (false == lgpng_is_stream_png(source)) {
+		if (false == lgpng_stream_is_png(source)) {
 			errx(EXIT_FAILURE, "not a PNG file");
 		}
 	} else {
@@ -112,37 +112,47 @@ main(int argc, char *argv[])
 				errx(EXIT_FAILURE, "not a PNG file");
 			}
 			offset += 1;
-		} while (false == lgpng_is_stream_png(source));
+		} while (false == lgpng_stream_is_png(source));
 	}
 
 	do {
-		enum chunktype		 chunktype;
-		struct unknown_chunk	 unknown_chunk;
-		uint8_t			*data = NULL;
+		int		 chunktype = CHUNK_TYPE__MAX;
+		uint32_t	 length = 0, chunk_crc = 0, calc_crc = 0;
+		uint8_t		*data = NULL;
+		uint8_t		 str_type[5] = {0, 0, 0, 0, 0};
 
-		if (-1 == lgpng_get_next_chunk_from_stream(source, &unknown_chunk, &data)) {
+		if (false == lgpng_stream_get_length(source, &length)) {
 			break;
 		}
-		chunktype = lgpng_identify_chunk(&unknown_chunk);
-		if (false == lgpng_validate_chunk_crc(&unknown_chunk, data)) {
-			warnx("Invalid CRC for chunk %s, skipping",
-			    chunktypemap[chunktype]);
+		if (false == lgpng_stream_get_type(source, &chunktype,
+		    (uint8_t *)str_type)) {
+			break;
+		}
+		if (NULL == (data = malloc(length + 1))) {
+			warn("malloc(length + 1)");
+			break;
+		}
+		if (false == lgpng_stream_get_data(source, length, &data)) {
+			goto stop;
+		}
+		if (false == lgpng_stream_get_crc(source, &chunk_crc)) {
+			goto stop;
+		}
+		if (false == lgpng_chunk_crc(length, str_type, data,
+		    &calc_crc)) {
+			warnx("Invalid CRC for chunk %s, skipping", str_type);
 			goto stop;
 		}
 		if (lflag) {
 			/* Simply list chunks' name */
-			if (CHUNK_TYPE__MAX == chunktype) {
-				printf("%s\n", unknown_chunk.type);
-			} else {
-				printf("%s\n", chunktypemap[chunktype]);
-			}
+			printf("%s\n", str_type);
 		}
 		/*
 		 * The IHDR chunk contains important information used to
 		 * decode other chunks, such as bKGD, sBIT and tRNS.
 		 */
 		if (CHUNK_TYPE_IHDR == chunktype) {
-			if (-1 == lgpng_create_IHDR_from_data(&ihdr, data, unknown_chunk.length)) {
+			if (-1 == lgpng_create_IHDR_from_data(&ihdr, data, length)) {
 				warnx("IHDR: Invalid IHDR chunk");
 				loopexit = true;
 				goto stop;
@@ -153,7 +163,7 @@ main(int argc, char *argv[])
 		 * so it is important to keep it around if it is encountered.
 		 */
 		if (CHUNK_TYPE_PLTE == chunktype) {
-			if (-1 == lgpng_create_PLTE_from_data(&plte, data, unknown_chunk.length)) {
+			if (-1 == lgpng_create_PLTE_from_data(&plte, data, length)) {
 				loopexit = true;
 				warnx("PLTE: Invalid PLTE chunk");
 				goto stop;
@@ -161,7 +171,7 @@ main(int argc, char *argv[])
 
 		}
 		if (cflag && chunktype == chunk) {
-			size_t dataz = unknown_chunk.length;
+			size_t dataz = length;
 
 			switch (chunktype) {
 			case CHUNK_TYPE_IHDR:
@@ -217,6 +227,7 @@ stop:
 			loopexit = true;
 		}
 		free(data);
+		data = NULL;
 	} while(! loopexit);
 	fclose(source);
 	return(EXIT_SUCCESS);
