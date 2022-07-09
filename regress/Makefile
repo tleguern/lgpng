@@ -1,23 +1,26 @@
-PROG= test-ihdr
-SRCS= ihdr.c
-OBJS= ${SRCS:.c=.o}
-
 LDADD+= -llgpng
-LDFLAGS+= -L../
+LDFLAGS+= -L../lgpng
 CFLAGS= -Wall -Wextra
-CFLAGS+= -std=c99 -Wpointer-sign -I../
+CFLAGS+= -std=c99 -Wpointer-sign -I../lgpng
 NOMAN= yes
 
 .SUFFIXES: .c .o
 .PHONY: clean
 
-all: ${PROG}
+#all: test-data test-ihdr test-stream
+all: test-data test-stream
 
 .c.o:
 	${CC} ${CFLAGS} -c $<
 
-${PROG}: ${OBJS}
-	${CC} ${LDFLAGS} -o $@ ${OBJS} ${LDADD}
+test-data: data.o
+	${CC} ${LDFLAGS} -o $@ data.o ${LDADD}
+
+#test-ihdr: ihdr.o
+#	${CC} ${LDFLAGS} -o $@ ihdr.o ${LDADD}
+
+test-stream: stream.o
+	${CC} ${LDFLAGS} -o $@ stream.o ${LDADD}
 
 clean:
-	rm -f -- ${OBJS} ${PROG}
+	rm -f -- *.o test-*
