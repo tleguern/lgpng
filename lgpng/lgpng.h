@@ -319,7 +319,7 @@ struct tIME {
 	} __attribute__((packed)) data;
 };
 
-/* main lib */
+/* chunks */
 int		lgpng_create_IHDR_from_data(struct IHDR *, uint8_t *, size_t);
 int		lgpng_create_PLTE_from_data(struct PLTE *, uint8_t *, size_t);
 /*int		lgpng_create_IDAT_from_data(struct IDAT *, uint8_t *, size_t);*/
