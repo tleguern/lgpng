@@ -358,7 +358,6 @@ lgpng_create_sRGB_from_data(struct sRGB *srgb, uint8_t *data, size_t dataz)
 int
 lgpng_create_tEXt_from_data(struct tEXt *text, uint8_t *data, size_t dataz)
 {
-	/* XXX: Depends on the lifetime of data */
 	text->length = dataz;
 	text->type = CHUNK_TYPE_tEXt;
 	text->data.keyword = (char *)data;

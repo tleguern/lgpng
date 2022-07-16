@@ -513,21 +513,6 @@ info_zTXt(uint8_t *data, size_t dataz)
 	lgpng_create_zTXt_from_data(&ztxt, data, dataz);
 }
 
-#define BINARY_PATTERN_INT8 "%c%c%c%c%c%c%c%c"
-#define BYTE_TO_BINARY_INT8(i)    \
-	(((i) & 0x80ll) ? '1' : '0'), \
-	(((i) & 0x40ll) ? '1' : '0'), \
-	(((i) & 0x20ll) ? '1' : '0'), \
-	(((i) & 0x10ll) ? '1' : '0'), \
-	(((i) & 0x08ll) ? '1' : '0'), \
-	(((i) & 0x04ll) ? '1' : '0'), \
-	(((i) & 0x02ll) ? '1' : '0'), \
-	(((i) & 0x01ll) ? '1' : '0')
-#define BINARY_PATTERN_INT16 \
-	BINARY_PATTERN_INT8 " " BINARY_PATTERN_INT8
-#define BYTE_TO_BINARY_INT16(i) \
-	BYTE_TO_BINARY_INT8((i) >> 8), BYTE_TO_BINARY_INT8(i)
-
 void
 info_bKGD(struct IHDR *ihdr, struct PLTE *plte, uint8_t *data, size_t dataz)
 {
