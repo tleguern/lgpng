@@ -130,17 +130,27 @@ main(int argc, char *argv[])
 		    (uint8_t *)str_type)) {
 			break;
 		}
-		if (NULL == (data = malloc(length + 1))) {
-			warn("malloc(length + 1)");
+		/*
+		 * Do not bother allocating memory in -l mode
+		 */
+		if (cflag) {
+			if (NULL == (data = malloc(length + 1))) {
+				warn("malloc(length + 1)");
+				break;
+			}
+			if (false == lgpng_stream_get_data(source, length, &data)) {
+				goto stop;
+			}
+		} else if (lflag) {
+			lgpng_stream_skip_data(source, length);
+		} else {
+			warnx("Internal error");
 			break;
-		}
-		if (false == lgpng_stream_get_data(source, length, &data)) {
-			goto stop;
 		}
 		if (false == lgpng_stream_get_crc(source, &chunk_crc)) {
 			goto stop;
 		}
-		if (false == lgpng_chunk_crc(length, str_type, data,
+		if (cflag && false == lgpng_chunk_crc(length, str_type, data,
 		    &calc_crc)) {
 			warnx("Invalid CRC for chunk %s, skipping", str_type);
 			goto stop;
@@ -226,13 +236,16 @@ main(int argc, char *argv[])
 					errx(EXIT_FAILURE, "Unsupported chunk type");
 				}
 			}
+			free(data);
+			data = NULL;
+		} else {
+			warnx("Internal error");
+			break;
 		}
 stop:
 		if (CHUNK_TYPE_IEND == chunktype) {
 			loopexit = true;
 		}
-		free(data);
-		data = NULL;
 	} while(! loopexit);
 	fclose(source);
 	return(EXIT_SUCCESS);
