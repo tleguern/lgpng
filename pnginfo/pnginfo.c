@@ -146,80 +146,80 @@ main(int argc, char *argv[])
 		if (lflag) {
 			/* Simply list chunks' name */
 			printf("%s\n", str_type);
-		}
-		/*
-		 * The IHDR chunk contains important information used to
-		 * decode other chunks, such as bKGD, sBIT and tRNS.
-		 */
-		if (CHUNK_TYPE_IHDR == chunktype) {
-			if (-1 == lgpng_create_IHDR_from_data(&ihdr, data, length)) {
-				warnx("IHDR: Invalid IHDR chunk");
-				loopexit = true;
-				goto stop;
+		} else if (cflag) {
+			/*
+			 * The IHDR chunk contains important information used to
+			 * decode other chunks, such as bKGD, sBIT and tRNS.
+			 */
+			if (CHUNK_TYPE_IHDR == chunktype) {
+				if (-1 == lgpng_create_IHDR_from_data(&ihdr,
+				    data, length)) {
+					warnx("IHDR: Invalid IHDR chunk");
+					loopexit = true;
+					goto stop;
+				}
 			}
-		}
-		/*
-		 * The hIST chunk mirrors the size of the PLTE chunk,
-		 * so it is important to keep it around if it is encountered.
-		 */
-		if (CHUNK_TYPE_PLTE == chunktype) {
-			if (-1 == lgpng_create_PLTE_from_data(&plte, data, length)) {
-				loopexit = true;
-				warnx("PLTE: Invalid PLTE chunk");
-				goto stop;
+			/*
+			 * The hIST chunk mirrors the size of the PLTE chunk,
+			 * so it is important to keep it around if it is encountered.
+			 */
+			if (CHUNK_TYPE_PLTE == chunktype) {
+				if (-1 == lgpng_create_PLTE_from_data(&plte,
+				    data, length)) {
+					loopexit = true;
+					warnx("PLTE: Invalid PLTE chunk");
+					goto stop;
+				}
 			}
-
-		}
-		if (cflag && chunktype == chunk) {
-			size_t dataz = length;
-
-			switch (chunktype) {
-			case CHUNK_TYPE_IHDR:
-				info_IHDR(&ihdr);
-				break;
-			case CHUNK_TYPE_PLTE:
-				info_PLTE(&plte);
-				break;
-			case CHUNK_TYPE_tRNS:
-				info_tRNS(&ihdr, &plte, data, dataz);
-				break;
-			case CHUNK_TYPE_cHRM:
-				info_cHRM(data, dataz);
-				break;
-			case CHUNK_TYPE_gAMA:
-				info_gAMA(data, dataz);
-				break;
-			case CHUNK_TYPE_sBIT:
-				info_sBIT(&ihdr, data, dataz);
-				break;
-			case CHUNK_TYPE_sRGB:
-				info_sRGB(data, dataz);
-				break;
-			case CHUNK_TYPE_tEXt:
-				info_tEXt(data, dataz);
-				break;
-			case CHUNK_TYPE_zTXt:
-				info_zTXt(data, dataz);
-				break;
-			case CHUNK_TYPE_bKGD:
-				info_bKGD(&ihdr, &plte, data, dataz);
-				break;
-			case CHUNK_TYPE_hIST:
-				info_hIST(&plte, data, dataz);
-				break;
-			case CHUNK_TYPE_pHYs:
-				info_pHYs(data, dataz);
-				break;
-			case CHUNK_TYPE_sPLT:
-				info_sPLT(data, dataz);
-				break;
-			case CHUNK_TYPE_tIME:
-				info_tIME(data, dataz);
-				break;
-			case CHUNK_TYPE__MAX:
-				/* FALLTHROUGH */
-			default:
-				errx(EXIT_FAILURE, "Unsupported chunk type");
+			if (chunktype == chunk) {
+				switch (chunktype) {
+				case CHUNK_TYPE_IHDR:
+					info_IHDR(&ihdr);
+					break;
+				case CHUNK_TYPE_PLTE:
+					info_PLTE(&plte);
+					break;
+				case CHUNK_TYPE_tRNS:
+					info_tRNS(&ihdr, &plte, data, length);
+					break;
+				case CHUNK_TYPE_cHRM:
+					info_cHRM(data, length);
+					break;
+				case CHUNK_TYPE_gAMA:
+					info_gAMA(data, length);
+					break;
+				case CHUNK_TYPE_sBIT:
+					info_sBIT(&ihdr, data, length);
+					break;
+				case CHUNK_TYPE_sRGB:
+					info_sRGB(data, length);
+					break;
+				case CHUNK_TYPE_tEXt:
+					info_tEXt(data, length);
+					break;
+				case CHUNK_TYPE_zTXt:
+					info_zTXt(data, length);
+					break;
+				case CHUNK_TYPE_bKGD:
+					info_bKGD(&ihdr, &plte, data, length);
+					break;
+				case CHUNK_TYPE_hIST:
+					info_hIST(&plte, data, length);
+					break;
+				case CHUNK_TYPE_pHYs:
+					info_pHYs(data, length);
+					break;
+				case CHUNK_TYPE_sPLT:
+					info_sPLT(data, length);
+					break;
+				case CHUNK_TYPE_tIME:
+					info_tIME(data, length);
+					break;
+				case CHUNK_TYPE__MAX:
+					/* FALLTHROUGH */
+				default:
+					errx(EXIT_FAILURE, "Unsupported chunk type");
+				}
 			}
 		}
 stop:
