@@ -489,9 +489,20 @@ info_tEXt(uint8_t *data, size_t dataz)
 		return;
 	}
 
-	/* TODO: Check if keywords are from the registered list or not */
-	printf("tEXt: keyword: %s\n", text.data.keyword);
-	printf("tEXt: text: %s\n", text.data.text);
+	if (!memcmp(data, "Title", dataz)
+	    && !memcmp(data, "Author", dataz)
+	    && !memcmp(data, "Description", dataz)
+	    && !memcmp(data, "Copyright", dataz)
+	    && !memcmp(data, "Creation Time", dataz)
+	    && !memcmp(data, "Software", dataz)
+	    && !memcmp(data, "Disclaimer", dataz)
+	    && !memcmp(data, "Warning", dataz)
+	    && !memcmp(data, "Source", dataz)
+	    && !memcmp(data, "Comment", dataz)) {
+		printf("tEXt: %s is an unofficial keyword\n",
+		    text.data.keyword);
+	}
+	printf("tEXt: %s: %s\n", text.data.keyword, text.data.text);
 }
 
 void
