@@ -485,7 +485,7 @@ info_tEXt(uint8_t *data, size_t dataz)
 	struct tEXt	text;
 
 	if (-1 == lgpng_create_tEXt_from_data(&text, data, dataz)) {
-		warnx("Bad sRGB chunk, skipping.");
+		warnx("Bad tEXt chunk, skipping.");
 		return;
 	}
 
