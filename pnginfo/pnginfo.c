@@ -328,7 +328,7 @@ info_tRNS(struct IHDR *ihdr, struct PLTE *plte, uint8_t *data, size_t dataz)
 		printf("tRNS: blue: %u\n", trns.data.blue);
 		break;
 	case COLOUR_TYPE_INDEXED:
-		if (trns.data.entries >= plte->data.entries) {
+		if (trns.data.entries > plte->data.entries) {
 			warnx("tRNS should not have more entries than PLTE");
 		}
 		for (size_t i = 0; i < trns.data.entries; i++) {
