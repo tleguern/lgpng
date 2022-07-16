@@ -1,6 +1,7 @@
 a.out
 *.o
-*.a
+lgpng/lgpng.c
+lgpng/liblgpng.a
 pnginfo/pnginfo
 pngdump/pngdump
 pngexplode/pngexplode
