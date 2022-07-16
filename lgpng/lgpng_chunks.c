@@ -284,8 +284,9 @@ int
 lgpng_create_gAMA_from_data(struct gAMA *gama, uint8_t *data, size_t dataz)
 {
 	if (4 != dataz) {
-		gama->length = 4;
+		return(-1);
 	}
+	gama->length = 4;
 	gama->type = CHUNK_TYPE_gAMA;
 	(void)memcpy(&(gama->data.gamma), data, 4);
 	gama->data.gamma = ntohl(gama->data.gamma);
