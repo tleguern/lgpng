@@ -4,7 +4,7 @@ PROG= pnginfo
 SRCS= ${PROG}.c compats.c
 OBJS= ${SRCS:.c=.o}
 
-LDADD+= -llgpng
+LDADD+= -llgpng -lz
 LDFLAGS+= -L../lgpng
 CFLAGS= -Wall -Wextra -I ../lgpng
 CFLAGS+= -std=c99 -Wpointer-sign

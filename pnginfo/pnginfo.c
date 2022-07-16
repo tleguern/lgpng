@@ -27,6 +27,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <zlib.h>
 
 #include "lgpng.h"
 
@@ -36,6 +37,7 @@ void info_PLTE(struct PLTE *);
 void info_tRNS(struct IHDR *, struct PLTE *, uint8_t *, size_t);
 void info_cHRM(uint8_t *, size_t);
 void info_gAMA(uint8_t *, size_t);
+void info_iCCP(uint8_t *, size_t);
 void info_sBIT(struct IHDR *, uint8_t *, size_t);
 void info_sRGB(uint8_t *, size_t);
 void info_tEXt(uint8_t *, size_t);
@@ -187,6 +189,9 @@ main(int argc, char *argv[])
 					break;
 				case CHUNK_TYPE_gAMA:
 					info_gAMA(data, length);
+					break;
+				case CHUNK_TYPE_iCCP:
+					info_iCCP(data, length);
 					break;
 				case CHUNK_TYPE_sBIT:
 					info_sBIT(&ihdr, data, length);
@@ -382,6 +387,35 @@ info_gAMA(uint8_t *data, size_t dataz)
 		return;
 	}
 	printf("gAMA: image gamma: %u\n", gama.data.gamma);
+}
+
+void
+info_iCCP(uint8_t *data, size_t dataz)
+{
+	/*
+	int		 zret, retry = 2;
+	size_t		 outz;
+	uint8_t		*out = NULL;
+	*/
+	struct iCCP	 iccp;
+
+	if (-1 == lgpng_create_iCCP_from_data(&iccp, data, dataz)) {
+		warnx("Bad iCCP chunk, skipping.");
+		return;
+	}
+	printf("iCCP: profile name: %s\n", iccp.data.name);
+	printf("iCCP: compression method: %s\n", compressiontypemap[iccp.data.compression]);
+	/*
+	{
+		size_t	 len;
+		uint8_t	*buf;
+
+		len = compressBound(iccp.length - 1 - iccp.data.namez);
+		buf = malloc(len);
+		zret = uncompress(out, &outz, iccp.data.profile, iccp.length);
+	}
+	printf("iCCP: profile: %s (%zu)\n", out, outz);
+	*/
 }
 
 void
