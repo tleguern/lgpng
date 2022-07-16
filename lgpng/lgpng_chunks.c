@@ -293,6 +293,56 @@ lgpng_create_gAMA_from_data(struct gAMA *gama, uint8_t *data, size_t dataz)
 }
 
 int
+lgpng_create_iCCP_from_data(struct iCCP *iccp, uint8_t *data, size_t dataz)
+{
+	size_t	  offset;
+	uint8_t	 *nul;
+
+	if (iccp->length <= 81) {
+		return(-1);
+	}
+	iccp->length = dataz;
+	iccp->type = CHUNK_TYPE_iCCP;
+	if (NULL == (nul = memchr(data, '\0', 80))) {
+		return(-1);
+	}
+	offset = nul - data;
+	if (1 > offset || 79 < offset) {
+		return(-1);
+	}
+	(void)memset(iccp->data.name, 0, sizeof(iccp->data.name));
+	(void)memcpy(iccp->data.name, data, offset);
+	iccp->data.namez = offset;
+	/*
+	 * The 11.3.3.3 sections says profile names should neither start nor
+	 * end with a space and consecutive spaces are not allowed either.
+	 * Still copy the name first, it can be useful.
+	 */
+	if (' ' == data[0]) {
+		return(-1);
+	}
+	if (' ' == data[offset - 1]) {
+		return(-1);
+	}
+	if (NULL != memmem(data, offset,"  ", 2)) {
+		return(-1);
+	}
+
+	if (offset + 1 > dataz) {
+		return(-1);
+	}
+	iccp->data.compression = data[offset + 1];
+	if (COMPRESSION_TYPE_DEFLATE != iccp->data.compression) {
+		return(-1);
+	}
+	if (offset + 2 > dataz) {
+		return(-1);
+	}
+	iccp->data.profile = data + offset + 2;
+	return(0);
+}
+
+int
 lgpng_create_sRGB_from_data(struct sRGB *srgb, uint8_t *data, size_t dataz)
 {
 	if (1 != dataz) {

@@ -166,6 +166,19 @@ struct gAMA {
 	} __attribute__((packed)) data;
 };
 
+/* iCCP chunk */
+struct iCCP {
+	uint32_t         length;
+	enum chunktype   type;
+	uint32_t         crc;
+	struct {
+		size_t	 namez;
+		uint8_t	 name[80];
+		int8_t	 compression;
+		uint8_t	*profile;
+	} __attribute__((packed)) data;
+};
+
 /* sBIT chunk */
 struct sBIT {
 	uint32_t         length;
@@ -326,7 +339,7 @@ int		lgpng_create_PLTE_from_data(struct PLTE *, uint8_t *, size_t);
 int		lgpng_create_tRNS_from_data(struct tRNS *, struct IHDR *, uint8_t *, size_t);
 int		lgpng_create_cHRM_from_data(struct cHRM *, uint8_t *, size_t);
 int		lgpng_create_gAMA_from_data(struct gAMA *, uint8_t *, size_t);
-/*int		lgpng_create_iCCP_from_data(struct iCCP *, uint8_t *, size_t);*/
+int		lgpng_create_iCCP_from_data(struct iCCP *, uint8_t *, size_t);
 int		lgpng_create_sBIT_from_data(struct sBIT *, struct IHDR *, uint8_t *, size_t);
 int		lgpng_create_sRGB_from_data(struct sRGB *, uint8_t *, size_t);
 /*int		lgpng_create_iTXt_from_data(struct iTXt *, uint8_t *, size_t);*/
