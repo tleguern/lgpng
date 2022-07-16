@@ -114,6 +114,21 @@ lgpng_stream_get_data(FILE *src, uint32_t length, uint8_t **data)
 }
 
 bool
+lgpng_stream_skip_data(FILE *src, uint32_t length)
+{
+	if (NULL == src) {
+		return(false);
+	}
+	if (0 != length) {
+		if (-1 == fseek(src, length, SEEK_CUR)) {
+			fprintf(stderr, "Not enough data to skip chunk's data\n");
+			return(false);
+		}
+	}
+	return(true);
+}
+
+bool
 lgpng_stream_get_crc(FILE *src, uint32_t *crc)
 {
 	if (NULL == src) {
