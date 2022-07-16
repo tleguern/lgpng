@@ -11,7 +11,7 @@ NOMAN= yes
 .SUFFIXES: .c .o
 .PHONY: clean install
 
-all: lib${LIB}.a
+all: lgpng.c lib${LIB}.a
 
 .c.o:
 	${CC} ${CFLAGS} -c $<
@@ -21,12 +21,15 @@ lgpng_crc.c: lgpng.h
 lgpng_data.c: lgpng.h
 lgpng_stream.c: lgpng.h
 
+lgpng.c: ${SRCS}
+	cat ${SRCS} > lgpng.c
+
 lib${LIB}.a: ${OBJS}
 	${AR} cqD lib${LIB}.a ${OBJS}
 	ranlib lib${LIB}.a
 
 clean:
-	rm -f -- ${OBJS} lib${LIB}.a
+	rm -f -- ${OBJS} lib${LIB}.a lgpng.c
 
 install:
 	mkdir -p ${PREFIX}/lib/
