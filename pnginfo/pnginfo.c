@@ -662,7 +662,7 @@ info_tIME(uint8_t *data, size_t dataz)
 	if (time.data.second > 60) {
 		warnx("tIME: invalid second value");
 	}
-	printf("tIME: %i-%i-%i %i:%i:%i\n",
+	printf("tIME: %i-%02i-%02i %02i:%02i:%02i\n",
 	    time.data.year, time.data.month, time.data.day,
 	    time.data.hour, time.data.minute, time.data.second);
 }
