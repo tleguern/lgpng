@@ -405,30 +405,50 @@ info_gAMA(uint8_t *data, size_t dataz)
 void
 info_iCCP(uint8_t *data, size_t dataz)
 {
-	/*
-	int		 zret, retry = 2;
-	size_t		 outz;
-	uint8_t		*out = NULL;
-	*/
+	int		 retry = 2, zret;
+	size_t		 outz, outtmpz;
 	struct iCCP	 iccp;
+	uint8_t		*out = NULL, *outtmp = NULL;
 
 	if (-1 == lgpng_create_iCCP_from_data(&iccp, data, dataz)) {
 		warnx("Bad iCCP chunk, skipping.");
 		return;
 	}
 	printf("iCCP: profile name: %s\n", iccp.data.name);
-	printf("iCCP: compression method: %s\n", compressiontypemap[iccp.data.compression]);
-	/*
-	{
-		size_t	 len;
-		uint8_t	*buf;
-
-		len = compressBound(iccp.length - 1 - iccp.data.namez);
-		buf = malloc(len);
-		zret = uncompress(out, &outz, iccp.data.profile, iccp.length);
+	printf("iCCP: compression method: %s\n",
+	    compressiontypemap[iccp.data.compression]);
+	do {
+		outtmpz = iccp.data.profilez * retry;
+		if (NULL == (outtmp = realloc(out, outtmpz + 1))) {
+			warn("realloc(outtmpz + 1)");
+			goto error;
+		}
+		out = outtmp;
+		outz = outtmpz;
+		zret = uncompress(out, &outz,
+		    iccp.data.profile, iccp.data.profilez);
+		if (Z_BUF_ERROR != zret && Z_OK != zret) {
+			if (Z_MEM_ERROR == zret) {
+				warn("uncompress(iccp.data.textz)");
+			} else if (Z_DATA_ERROR == zret) {
+				warnx("Invalid input data");
+			}
+			warnx("iCCP: Failed decompression");
+			goto error;
+		}
+		out[outz] = '\0';
+		retry += 1;
+	} while (Z_OK != zret);
+	if (outz > iccp.data.profilez) {
+		printf("iCCP: compressed data is bigger than uncompressed\n");
 	}
-	printf("iCCP: profile: %s (%zu)\n", out, outz);
-	*/
+	/* TODO: https://www.color.org/ICC_Minor_Revision_for_Web.pdf */
+	printf("iCCP: profile size: (%zu)\n", outz);
+error:
+	free(out);
+	out = NULL;
+	outz = 0;
+
 }
 
 void
