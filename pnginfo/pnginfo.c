@@ -489,17 +489,9 @@ info_tEXt(uint8_t *data, size_t dataz)
 		return;
 	}
 
-	if (!memcmp(data, "Title", dataz)
-	    && !memcmp(data, "Author", dataz)
-	    && !memcmp(data, "Description", dataz)
-	    && !memcmp(data, "Copyright", dataz)
-	    && !memcmp(data, "Creation Time", dataz)
-	    && !memcmp(data, "Software", dataz)
-	    && !memcmp(data, "Disclaimer", dataz)
-	    && !memcmp(data, "Warning", dataz)
-	    && !memcmp(data, "Source", dataz)
-	    && !memcmp(data, "Comment", dataz)) {
-		printf("tEXt: %s is an unofficial keyword\n",
+	if (!lgpng_is_official_keyword(text.data.keyword,
+	    sizeof(text.data.keyword))) {
+		printf("tEXt: %s is not an official keyword\n",
 		    text.data.keyword);
 	}
 	printf("tEXt: %s: %s\n", text.data.keyword, text.data.text);

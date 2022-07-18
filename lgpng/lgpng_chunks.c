@@ -104,6 +104,24 @@ lgpng_validate_keyword(uint8_t *keyword, size_t keywordz)
 	return(true);
 }
 
+bool
+lgpng_is_official_keyword(uint8_t *keyword, size_t keywordz)
+{
+	if (0 != memcmp(keyword, "Title", keywordz)
+	    && 0 != memcmp(keyword, "Author", keywordz)
+	    && 0 != memcmp(keyword, "Description", keywordz)
+	    && 0 != memcmp(keyword, "Copyright", keywordz)
+	    && 0 != memcmp(keyword, "Creation Time", keywordz)
+	    && 0 != memcmp(keyword, "Software", keywordz)
+	    && 0 != memcmp(keyword, "Disclaimer", keywordz)
+	    && 0 != memcmp(keyword, "Warning", keywordz)
+	    && 0 != memcmp(keyword, "Source", keywordz)
+	    && 0 != memcmp(keyword, "Comment", keywordz)) {
+		return(false);
+	}
+	return(true);
+}
+
 int
 lgpng_create_IHDR_from_data(struct IHDR *ihdr, uint8_t *data, size_t dataz)
 {

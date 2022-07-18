@@ -333,6 +333,7 @@ struct tIME {
 
 /* chunks extra */
 bool		lgpng_validate_keyword(uint8_t *, size_t);
+bool		lgpng_is_official_keyword(uint8_t *, size_t);
 
 /* chunks */
 int		lgpng_create_IHDR_from_data(struct IHDR *, uint8_t *, size_t);
