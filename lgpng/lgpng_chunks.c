@@ -594,11 +594,11 @@ lgpng_create_tIME_from_data(struct tIME *time, uint8_t *data, size_t dataz)
 	time->type = CHUNK_TYPE_tIME;
 	(void)memcpy(&(time->data.year), data, 2);
 	time->data.year = ntohs(time->data.year);
-	time->data.month = data[3];
-	time->data.day = data[4];
-	time->data.hour = data[5];
-	time->data.minute = data[6];
-	time->data.second = data[7];
+	time->data.month = data[2];
+	time->data.day = data[3];
+	time->data.hour = data[4];
+	time->data.minute = data[5];
+	time->data.second = data[6];
 	return(0);
 }
 
