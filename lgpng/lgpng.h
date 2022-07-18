@@ -172,8 +172,10 @@ struct iCCP {
 	enum chunktype   type;
 	uint32_t         crc;
 	struct {
+		size_t	 namez;
 		uint8_t	 name[80];
 		int8_t	 compression;
+		size_t	 profilez;
 		uint8_t	*profile;
 	} __attribute__((packed)) data;
 };

@@ -339,9 +339,6 @@ lgpng_create_iCCP_from_data(struct iCCP *iccp, uint8_t *data, size_t dataz)
 	size_t	  offset;
 	uint8_t	 *nul;
 
-	if (iccp->length <= 81) {
-		return(-1);
-	}
 	iccp->length = dataz;
 	iccp->type = CHUNK_TYPE_iCCP;
 	if (NULL == (nul = memchr(data, '\0', 80))) {
@@ -353,6 +350,7 @@ lgpng_create_iCCP_from_data(struct iCCP *iccp, uint8_t *data, size_t dataz)
 	}
 	(void)memset(iccp->data.name, 0, sizeof(iccp->data.name));
 	(void)memcpy(iccp->data.name, data, offset);
+	iccp->data.namez = offset;
 	if (!lgpng_validate_keyword(iccp->data.name, offset)) {
 		return(-1);
 	}
@@ -370,6 +368,7 @@ lgpng_create_iCCP_from_data(struct iCCP *iccp, uint8_t *data, size_t dataz)
 		return(-1);
 	}
 	iccp->data.profile = data + offset + 2;
+	iccp->data.profilez = dataz - offset - 2;
 	return(0);
 }
 
