@@ -82,6 +82,28 @@ const char *unitspecifiermap[UNITSPECIFIER__MAX] = {
 	"metre",
 };
 
+bool
+lgpng_validate_keyword(uint8_t *keyword, size_t keywordz)
+{
+	if (' ' == keyword[0]) {
+		return(false);
+	}
+	if (' ' == keyword[keywordz - 1]) {
+		return(false);
+	}
+	if (NULL != memmem(keyword, keywordz,"  ", 2)) {
+		return(false);
+	}
+	for (size_t i = 0; i < keywordz; i++) {
+		if (keyword[i] < 32
+		    || (keyword[i] > 126 && keyword[i] < 161)
+		    || keyword[i] > 255) {
+			return(false);
+		}
+	}
+	return(true);
+}
+
 int
 lgpng_create_IHDR_from_data(struct IHDR *ihdr, uint8_t *data, size_t dataz)
 {
@@ -315,20 +337,14 @@ lgpng_create_iCCP_from_data(struct iCCP *iccp, uint8_t *data, size_t dataz)
 	(void)memcpy(iccp->data.name, data, offset);
 	iccp->data.namez = offset;
 	/*
-	 * The 11.3.3.3 sections says profile names should neither start nor
-	 * end with a space and consecutive spaces are not allowed either.
-	 * Still copy the name first, it can be useful.
+	 * Validate keyword before pursuing (XXX: here or later?)
 	 */
-	if (' ' == data[0]) {
+	if (!lgpng_validate_keyword(iccp->data.name, iccp->data.namez)) {
 		return(-1);
 	}
-	if (' ' == data[offset - 1]) {
-		return(-1);
-	}
-	if (NULL != memmem(data, offset,"  ", 2)) {
-		return(-1);
-	}
-
+	/*
+	 * Only one compression type allowed here too but check anyway
+	 */
 	if (offset + 1 > dataz) {
 		return(-1);
 	}
@@ -358,10 +374,16 @@ lgpng_create_sRGB_from_data(struct sRGB *srgb, uint8_t *data, size_t dataz)
 int
 lgpng_create_tEXt_from_data(struct tEXt *text, uint8_t *data, size_t dataz)
 {
+	size_t	keywordz;
+
 	text->length = dataz;
 	text->type = CHUNK_TYPE_tEXt;
 	text->data.keyword = (char *)data;
-	text->data.text = (char *)data + strlen((char *)data) + 1;
+	keywordz = strlen((char *)data);
+	if (!lgpng_validate_keyword(text->data.keyword, keywordz)) {
+		return(-1);
+	}
+	text->data.text = (char *)data + keywordz + 1;
 	return(0);
 }
 
@@ -479,6 +501,9 @@ lgpng_create_sPLT_from_data(struct sPLT *splt, uint8_t *data, size_t dataz)
 	splt->data.palettename = (char *)data;
 	palettenamez = strlen(splt->data.palettename);
 	if (palettenamez > 80) {
+		return(-1);
+	}
+	if (!lgpng_validate_keyword(splt->data.palettename, palettenamez)) {
 		return(-1);
 	}
 	offset = palettenamez + 1;

@@ -332,6 +332,9 @@ struct tIME {
 	} __attribute__((packed)) data;
 };
 
+/* chunks extra */
+bool		lgpng_validate_keyword(uint8_t *, size_t);
+
 /* chunks */
 int		lgpng_create_IHDR_from_data(struct IHDR *, uint8_t *, size_t);
 int		lgpng_create_PLTE_from_data(struct PLTE *, uint8_t *, size_t);
