@@ -172,7 +172,6 @@ struct iCCP {
 	enum chunktype   type;
 	uint32_t         crc;
 	struct {
-		size_t	 namez;
 		uint8_t	 name[80];
 		int8_t	 compression;
 		uint8_t	*profile;
@@ -219,8 +218,8 @@ struct tEXt {
 	enum chunktype   type;
 	uint32_t         crc;
 	struct {
-		char	*keyword;
-		char	*text;
+		uint8_t	 keyword[80];
+		uint8_t	*text;
 	} __attribute__((packed)) data;
 };
 
@@ -310,7 +309,7 @@ struct sPLT {
 	enum chunktype   type;
 	uint32_t         crc;
 	struct {
-		char			*palettename;
+		char			 palettename[80];
 		uint8_t			 sampledepth;
 		size_t			 entries;
 		struct splt_entry	*entry;

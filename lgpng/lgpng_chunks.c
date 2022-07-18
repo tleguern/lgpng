@@ -335,11 +335,7 @@ lgpng_create_iCCP_from_data(struct iCCP *iccp, uint8_t *data, size_t dataz)
 	}
 	(void)memset(iccp->data.name, 0, sizeof(iccp->data.name));
 	(void)memcpy(iccp->data.name, data, offset);
-	iccp->data.namez = offset;
-	/*
-	 * Validate keyword before pursuing (XXX: here or later?)
-	 */
-	if (!lgpng_validate_keyword(iccp->data.name, iccp->data.namez)) {
+	if (!lgpng_validate_keyword(iccp->data.name, offset)) {
 		return(-1);
 	}
 	/*
@@ -374,16 +370,24 @@ lgpng_create_sRGB_from_data(struct sRGB *srgb, uint8_t *data, size_t dataz)
 int
 lgpng_create_tEXt_from_data(struct tEXt *text, uint8_t *data, size_t dataz)
 {
-	size_t	keywordz;
+	int	 offset;
+	uint8_t	*nul;
 
 	text->length = dataz;
 	text->type = CHUNK_TYPE_tEXt;
-	text->data.keyword = (char *)data;
-	keywordz = strlen((char *)data);
-	if (!lgpng_validate_keyword(text->data.keyword, keywordz)) {
+	if (NULL == (nul = memchr(data, '\0', 80))) {
 		return(-1);
 	}
-	text->data.text = (char *)data + keywordz + 1;
+	offset = nul - data;
+	(void)memset(text->data.keyword, 0, sizeof(text->data.keyword));
+	(void)memcpy(text->data.keyword, data, offset);
+	if (1 > offset || 79 < offset) {
+		return(-1);
+	}
+	if (!lgpng_validate_keyword(text->data.keyword, offset)) {
+		return(-1);
+	}
+	text->data.text = data + offset + 1;
 	return(0);
 }
 
@@ -493,20 +497,24 @@ lgpng_create_pHYs_from_data(struct pHYs *phys, uint8_t *data, size_t dataz)
 int
 lgpng_create_sPLT_from_data(struct sPLT *splt, uint8_t *data, size_t dataz)
 {
-	size_t	palettenamez;
-	int	offset;
+	int	 offset;
+	uint8_t	*nul;
 
 	splt->length = dataz;
 	splt->type = CHUNK_TYPE_sPLT;
-	splt->data.palettename = (char *)data;
-	palettenamez = strlen(splt->data.palettename);
-	if (palettenamez > 80) {
+	if (NULL == (nul = memchr(data, '\0', 80))) {
 		return(-1);
 	}
-	if (!lgpng_validate_keyword(splt->data.palettename, palettenamez)) {
+	offset = nul - data;
+	(void)memset(splt->data.palettename, 0, sizeof(splt->data.palettename));
+	(void)memcpy(splt->data.palettename, data, offset);
+	if (1 > offset || 79 < offset) {
 		return(-1);
 	}
-	offset = palettenamez + 1;
+	if (!lgpng_validate_keyword((uint8_t *)splt->data.palettename, offset)) {
+		return(-1);
+	}
+	offset += 1;
 	splt->data.sampledepth = data[offset];
 	if (8 != splt->data.sampledepth && 16 != splt->data.sampledepth) {
 		return(-1);
