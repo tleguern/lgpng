@@ -388,7 +388,7 @@ lgpng_create_sRGB_from_data(struct sRGB *srgb, uint8_t *data, size_t dataz)
 int
 lgpng_create_tEXt_from_data(struct tEXt *text, uint8_t *data, size_t dataz)
 {
-	int	 offset;
+	size_t	 offset;
 	uint8_t	*nul;
 
 	text->length = dataz;
@@ -412,9 +412,39 @@ lgpng_create_tEXt_from_data(struct tEXt *text, uint8_t *data, size_t dataz)
 int
 lgpng_create_zTXt_from_data(struct zTXt *ztxt, uint8_t *data, size_t dataz)
 {
+	size_t	 offset;
+	uint8_t	*nul;
+
 	ztxt->length = dataz;
 	ztxt->type = CHUNK_TYPE_zTXt;
-	fprintf(stderr, "[zTXT: TODO]\n");
+	if (NULL == (nul = memchr(data, '\0', 80))) {
+		return(-1);
+	}
+	offset = nul - data;
+	(void)memset(ztxt->data.keyword, 0, sizeof(ztxt->data.keyword));
+	(void)memcpy(ztxt->data.keyword, data, offset);
+	ztxt->data.keywordz = offset;
+	if (1 > offset || 79 < offset) {
+		return(-1);
+	}
+	if (!lgpng_validate_keyword(ztxt->data.keyword, offset)) {
+		return(-1);
+	}
+	/*
+	 * Only one compression type allowed here but check anyway
+	 */
+	if (offset + 1 > dataz) {
+		return(-1);
+	}
+	ztxt->data.compression = data[offset + 1];
+	if (COMPRESSION_TYPE_DEFLATE != ztxt->data.compression) {
+		return(-1);
+	}
+	if (offset + 2 > dataz) {
+		return(-1);
+	}
+	ztxt->data.text = data + offset + 2;
+	ztxt->data.textz = dataz - offset - 2;
 	return(0);
 }
 

@@ -229,9 +229,11 @@ struct zTXt {
 	enum chunktype   type;
 	uint32_t         crc;
 	struct {
-		char		*keyword;
+		size_t		 keywordz;
+		uint8_t		 keyword[80];
 		uint8_t		 compression;
-		unsigned char	*text;
+		size_t		 textz;
+		uint8_t		*text;
 	} __attribute__((packed)) data;
 };
 

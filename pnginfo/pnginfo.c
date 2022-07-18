@@ -490,7 +490,7 @@ info_tEXt(uint8_t *data, size_t dataz)
 	}
 
 	if (!lgpng_is_official_keyword(text.data.keyword,
-	    sizeof(text.data.keyword))) {
+	    strlen((char *)text.data.keyword))) {
 		printf("tEXt: %s is not an official keyword\n",
 		    text.data.keyword);
 	}
@@ -500,9 +500,53 @@ info_tEXt(uint8_t *data, size_t dataz)
 void
 info_zTXt(uint8_t *data, size_t dataz)
 {
-	struct zTXt	ztxt;
+	int		 retry = 2, zret;
+	size_t		 outz, outtmpz;
+	struct zTXt	 ztxt;
+	uint8_t		*out = NULL, *outtmp = NULL;
 
 	lgpng_create_zTXt_from_data(&ztxt, data, dataz);
+	if (-1 == lgpng_create_zTXt_from_data(&ztxt, data, dataz)) {
+		warnx("Bad zTXt chunk, skipping.");
+		return;
+	}
+	if (!lgpng_is_official_keyword(ztxt.data.keyword,
+	    strlen((char *)ztxt.data.keyword))) {
+		printf("zTXt: %s is not an official keyword\n",
+		    ztxt.data.keyword);
+	}
+	printf("zTXt: compression method: %s\n",
+	    compressiontypemap[ztxt.data.compression]);
+	do {
+		outtmpz = ztxt.data.textz * retry;
+		if (NULL == (outtmp = realloc(out, outtmpz + 1))) {
+			warn("realloc(outtmpz + 1)");
+			goto error;
+		}
+		out = outtmp;
+		outz = outtmpz;
+		zret = uncompress(out, &outz, ztxt.data.text, ztxt.data.textz);
+		if (Z_BUF_ERROR != zret && Z_OK != zret) {
+			if (Z_MEM_ERROR == zret) {
+				warn("uncompress(ztxt.data.textz)");
+			} else if (Z_DATA_ERROR == zret) {
+				warnx("Invalid input data");
+			}
+			warnx("zTXt: Failed decompression");
+			goto error;
+		}
+		out[outz] = '\0';
+		retry += 1;
+	} while (Z_OK != zret);
+	if (outz > ztxt.data.textz) {
+		printf("zTXt: compressed data is bigger than uncompressed\n");
+	}
+	printf("zTXt: keyword: %s\n", ztxt.data.keyword);
+	printf("zTXt: text: %s\n", out);
+error:
+	free(out);
+	out = NULL;
+	outz = 0;
 }
 
 void
