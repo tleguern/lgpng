@@ -18,6 +18,9 @@ all: ${PROG}
 .c.o:
 	${CC} ${CFLAGS} -c $<
 
+icc.c: icc.h
+pnginfo.c: icc.h
+
 ${PROG}: ${OBJS}
 	${CC} ${LDFLAGS} -o $@ ${OBJS} ${LDADD}
 
