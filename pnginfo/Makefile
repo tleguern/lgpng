@@ -1,7 +1,7 @@
 include Makefile.configure
 
 PROG= pnginfo
-SRCS= ${PROG}.c compats.c
+SRCS= ${PROG}.c compats.c icc.c
 OBJS= ${SRCS:.c=.o}
 
 LDADD+= -llgpng -lz

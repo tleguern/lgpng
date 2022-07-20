@@ -30,6 +30,7 @@
 #include <zlib.h>
 
 #include "lgpng.h"
+#include "icc.h"
 
 void usage(void);
 void info_IHDR(struct IHDR *);
@@ -405,10 +406,11 @@ info_gAMA(uint8_t *data, size_t dataz)
 void
 info_iCCP(uint8_t *data, size_t dataz)
 {
-	int		 retry = 2, zret;
-	size_t		 outz, outtmpz;
-	struct iCCP	 iccp;
-	uint8_t		*out = NULL, *outtmp = NULL;
+	int			 retry = 2, zret;
+	size_t			 outz, outtmpz;
+	struct iCCP		 iccp;
+	struct icc_profile	 profile;
+	uint8_t			*out = NULL, *outtmp = NULL;
 
 	if (-1 == lgpng_create_iCCP_from_data(&iccp, data, dataz)) {
 		warnx("Bad iCCP chunk, skipping.");
@@ -439,16 +441,40 @@ info_iCCP(uint8_t *data, size_t dataz)
 		out[outz] = '\0';
 		retry += 1;
 	} while (Z_OK != zret);
-	if (outz > iccp.data.profilez) {
-		printf("iCCP: compressed data is bigger than uncompressed\n");
+	printf("iCCP: profile size: %zu\n", outz);
+	if (false == icc_create_from_data(&profile, out, outz)) {
+		warnx("Invalid ICC profile");
+		return;
 	}
-	/* TODO: https://www.color.org/ICC_Minor_Revision_for_Web.pdf */
-	printf("iCCP: profile size: (%zu)\n", outz);
+	printf("iCCP: profile: CMM Type signature: %c%c%c%c\n",
+	    profile.cmm_type_sig[0], profile.cmm_type_sig[1],
+	    profile.cmm_type_sig[2], profile.cmm_type_sig[3]);
+	printf("iCCP: profile: version: %d.%d.%d\n",
+	    profile.major_version,
+	    profile.minor_version,
+	    profile.patch_version);
+	printf("iCCP: profile: class: %s\n",
+	    icc_classmap[profile.class]);
+	printf("iCCP: profile: color space: %s\n",
+	    icc_colorspacemap[profile.colorspace]);
+	printf("iCCP: profile: connection space: %s\n",
+	    icc_colorspacemap[profile.profile_colorspace]);
+	printf("iCCP: profile: creation date: %d-%02d-%02d %02d:%02d:%02d\n",
+	    profile.year, profile.month, profile.day, profile.hour,
+	    profile.minute, profile.second);
+	printf("iCCP: profile: primary platform: %s\n",
+	    icc_platformmap[profile.platform]);
+	printf("iCCP: profile: flags: not impemented\n");
+	printf("iCCP: profile: device manufacturer: %s\n", profile.manufacturer);
+	printf("iCCP: profile: device model: %s\n", profile.model);
+	printf("iCCP: profile: attributes: not impemented\n");
+	printf("iCCP: profile: rendering intent: %s\n",
+	    icc_rendering_intentmap[profile.rendering_intent]);
+	printf("iCCP: profile: creator: %s\n", profile.creator);
 error:
 	free(out);
 	out = NULL;
 	outz = 0;
-
 }
 
 void
