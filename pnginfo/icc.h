@@ -106,6 +106,15 @@ struct icc_profile {
 	uint64_t	attributes;
 	uint8_t         rendering_intent;	/* enum icc_rendering_intent */
 	uint8_t         creator[4];
+	uint32_t	tag_count;
+};
+
+enum icc_tag_type {
+	ICC_TAG_TYPE_TEXT_DESCRIPTION,
+	ICC_TAG_TYPE_TEXT,
+	ICC_TAG_TYPE_XYZNUMBER,
+	ICC_TAG_TYPE_CURV,
+	ICC_TAG_TYPE__MAX,
 };
 
 /* helper macro */

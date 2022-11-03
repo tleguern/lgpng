@@ -18,7 +18,9 @@
 
 #include <err.h>
 #include <stdbool.h>
+#include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "icc.h"
 
@@ -133,12 +135,12 @@ struct icc_platform_match {
 bool
 icc_create_from_data(struct icc_profile *profile, uint8_t *data, size_t dataz)
 {
-	int		i;
+	int		i, offset;
 	uint8_t		device_class_sig[5];
 	uint8_t		color_space_sig[5];
 	uint8_t 	profile_conn_space_sig[5];
 	uint8_t		primary_platform_sig[5];
-	uint32_t	rendering;
+	uint32_t	rendering, tag_count;
 
 	/*
 	 * ICC profile header
@@ -274,6 +276,14 @@ icc_create_from_data(struct icc_profile *profile, uint8_t *data, size_t dataz)
 	/* Creator signature */
 	(void)memcpy((uint8_t *)&(profile->creator), data + 80, 4);
 	/* Skip 44 bytes */
+
+	/*
+	 * Tag Table
+	 */
+	offset = 128;
+	(void)memcpy((uint8_t *)&tag_count, data + offset, 4);
+	tag_count = ntohl(tag_count);
+	profile->tag_count = tag_count;
 	return(true);
 }
 

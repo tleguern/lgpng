@@ -471,6 +471,8 @@ info_iCCP(uint8_t *data, size_t dataz)
 	printf("iCCP: profile: rendering intent: %s\n",
 	    icc_rendering_intentmap[profile.rendering_intent]);
 	printf("iCCP: profile: creator: %s\n", profile.creator);
+	printf("iCCP: entries in the tag table: %d\n",
+	    profile.tag_count);
 error:
 	free(out);
 	out = NULL;
