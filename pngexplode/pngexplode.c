@@ -40,7 +40,7 @@ main(int argc, char *argv[])
 	FILE		*source = stdin, *output = NULL;
 
 #if HAVE_PLEDGE
-	pledge("stdio wpath cpath", NULL);
+	pledge("stdio wpath rpath cpath", NULL);
 #endif
 	while (-1 != (ch = getopt(argc, argv, "f:s")))
 		switch (ch) {
