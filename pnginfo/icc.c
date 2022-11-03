@@ -132,6 +132,63 @@ struct icc_platform_match {
 	{ "TGNT", ICC_PLATFORM_TALIGENT  },
 };
 
+struct icc_type_match {
+	const char *const	tag;
+	enum icc_tag_type	type;
+} icc_tag_type_match[] = {
+	{ "desc", ICC_TAG_TYPE_TEXT_DESCRIPTION },
+	{ "cprt", ICC_TAG_TYPE_TEXT		},
+	{ "wtpt", ICC_TAG_TYPE_XYZNUMBER	},
+	{ "bkpt", ICC_TAG_TYPE_XYZNUMBER	},
+	{ "rXYZ", ICC_TAG_TYPE_XYZNUMBER	},
+	{ "gXYZ", ICC_TAG_TYPE_XYZNUMBER	},
+	{ "bXYZ", ICC_TAG_TYPE_XYZNUMBER	},
+	{ "rTRC", ICC_TAG_TYPE_CURV		},
+	{ "gTRC", ICC_TAG_TYPE_CURV		},
+	{ "bTRC", ICC_TAG_TYPE_CURV		},
+};
+
+enum icc_tag_type
+icc_match_tag_type(uint8_t *tag)
+{
+	unsigned int i, max;
+	enum icc_tag_type match = ICC_TAG_TYPE__MAX;
+
+	max = sizeof(icc_tag_type_match) / sizeof(struct icc_type_match);
+	for (i = 0; i < max; i++) {
+		if (0 == memcmp(tag, icc_tag_type_match[i].tag, 4)) {
+			match = icc_tag_type_match[i].type;
+			break;
+		}
+	}
+	return(match);
+}
+
+bool
+icc_validate_tag(uint8_t *tag, uint8_t *type, uint32_t tag_offset, uint8_t *data, size_t dataz)
+{
+	uint8_t	real_type[5];
+	uint8_t	reserved[4];
+
+	if (tag_offset >= dataz) {
+		warnx("Invalid tag offset for tag '%s'", tag);
+		return(false);
+	}
+	(void)memset((uint8_t *)&real_type, 0, sizeof(real_type));
+	(void)memcpy((uint8_t *)&real_type, data + tag_offset, 4);
+	if (0 != memcmp(real_type, type, 4)) {
+		warnx("Invalid type signature for tag '%s', should be '%s'"
+		    " but found '%.4s'", tag, type, real_type);
+		return(false);
+	}
+	(void)memset((uint8_t *)&reserved, 0, sizeof(reserved));
+	if (0 != memcmp((uint8_t *)&reserved, data + tag_offset + 4, 4)) {
+		warnx("Reserved bytes are not zero for tag '%s'", tag);
+		return(false);
+	}
+	return(true);
+}
+
 bool
 icc_create_from_data(struct icc_profile *profile, uint8_t *data, size_t dataz)
 {
@@ -284,6 +341,46 @@ icc_create_from_data(struct icc_profile *profile, uint8_t *data, size_t dataz)
 	(void)memcpy((uint8_t *)&tag_count, data + offset, 4);
 	tag_count = ntohl(tag_count);
 	profile->tag_count = tag_count;
+	offset += 4;
+	for (uint32_t tagn = 0; tagn < tag_count; tagn++) {
+		uint8_t		tag[5];
+		uint32_t	tag_offset, tag_size;
+		int		tagtype;
+
+		(void)memset((uint8_t *)&tag, 0, sizeof(tag));
+		(void)memcpy((uint8_t *)&tag, data + offset, 4);
+		(void)memcpy((uint8_t *)&tag_offset, data + offset + 4, 4);
+		(void)memcpy((uint8_t *)&tag_size, data + offset + 8, 4);
+		tag_offset = ntohl(tag_offset);
+		tag_size = ntohl(tag_size);
+		offset += 12;
+		tagtype = icc_match_tag_type(tag);
+		if (ICC_TAG_TYPE__MAX == tagtype) {
+			fprintf(stderr, "Unimplemented type for tag '%s'\n", tag);
+			continue;
+		}
+		if (ICC_TAG_TYPE_TEXT_DESCRIPTION == tagtype) {
+			/* textDescriptionTag tag type */
+			(void)icc_validate_tag(tag, (uint8_t *)"desc", tag_offset, data, dataz);
+		} else if (ICC_TAG_TYPE_TEXT == tagtype) {
+			/* text tag type */
+			(void)icc_validate_tag(tag, (uint8_t *)"text", tag_offset, data, dataz);
+		} else if (ICC_TAG_TYPE_XYZNUMBER == tagtype) {
+			/* XYZType tag type */
+			(void)icc_validate_tag(tag, (uint8_t *)"XYZ ", tag_offset, data, dataz);
+			//printf("tag %s: number of XYZNumber: %d\n", tag, (tag_size - 8) / 3);
+			/* TODO: Decode XYZNumbers */
+		} else if (ICC_TAG_TYPE_CURV == tagtype) {
+			/* curveType tag type */
+			uint32_t entries;
+
+			(void)icc_validate_tag(tag, (uint8_t *)"curv", tag_offset, data, dataz);
+			(void)memcpy((uint8_t *)&entries, data + tag_offset + 8, 4);
+			entries = ntohl(entries);
+			//printf("tag %s: number of entries: %d\n", tag, entries);
+			/* TODO: Handle special values 0 and 1 */
+		}
+	}
 	return(true);
 }
 
