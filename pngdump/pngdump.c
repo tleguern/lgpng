@@ -116,11 +116,8 @@ main(int argc, char *argv[])
 		}
 		/* Ignore invalid CRC */
 		if (chunktype == chunk) {
-			uint32_t nlength = htonl(length);
-			uint32_t ncrc = htonl(crc);
-
-			(void)lgpng_stream_write_chunk(stdout, nlength,
-			    str_type, data, ncrc);
+			(void)lgpng_stream_write_chunk(stdout, length,
+			    str_type, data, crc);
 			loopexit = true;
 		}
 stop:

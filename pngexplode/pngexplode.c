@@ -88,7 +88,7 @@ main(int argc, char *argv[])
 
 	do {
 		int		 chunktype = CHUNK_TYPE__MAX;
-		uint32_t	 length = 0, crc = 0, nlength = 0, ncrc = 0;
+		uint32_t	 length = 0, crc = 0;
 		uint8_t		*data = NULL;
 		uint8_t		 str_type[5] = {0, 0, 0, 0, 0};
 
@@ -122,10 +122,8 @@ main(int argc, char *argv[])
 			free(data);
 			return(EXIT_FAILURE);
 		}
-		nlength = htonl(length);
-		ncrc = htonl(crc);
-		(void)lgpng_steam_write_chunk(output, nlength, str_type,
-		    data, ncrc);
+		(void)lgpng_stream_write_chunk(output, length, str_type,
+		    data, crc);
 		(void)fclose(output);
 		if (CHUNK_TYPE_IEND == chunktype) {
 			loopexit = true;

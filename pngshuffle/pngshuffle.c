@@ -87,7 +87,6 @@ main(int argc, char *argv[])
 		uint8_t		*data = NULL;
 		uint8_t		 str_type[5] = {0, 0, 0, 0, 0};
 		struct PLTE	 plte;
-		uint32_t	 nlength, ncrc;
 
 		if (false == lgpng_stream_get_length(source, &length)) {
 			break;
@@ -107,7 +106,6 @@ main(int argc, char *argv[])
 			goto stop;
 		}
 
-		nlength = htonl(length);
 		/* If it is PLTE shuffle it, otherwise just write it */
 		if (CHUNK_TYPE_PLTE == chunktype) {
 			int		permutations;
@@ -142,11 +140,10 @@ main(int argc, char *argv[])
 				data[src] = g;
 				data[src] = b;
 			}
-			lgpng_chunk_crc(length, str_type, data, &ncrc);
+			lgpng_chunk_crc(length, str_type, data, &crc);
 		}
-		ncrc = htonl(crc);
-		(void)lgpng_stream_write_chunk(stdout, nlength, str_type,
-		    data, ncrc);
+		(void)lgpng_stream_write_chunk(stdout, length, str_type,
+		    data, crc);
 stop:
 		if (CHUNK_TYPE_IEND == chunktype) {
 			loopexit = true;
