@@ -212,10 +212,16 @@ lgpng_create_tRNS_from_data(struct tRNS *trns, struct IHDR *ihdr, uint8_t *data,
 	(void)memset(&(trns->data.palette), 0, sizeof(trns->data.palette));
 	switch (ihdr->data.colourtype) {
 	case COLOUR_TYPE_GREYSCALE:
+		if (2 != dataz) {
+			return(-1);
+		}
 		(void)memcpy(&(trns->data.gray), data, 2);
 		trns->data.gray = ntohs(trns->data.gray);
 		break;
 	case COLOUR_TYPE_TRUECOLOUR:
+		if (6 != dataz) {
+			return(-1);
+		}
 		(void)memcpy(&(trns->data.red), data, 2);
 		trns->data.red = ntohs(trns->data.red);
 		(void)memcpy(&(trns->data.green), data, 2);
@@ -224,6 +230,9 @@ lgpng_create_tRNS_from_data(struct tRNS *trns, struct IHDR *ihdr, uint8_t *data,
 		trns->data.blue = ntohs(trns->data.blue);
 		break;
 	case COLOUR_TYPE_INDEXED:
+		if (dataz > 256) {
+			return(-1);
+		}
 		trns->data.entries = dataz;
 		(void)memcpy(&(trns->data.palette), data, dataz);
 		break;
