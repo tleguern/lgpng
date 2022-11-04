@@ -35,6 +35,7 @@
 void usage(void);
 void info_IHDR(struct IHDR *);
 void info_PLTE(struct PLTE *);
+void info_IDAT(uint8_t *, size_t);
 void info_tRNS(struct IHDR *, struct PLTE *, uint8_t *, size_t);
 void info_cHRM(uint8_t *, size_t);
 void info_gAMA(uint8_t *, size_t);
@@ -198,6 +199,9 @@ main(int argc, char *argv[])
 				case CHUNK_TYPE_PLTE:
 					info_PLTE(&plte);
 					break;
+				case CHUNK_TYPE_IDAT:
+					info_IDAT(data, length);
+					break;
 				case CHUNK_TYPE_tRNS:
 					info_tRNS(&ihdr, &plte, data, length);
 					break;
@@ -350,6 +354,15 @@ info_PLTE(struct PLTE *plte)
 		    plte->data.entry[i].green,
 		    plte->data.entry[i].blue);
 	}
+}
+
+void
+info_IDAT(uint8_t *data, size_t dataz)
+{
+	struct IDAT idat;
+
+	(void)lgpng_create_IDAT_from_data(&idat, data, dataz);
+	printf("IDAT: compressed bytes %u\n", idat.length);
 }
 
 void
