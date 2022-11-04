@@ -26,7 +26,7 @@ lgpng.c: ${SRCS}
 	cat ${SRCS} > lgpng.c
 
 lib${LIB}.a: ${OBJS}
-	${AR} cqD lib${LIB}.a ${OBJS}
+	${AR} rcD lib${LIB}.a ${OBJS}
 	ranlib lib${LIB}.a
 
 clean:
