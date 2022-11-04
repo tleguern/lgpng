@@ -55,6 +55,7 @@ void info_acTL(uint8_t *, size_t);
 void info_fcTL(uint8_t *, size_t);
 void info_fdAT(uint8_t *, size_t);
 void info_oFFs(uint8_t *, size_t);
+void info_unknown(uint8_t [5], uint8_t *, size_t);
 
 int
 main(int argc, char *argv[])
@@ -67,6 +68,7 @@ main(int argc, char *argv[])
 	struct IHDR	 ihdr;
 	struct PLTE	 plte;
 	FILE		*source = stdin;
+	uint8_t		 str_cflag[4] = {0, 0, 0, 0};
 
 #if HAVE_PLEDGE
 	pledge("stdio rpath", NULL);
@@ -84,9 +86,8 @@ main(int argc, char *argv[])
 					break;
 				}
 			}
-			/* TODO: Allow arbitrary chunk ? */
 			if (CHUNK_TYPE__MAX == chunk) {
-				errx(EXIT_FAILURE, "%s: invalid chunk", optarg);
+				(void)memcpy(str_cflag, optarg, 4);
 			}
 			break;
 		case 'f':
@@ -165,7 +166,7 @@ main(int argc, char *argv[])
 		}
 		if (lflag) {
 			/* Simply list chunks' name */
-			printf("%s\n", str_type);
+			printf("%.4s\n", str_type);
 		} else if (cflag) {
 			/*
 			 * The IHDR chunk contains important information used to
@@ -262,7 +263,9 @@ main(int argc, char *argv[])
 				case CHUNK_TYPE__MAX:
 					/* FALLTHROUGH */
 				default:
-					errx(EXIT_FAILURE, "Unsupported chunk type");
+					if (0 == memcmp(str_type, str_cflag, 4)) {
+						info_unknown(str_type, data, length);
+					}
 				}
 			}
 			free(data);
@@ -836,6 +839,13 @@ info_oFFs(uint8_t *data, size_t dataz)
 	printf("oFFs: x position: %d\n", offs.data.x_position);
 	printf("oFFs: y position: %d\n", offs.data.y_position);
 	printf("oFFs: unit specifier: %s\n", offsunitspecifiermap[offs.data.unitspecifier]);
+}
+
+void
+info_unknown(uint8_t name[5], uint8_t *data, size_t dataz)
+{
+	(void)data;
+	printf("%s: bytes %zu\n", name, dataz);
 }
 
 void
