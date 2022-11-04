@@ -50,6 +50,7 @@ enum chunktype {
 	CHUNK_TYPE_fcTL,
 	CHUNK_TYPE_fdAT,
 	CHUNK_TYPE_oFFs,
+	CHUNK_TYPE_vpAg,
 	CHUNK_TYPE_caNv,
 	CHUNK_TYPE__MAX,
 };
@@ -453,6 +454,25 @@ struct oFFs {
 	} __attribute__((packed)) data;
 };
 
+/* vpAg chunk */
+enum vpag_unitspecifier {
+	VPAG_UNITSPECIFIER_PIXEL,
+	VPAG_UNITSPECIFIER__MAX,
+};
+
+extern const char *vpagunitspecifiermap[VPAG_UNITSPECIFIER__MAX];
+
+struct vpAg {
+	uint32_t         length;
+	enum chunktype   type;
+	uint32_t         crc;
+	struct {
+		uint32_t	width;
+		uint32_t	height;
+		uint8_t		unitspecifier;	/* enum vpag_unitspecifier */
+	} __attribute__((packed)) data;
+};
+
 /* caNv chunk */
 struct caNv {
 	uint32_t         length;
@@ -495,6 +515,7 @@ int		lgpng_create_fdAT_from_data(struct fdAT *, uint8_t *, size_t);
 int		lgpng_create_oFFs_from_data(struct oFFs *, uint8_t *, size_t);
 
 /* chunks_extra */
+int		lgpng_create_vpAg_from_data(struct vpAg *, uint8_t *, size_t);
 int		lgpng_create_caNv_from_data(struct caNv *, uint8_t *, size_t);
 
 /* data */

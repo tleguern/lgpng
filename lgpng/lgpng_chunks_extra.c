@@ -21,6 +21,27 @@
 
 #include "lgpng.h"
 
+const char *vpagunitspecifiermap[VPAG_UNITSPECIFIER__MAX] = {
+	"pixel",
+};
+
+int
+lgpng_create_vpAg_from_data(struct vpAg *vpag, uint8_t *data, size_t dataz)
+{
+	if (9 != dataz) {
+		return(-1);
+	}
+	(void)memcpy(&(vpag->data.width), data, 4);
+	(void)memcpy(&(vpag->data.height), data + 4, 4);
+	vpag->data.width = ntohl(vpag->data.width);
+	vpag->data.height = ntohl(vpag->data.height);
+	vpag->data.unitspecifier = data[8];
+	if (0 != vpag->data.unitspecifier) {
+		return(-1);
+	}
+	return(0);
+}
+
 int
 lgpng_create_caNv_from_data(struct caNv *canv, uint8_t *data, size_t dataz)
 {

@@ -51,6 +51,7 @@ const char *chunktypemap[CHUNK_TYPE__MAX] = {
 	"fcTL",
 	"fdAT",
 	"oFFs",
+	"vpAg",
 	"caNv",
 };
 
