@@ -36,6 +36,7 @@ enum chunktype {
 	CHUNK_TYPE_iCCP,
 	CHUNK_TYPE_sBIT,
 	CHUNK_TYPE_sRGB,
+	CHUNK_TYPE_cICP,
 	CHUNK_TYPE_iTXt,
 	CHUNK_TYPE_tEXt,
 	CHUNK_TYPE_zTXt,
@@ -214,6 +215,19 @@ struct sRGB {
 	} __attribute__((packed)) data;
 };
 
+/* cICP chunk */
+struct cICP {
+	uint32_t         length;
+	enum chunktype   type;
+	uint32_t         crc;
+	struct {
+		uint8_t	colour_primaries;
+		uint8_t	transfer_function;
+		uint8_t	matrix_coefficients;
+		uint8_t	video_full_range;
+	} __attribute__((packed)) data;
+};
+
 /* tEXt chunk */
 struct tEXt {
 	uint32_t         length;
@@ -349,6 +363,7 @@ int		lgpng_create_gAMA_from_data(struct gAMA *, uint8_t *, size_t);
 int		lgpng_create_iCCP_from_data(struct iCCP *, uint8_t *, size_t);
 int		lgpng_create_sBIT_from_data(struct sBIT *, struct IHDR *, uint8_t *, size_t);
 int		lgpng_create_sRGB_from_data(struct sRGB *, uint8_t *, size_t);
+int		lgpng_create_cICP_from_data(struct cICP *, uint8_t *, size_t);
 /*int		lgpng_create_iTXt_from_data(struct iTXt *, uint8_t *, size_t);*/
 int		lgpng_create_tEXt_from_data(struct tEXt *, uint8_t *, size_t);
 int		lgpng_create_zTXt_from_data(struct zTXt *, uint8_t *, size_t);

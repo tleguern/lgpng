@@ -37,6 +37,7 @@ const char *chunktypemap[CHUNK_TYPE__MAX] = {
 	"iCCP",
 	"sBIT",
 	"sRGB",
+	"cICP",
 	"iTXt",
 	"tEXt",
 	"zTXt",
@@ -381,6 +382,31 @@ lgpng_create_sRGB_from_data(struct sRGB *srgb, uint8_t *data, size_t dataz)
 	srgb->length = dataz;
 	srgb->type = CHUNK_TYPE_sRGB;
 	srgb->data.intent = data[0];
+	return(0);
+}
+
+int
+lgpng_create_cICP_from_data(struct cICP *cicp, uint8_t *data, size_t dataz)
+{
+	if (4 != dataz) {
+		return(-1);
+	}
+	cicp->length = dataz;
+	cicp->type = CHUNK_TYPE_cICP;
+	cicp->data.colour_primaries = data[0];
+	cicp->data.transfer_function = data[1];
+	cicp->data.matrix_coefficients = data[2];
+	cicp->data.video_full_range = data[3];
+	if (0 != cicp->data.matrix_coefficients) {
+		return(-1);
+	}
+	if (0 != cicp->data.video_full_range && 1 != cicp->data.video_full_range) {
+		return(-1);
+	}
+	/*
+	 * TODO: find the name of the transfer functions
+	 * -> Tables 2, 3 & 4 of ITU-T H.273 ?
+	 * */
 	return(0);
 }
 
