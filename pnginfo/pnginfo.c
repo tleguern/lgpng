@@ -55,6 +55,7 @@ void info_acTL(uint8_t *, size_t);
 void info_fcTL(uint8_t *, size_t);
 void info_fdAT(uint8_t *, size_t);
 void info_oFFs(uint8_t *, size_t);
+void info_vpAg(uint8_t *, size_t);
 void info_caNv(uint8_t *, size_t);
 void info_unknown(uint8_t [5], uint8_t *, size_t);
 
@@ -260,6 +261,9 @@ main(int argc, char *argv[])
 					break;
 				case CHUNK_TYPE_oFFs:
 					info_oFFs(data, length);
+					break;
+				case CHUNK_TYPE_vpAg:
+					info_vpAg(data, length);
 					break;
 				case CHUNK_TYPE_caNv:
 					info_caNv(data, length);
@@ -844,6 +848,21 @@ info_oFFs(uint8_t *data, size_t dataz)
 	printf("oFFs: y position: %d\n", offs.data.y_position);
 	printf("oFFs: unit specifier: %s\n", offsunitspecifiermap[offs.data.unitspecifier]);
 }
+
+void
+info_vpAg(uint8_t *data, size_t dataz)
+{
+	struct vpAg vpag;
+
+	if (-1 == lgpng_create_vpAg_from_data(&vpag, data, dataz)) {
+		warnx("Bad vpAg chunk, skipping.");
+		return;
+	}
+	printf("vpAg: width: %d\n", vpag.data.width);
+	printf("vpAg: height: %d\n", vpag.data.height);
+	printf("vpAg: unit specifier: %s\n", vpagunitspecifiermap[vpag.data.unitspecifier]);
+}
+
 
 void
 info_caNv(uint8_t *data, size_t dataz)
