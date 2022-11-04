@@ -46,6 +46,9 @@ enum chunktype {
 	CHUNK_TYPE_sPLT,
 	CHUNK_TYPE_eXIf,
 	CHUNK_TYPE_tIME,
+	CHUNK_TYPE_acTL,
+	CHUNK_TYPE_fcTL,
+	CHUNK_TYPE_fdAT,
 	CHUNK_TYPE__MAX,
 };
 
@@ -360,6 +363,65 @@ struct tIME {
 	} __attribute__((packed)) data;
 };
 
+/* acTL chunk */
+struct acTL {
+	uint32_t         length;
+	enum chunktype   type;
+	uint32_t         crc;
+	struct {
+		uint32_t	num_frames;
+		uint32_t	num_plays;
+	} __attribute__((packed)) data;
+};
+
+/* fcTL chunk */
+enum dispose_op {
+	DISPOSE_OP_NONE,
+	DISPOSE_OP_BACKGROUND,
+	DISPOSE_OP_PREVIOUS,
+	DISPOSE_OP__MAX,
+};
+
+extern const char *dispose_opmap[DISPOSE_OP__MAX];
+
+enum blend_op {
+	BLEND_OP_SOURCE,
+	BLEND_OP_OVER,
+	BLEND_OP__MAX,
+};
+
+extern const char *blend_opmap[BLEND_OP__MAX];
+
+struct fcTL {
+	uint32_t         length;
+	enum chunktype   type;
+	uint32_t         crc;
+	struct {
+		uint32_t	sequence_number;
+		uint32_t	width;
+		uint32_t	height;
+		uint32_t	x_offset;
+		uint32_t	y_offset;
+		uint16_t	delay_num;
+		uint16_t	delay_den;
+		uint8_t		dispose_op;
+		uint8_t		blend_op;
+
+	} __attribute__((packed)) data;
+};
+
+/* fdAT chunk */
+struct fdAT {
+	uint32_t         length;
+	enum chunktype   type;
+	uint32_t         crc;
+	struct {
+		uint32_t	 sequence_number;
+		uint8_t		*frame_data;
+	} __attribute__((packed)) data;
+};
+
+
 /* chunks extra */
 bool		lgpng_validate_keyword(uint8_t *, size_t);
 bool		lgpng_is_official_keyword(uint8_t *, size_t);
@@ -384,6 +446,9 @@ int		lgpng_create_pHYs_from_data(struct pHYs *, uint8_t *, size_t);
 int		lgpng_create_sPLT_from_data(struct sPLT *, uint8_t *, size_t);
 int		lgpng_create_eXIf_from_data(struct eXIf *, uint8_t *, size_t);
 int		lgpng_create_tIME_from_data(struct tIME *, uint8_t *, size_t);
+int		lgpng_create_acTL_from_data(struct acTL *, uint8_t *, size_t);
+int		lgpng_create_fcTL_from_data(struct fcTL *, uint8_t *, size_t);
+int		lgpng_create_fdAT_from_data(struct fdAT *, uint8_t *, size_t);
 
 /* data */
 bool	lgpng_data_is_png(uint8_t *, size_t);

@@ -46,7 +46,10 @@ const char *chunktypemap[CHUNK_TYPE__MAX] = {
 	"pHYs",
 	"sPLT",
 	"eXIf",
-	"tIME"
+	"tIME",
+	"acTL",
+	"fcTL",
+	"fdAT",
 };
 
 const char *colourtypemap[COLOUR_TYPE__MAX] = {
@@ -82,6 +85,17 @@ const char *rendering_intentmap[RENDERING_INTENT__MAX] = {
 const char *unitspecifiermap[UNITSPECIFIER__MAX] = {
 	"unknown",
 	"metre",
+};
+
+const char *dispose_opmap[DISPOSE_OP__MAX] = {
+	"none",
+	"background",
+	"previous",
+};
+
+const char *blend_opmap[BLEND_OP__MAX] = {
+	"source",
+	"over",
 };
 
 bool
@@ -634,6 +648,74 @@ lgpng_create_tIME_from_data(struct tIME *time, uint8_t *data, size_t dataz)
 	time->data.hour = data[4];
 	time->data.minute = data[5];
 	time->data.second = data[6];
+	return(0);
+}
+
+int
+lgpng_create_acTL_from_data(struct acTL *actl, uint8_t *data, size_t dataz)
+{
+	if (8 != dataz) {
+		return(-1);
+	}
+	actl->length = dataz;
+	actl->type = CHUNK_TYPE_acTL;
+	(void)memcpy(&(actl->data.num_frames), data, 4);
+	(void)memcpy(&(actl->data.num_plays), data + 4, 4);
+	actl->data.num_frames = ntohl(actl->data.num_frames);
+	actl->data.num_plays = ntohl(actl->data.num_plays);
+	if (0 == actl->data.num_frames) {
+		return(-1);
+	}
+	return(0);
+}
+
+int
+lgpng_create_fcTL_from_data(struct fcTL *fctl, uint8_t *data, size_t dataz)
+{
+	if (26 != dataz) {
+		return(-1);
+	}
+	fctl->length = dataz;
+	fctl->type = CHUNK_TYPE_fcTL;
+	(void)memcpy(&(fctl->data.sequence_number), data, 4);
+	(void)memcpy(&(fctl->data.width), data + 4, 4);
+	(void)memcpy(&(fctl->data.height), data + 8, 4);
+	(void)memcpy(&(fctl->data.x_offset), data + 12, 4);
+	(void)memcpy(&(fctl->data.y_offset), data + 16, 4);
+	(void)memcpy(&(fctl->data.delay_num), data + 20, 2);
+	(void)memcpy(&(fctl->data.delay_den), data + 22, 2);
+	fctl->data.sequence_number = ntohl(fctl->data.sequence_number);
+	fctl->data.width = ntohl(fctl->data.width);
+	fctl->data.height = ntohl(fctl->data.height);
+	fctl->data.x_offset = ntohl(fctl->data.x_offset);
+	fctl->data.y_offset = ntohl(fctl->data.y_offset);
+	fctl->data.delay_num = ntohs(fctl->data.delay_num);
+	fctl->data.delay_den = ntohs(fctl->data.delay_den);
+	fctl->data.dispose_op = data[24];
+	fctl->data.blend_op = data[25];
+	if (fctl->data.width == 0 || fctl->data.height == 0) {
+		return(-1);
+	}
+	if (fctl->data.dispose_op >= DISPOSE_OP__MAX) {
+		return(-1);
+	}
+	if (fctl->data.blend_op >= BLEND_OP__MAX) {
+		return(-1);
+	}
+	return(0);
+}
+
+int
+lgpng_create_fdAT_from_data(struct fdAT *fdat, uint8_t *data, size_t dataz)
+{
+	if (5 > dataz) {
+		return(-1);
+	}
+	fdat->length = dataz;
+	fdat->type = CHUNK_TYPE_fdAT;
+	(void)memcpy(&(fdat->data.sequence_number), data, 4);
+	fdat->data.sequence_number = ntohl(fdat->data.sequence_number);
+	fdat->data.frame_data = data + 4;
 	return(0);
 }
 
