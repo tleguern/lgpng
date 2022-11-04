@@ -50,6 +50,7 @@ enum chunktype {
 	CHUNK_TYPE_fcTL,
 	CHUNK_TYPE_fdAT,
 	CHUNK_TYPE_oFFs,
+	CHUNK_TYPE_caNv,
 	CHUNK_TYPE__MAX,
 };
 
@@ -452,12 +453,23 @@ struct oFFs {
 	} __attribute__((packed)) data;
 };
 
+/* caNv chunk */
+struct caNv {
+	uint32_t         length;
+	enum chunktype   type;
+	uint32_t         crc;
+	struct {
+		uint32_t	width;
+		uint32_t	height;
+		int32_t	 	x_position;
+		int32_t		y_position;
+	} __attribute__((packed)) data;
+};
 
-/* chunks extra */
+/* chunks */
 bool		lgpng_validate_keyword(uint8_t *, size_t);
 bool		lgpng_is_official_keyword(uint8_t *, size_t);
 
-/* chunks */
 int		lgpng_create_IHDR_from_data(struct IHDR *, uint8_t *, size_t);
 int		lgpng_create_PLTE_from_data(struct PLTE *, uint8_t *, size_t);
 int		lgpng_create_IDAT_from_data(struct IDAT *, uint8_t *, size_t);
@@ -481,6 +493,9 @@ int		lgpng_create_acTL_from_data(struct acTL *, uint8_t *, size_t);
 int		lgpng_create_fcTL_from_data(struct fcTL *, uint8_t *, size_t);
 int		lgpng_create_fdAT_from_data(struct fdAT *, uint8_t *, size_t);
 int		lgpng_create_oFFs_from_data(struct oFFs *, uint8_t *, size_t);
+
+/* chunks_extra */
+int		lgpng_create_caNv_from_data(struct caNv *, uint8_t *, size_t);
 
 /* data */
 bool	lgpng_data_is_png(uint8_t *, size_t);

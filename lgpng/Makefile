@@ -1,5 +1,5 @@
 LIB= lgpng
-SRCS= lgpng_chunks.c lgpng_crc.c lgpng_data.c lgpng_stream.c
+SRCS= lgpng_chunks.c lgpng_chunks_extra.c lgpng_crc.c lgpng_data.c lgpng_stream.c
 OBJS= ${SRCS:.c=.o}
 
 LDADD+=
@@ -17,6 +17,7 @@ all: lgpng.c lib${LIB}.a
 	${CC} ${CFLAGS} -c $<
 
 lgpng_chunks.c: lgpng.h
+lgpng_chunks_extra.c: lgpng.h
 lgpng_crc.c: lgpng.h
 lgpng_data.c: lgpng.h
 lgpng_stream.c: lgpng.h

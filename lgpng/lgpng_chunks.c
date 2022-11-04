@@ -51,6 +51,7 @@ const char *chunktypemap[CHUNK_TYPE__MAX] = {
 	"fcTL",
 	"fdAT",
 	"oFFs",
+	"caNv",
 };
 
 const char *colourtypemap[COLOUR_TYPE__MAX] = {
