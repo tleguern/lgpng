@@ -130,6 +130,16 @@ struct PLTE {
 	} __attribute__((packed)) data;
 };
 
+/* IDAT chunk */
+struct IDAT {
+	uint32_t         length;
+	enum chunktype   type;
+	uint32_t         crc;
+	struct {
+		uint8_t	*data;
+	} __attribute__((packed)) data;
+};
+
 /* tRNS chunk */
 struct tRNS {
 	uint32_t         length;
@@ -450,7 +460,7 @@ bool		lgpng_is_official_keyword(uint8_t *, size_t);
 /* chunks */
 int		lgpng_create_IHDR_from_data(struct IHDR *, uint8_t *, size_t);
 int		lgpng_create_PLTE_from_data(struct PLTE *, uint8_t *, size_t);
-/*int		lgpng_create_IDAT_from_data(struct IDAT *, uint8_t *, size_t);*/
+int		lgpng_create_IDAT_from_data(struct IDAT *, uint8_t *, size_t);
 int		lgpng_create_tRNS_from_data(struct tRNS *, struct IHDR *, uint8_t *, size_t);
 int		lgpng_create_cHRM_from_data(struct cHRM *, uint8_t *, size_t);
 int		lgpng_create_gAMA_from_data(struct gAMA *, uint8_t *, size_t);

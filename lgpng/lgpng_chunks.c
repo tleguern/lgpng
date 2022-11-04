@@ -185,6 +185,15 @@ lgpng_create_PLTE_from_data(struct PLTE *plte, uint8_t *data, size_t dataz)
 }
 
 int
+lgpng_create_IDAT_from_data(struct IDAT *idat, uint8_t *data, size_t dataz)
+{
+	idat->length = dataz;
+	idat->type = CHUNK_TYPE_IDAT;
+	idat->data.data = data;
+	return(0);
+}
+
+int
 lgpng_create_tRNS_from_data(struct tRNS *trns, struct IHDR *ihdr, uint8_t *data, size_t dataz)
 {
 	if (NULL == ihdr) {
