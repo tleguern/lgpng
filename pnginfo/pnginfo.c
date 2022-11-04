@@ -620,7 +620,6 @@ info_zTXt(uint8_t *data, size_t dataz)
 	struct zTXt	 ztxt;
 	uint8_t		*out = NULL, *outtmp = NULL;
 
-	lgpng_create_zTXt_from_data(&ztxt, data, dataz);
 	if (-1 == lgpng_create_zTXt_from_data(&ztxt, data, dataz)) {
 		warnx("Bad zTXt chunk, skipping.");
 		return;
@@ -669,7 +668,10 @@ info_bKGD(struct IHDR *ihdr, struct PLTE *plte, uint8_t *data, size_t dataz)
 {
 	struct bKGD bkgd;
 
-	lgpng_create_bKGD_from_data(&bkgd, ihdr, plte, data, dataz);
+	if (-1 == lgpng_create_bKGD_from_data(&bkgd, ihdr, plte, data, dataz)) {
+		warnx("Bad bKGD chunk");
+		return;
+	}
 	switch (ihdr->data.colourtype) {
 	case COLOUR_TYPE_GREYSCALE:
 		/* FALLTHROUGH */
@@ -738,7 +740,10 @@ info_pHYs(uint8_t *data, size_t dataz)
 {
 	struct pHYs phys;
 
-	lgpng_create_pHYs_from_data(&phys, data, dataz);
+	if (-1 == lgpng_create_pHYs_from_data(&phys, data, dataz)) {
+		warnx("Bad pHYs chunk");
+		return;
+	}
 	printf("pHYs: pixel per unit, X axis: %i\n", phys.data.ppux);
 	printf("pHYs: pixel per unit, Y axis: %i\n", phys.data.ppuy);
 	printf("pHYs: unit specifier: %s\n",
@@ -750,7 +755,10 @@ info_sPLT(uint8_t *data, size_t dataz)
 {
 	struct sPLT splt;
 
-	lgpng_create_sPLT_from_data(&splt, data, dataz);
+	if (-1 == lgpng_create_sPLT_from_data(&splt, data, dataz)) {
+		warnx("Bad sPLT chunk, skipping.");
+		return;
+	}
 	printf("sPLT: palette name: %s\n", splt.data.palettename);
 	printf("sPLT: sample depth: %i\n", splt.data.sampledepth);
 	printf("sPLT: %zu entries\n", splt.data.entries);
@@ -778,7 +786,10 @@ info_tIME(uint8_t *data, size_t dataz)
 {
 	struct tIME time;
 
-	lgpng_create_tIME_from_data(&time, data, dataz);
+	if (-1 == lgpng_create_tIME_from_data(&time, data, dataz)) {
+		warnx("Bad tIME chunk, skipping.");
+		return;
+	}
 	if (time.data.month == 0 || time.data.month > 12) {
 		warnx("tIME: invalid month value");
 	}
@@ -804,7 +815,10 @@ info_acTL(uint8_t *data, size_t dataz)
 {
 	struct acTL actl;
 
-	lgpng_create_acTL_from_data(&actl, data, dataz);
+	if (-1 == lgpng_create_acTL_from_data(&actl, data, dataz)) {
+		warnx("Bad acTL chunk, skipping.");
+		return;
+	}
 	printf("acTL: number of frames: %u\n", actl.data.num_frames);
 	if (0 == actl.data.num_plays) {
 		printf("acTL: number of plays: indefinitely\n");
@@ -818,7 +832,10 @@ info_fcTL(uint8_t *data, size_t dataz)
 {
 	struct fcTL fctl;
 
-	lgpng_create_fcTL_from_data(&fctl, data, dataz);
+	if (-1 == lgpng_create_fcTL_from_data(&fctl, data, dataz)) {
+		warnx("Bad fcTL chunk, skipping.");
+		return;
+	}
 	printf("fcTL: squence number: %d\n", fctl.data.sequence_number);
 	printf("fcTL: width: %d\n", fctl.data.width);
 	printf("fcTL: height: %d\n", fctl.data.height);
@@ -835,7 +852,10 @@ info_fdAT(uint8_t *data, size_t dataz)
 {
 	struct fdAT fdat;
 
-	lgpng_create_fdAT_from_data(&fdat, data, dataz);
+	if (-1 == lgpng_create_fdAT_from_data(&fdat, data, dataz)) {
+		warnx("Bad fdAT chunk, skipping.");
+		return;
+	}
 	printf("fdAT: squence number: %d\n", fdat.data.sequence_number);
 }
 
