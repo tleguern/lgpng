@@ -50,6 +50,9 @@ void info_pHYs(uint8_t *, size_t);
 void info_sPLT(uint8_t *, size_t);
 void info_eXIf(uint8_t *, size_t);
 void info_tIME(uint8_t *, size_t);
+void info_acTL(uint8_t *, size_t);
+void info_fcTL(uint8_t *, size_t);
+void info_fdAT(uint8_t *, size_t);
 
 int
 main(int argc, char *argv[])
@@ -238,6 +241,15 @@ main(int argc, char *argv[])
 					break;
 				case CHUNK_TYPE_tIME:
 					info_tIME(data, length);
+					break;
+				case CHUNK_TYPE_acTL:
+					info_acTL(data, length);
+					break;
+				case CHUNK_TYPE_fcTL:
+					info_fcTL(data, length);
+					break;
+				case CHUNK_TYPE_fdAT:
+					info_fdAT(data, length);
 					break;
 				case CHUNK_TYPE__MAX:
 					/* FALLTHROUGH */
@@ -753,6 +765,46 @@ info_tIME(uint8_t *data, size_t dataz)
 	printf("tIME: %i-%02i-%02i %02i:%02i:%02i\n",
 	    time.data.year, time.data.month, time.data.day,
 	    time.data.hour, time.data.minute, time.data.second);
+}
+
+void
+info_acTL(uint8_t *data, size_t dataz)
+{
+	struct acTL actl;
+
+	lgpng_create_acTL_from_data(&actl, data, dataz);
+	printf("acTL: number of frames: %u\n", actl.data.num_frames);
+	if (0 == actl.data.num_plays) {
+		printf("acTL: number of plays: indefinitely\n");
+	} else {
+		printf("acTL: number of plays: %u\n", actl.data.num_plays);
+	}
+}
+
+void
+info_fcTL(uint8_t *data, size_t dataz)
+{
+	struct fcTL fctl;
+
+	lgpng_create_fcTL_from_data(&fctl, data, dataz);
+	printf("fcTL: squence number: %d\n", fctl.data.sequence_number);
+	printf("fcTL: width: %d\n", fctl.data.width);
+	printf("fcTL: height: %d\n", fctl.data.height);
+	printf("fcTL: x_offset: %d\n", fctl.data.x_offset);
+	printf("fcTL: y_offset: %d\n", fctl.data.y_offset);
+	printf("fcTL: delay_num: %d\n", fctl.data.delay_num);
+	printf("fcTL: delay_den: %d\n", fctl.data.delay_den);
+	printf("fcTL: dispose_op: %s\n", dispose_opmap[fctl.data.dispose_op]);
+	printf("fcTL: blend_op: %s\n", blend_opmap[fctl.data.blend_op]);
+}
+
+void
+info_fdAT(uint8_t *data, size_t dataz)
+{
+	struct fdAT fdat;
+
+	lgpng_create_fdAT_from_data(&fdat, data, dataz);
+	printf("fdAT: squence number: %d\n", fdat.data.sequence_number);
 }
 
 void
