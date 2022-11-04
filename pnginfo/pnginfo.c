@@ -41,6 +41,7 @@ void info_gAMA(uint8_t *, size_t);
 void info_iCCP(uint8_t *, size_t);
 void info_sBIT(struct IHDR *, uint8_t *, size_t);
 void info_sRGB(uint8_t *, size_t);
+void info_cICP(uint8_t *, size_t);
 void info_tEXt(uint8_t *, size_t);
 void info_zTXt(uint8_t *, size_t);
 void info_bKGD(struct IHDR *, struct PLTE *, uint8_t *, size_t);
@@ -209,6 +210,9 @@ main(int argc, char *argv[])
 					break;
 				case CHUNK_TYPE_sRGB:
 					info_sRGB(data, length);
+					break;
+				case CHUNK_TYPE_cICP:
+					info_cICP(data, length);
 					break;
 				case CHUNK_TYPE_tEXt:
 					info_tEXt(data, length);
@@ -525,6 +529,21 @@ info_sRGB(uint8_t *data, size_t dataz)
 	}
 	printf("sRGB: rendering intent: %s\n",
 	    rendering_intentmap[srgb.data.intent]);
+}
+
+void
+info_cICP(uint8_t *data, size_t dataz)
+{
+	struct cICP cicp;
+
+	if (-1 == lgpng_create_cICP_from_data(&cicp, data, dataz)) {
+		warnx("Bad cICP chunk, skipping.");
+		return;
+	}
+	printf("cICP: colour primaries: %d\n", cicp.data.colour_primaries);
+	printf("cICP: transfer function: %d\n", cicp.data.transfer_function);
+	printf("cICP: matrix coefficients: %d\n", cicp.data.matrix_coefficients);
+	printf("cICP: video full range flag: %d\n", cicp.data.video_full_range);
 }
 
 void
