@@ -48,6 +48,7 @@ void info_bKGD(struct IHDR *, struct PLTE *, uint8_t *, size_t);
 void info_hIST(struct PLTE *, uint8_t *, size_t);
 void info_pHYs(uint8_t *, size_t);
 void info_sPLT(uint8_t *, size_t);
+void info_eXIf(uint8_t *, size_t);
 void info_tIME(uint8_t *, size_t);
 
 int
@@ -231,6 +232,9 @@ main(int argc, char *argv[])
 					break;
 				case CHUNK_TYPE_sPLT:
 					info_sPLT(data, length);
+					break;
+				case CHUNK_TYPE_eXIf:
+					info_eXIf(data, length);
 					break;
 				case CHUNK_TYPE_tIME:
 					info_tIME(data, length);
@@ -706,6 +710,23 @@ info_sPLT(uint8_t *data, size_t dataz)
 	printf("sPLT: palette name: %s\n", splt.data.palettename);
 	printf("sPLT: sample depth: %i\n", splt.data.sampledepth);
 	printf("sPLT: %zu entries\n", splt.data.entries);
+}
+
+void
+info_eXIf(uint8_t *data, size_t dataz)
+{
+	struct eXIf exif;
+	uint8_t little_endian[4] = { 73, 73, 42, 0};
+	uint8_t big_endian[4] = { 77, 77, 0, 42};
+
+	lgpng_create_eXIf_from_data(&exif, data, dataz);
+	if (0 == memcmp(exif.data.profile, little_endian, 4)) {
+		printf("eXIf: endianese: little-endian\n");
+	} else if (0 == memcmp(exif.data.profile, big_endian, 4)) {
+		printf("eXIf: endianese: big-endian\n");
+	} else {
+		printf("eXIf: endianese: weird\n");
+	}
 }
 
 void
