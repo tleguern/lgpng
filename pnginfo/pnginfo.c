@@ -57,6 +57,7 @@ void info_fdAT(uint8_t *, size_t);
 void info_oFFs(uint8_t *, size_t);
 void info_vpAg(uint8_t *, size_t);
 void info_caNv(uint8_t *, size_t);
+void info_orNt(uint8_t *, size_t);
 void info_unknown(uint8_t [5], uint8_t *, size_t);
 
 int
@@ -267,6 +268,9 @@ main(int argc, char *argv[])
 					break;
 				case CHUNK_TYPE_caNv:
 					info_caNv(data, length);
+					break;
+				case CHUNK_TYPE_orNt:
+					info_orNt(data, length);
 					break;
 				case CHUNK_TYPE__MAX:
 					/* FALLTHROUGH */
@@ -877,6 +881,18 @@ info_caNv(uint8_t *data, size_t dataz)
 	printf("caNv: height: %d\n", canv.data.height);
 	printf("caNv: x position: %d\n", canv.data.x_position);
 	printf("caNv: y position: %d\n", canv.data.y_position);
+}
+
+void
+info_orNt(uint8_t *data, size_t dataz)
+{
+	struct orNt ornt;
+
+	if (-1 == lgpng_create_orNt_from_data(&ornt, data, dataz)) {
+		warnx("Bad orNt chunk, skipping.");
+		return;
+	}
+	printf("orNt: orientation: %s\n", orientationmap[ornt.data.orientation]);
 }
 
 void
