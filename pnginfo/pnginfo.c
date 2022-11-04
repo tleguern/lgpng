@@ -55,6 +55,7 @@ void info_acTL(uint8_t *, size_t);
 void info_fcTL(uint8_t *, size_t);
 void info_fdAT(uint8_t *, size_t);
 void info_oFFs(uint8_t *, size_t);
+void info_caNv(uint8_t *, size_t);
 void info_unknown(uint8_t [5], uint8_t *, size_t);
 
 int
@@ -259,6 +260,9 @@ main(int argc, char *argv[])
 					break;
 				case CHUNK_TYPE_oFFs:
 					info_oFFs(data, length);
+					break;
+				case CHUNK_TYPE_caNv:
+					info_caNv(data, length);
 					break;
 				case CHUNK_TYPE__MAX:
 					/* FALLTHROUGH */
@@ -839,6 +843,21 @@ info_oFFs(uint8_t *data, size_t dataz)
 	printf("oFFs: x position: %d\n", offs.data.x_position);
 	printf("oFFs: y position: %d\n", offs.data.y_position);
 	printf("oFFs: unit specifier: %s\n", offsunitspecifiermap[offs.data.unitspecifier]);
+}
+
+void
+info_caNv(uint8_t *data, size_t dataz)
+{
+	struct caNv canv;
+
+	if (-1 == lgpng_create_caNv_from_data(&canv, data, dataz)) {
+		warnx("Bad caNv chunk, skipping.");
+		return;
+	}
+	printf("caNv: width: %d\n", canv.data.width);
+	printf("caNv: height: %d\n", canv.data.height);
+	printf("caNv: x position: %d\n", canv.data.x_position);
+	printf("caNv: y position: %d\n", canv.data.y_position);
 }
 
 void
