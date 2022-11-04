@@ -53,6 +53,7 @@ void info_tIME(uint8_t *, size_t);
 void info_acTL(uint8_t *, size_t);
 void info_fcTL(uint8_t *, size_t);
 void info_fdAT(uint8_t *, size_t);
+void info_oFFs(uint8_t *, size_t);
 
 int
 main(int argc, char *argv[])
@@ -250,6 +251,9 @@ main(int argc, char *argv[])
 					break;
 				case CHUNK_TYPE_fdAT:
 					info_fdAT(data, length);
+					break;
+				case CHUNK_TYPE_oFFs:
+					info_oFFs(data, length);
 					break;
 				case CHUNK_TYPE__MAX:
 					/* FALLTHROUGH */
@@ -805,6 +809,20 @@ info_fdAT(uint8_t *data, size_t dataz)
 
 	lgpng_create_fdAT_from_data(&fdat, data, dataz);
 	printf("fdAT: squence number: %d\n", fdat.data.sequence_number);
+}
+
+void
+info_oFFs(uint8_t *data, size_t dataz)
+{
+	struct oFFs offs;
+
+	if (-1 == lgpng_create_oFFs_from_data(&offs, data, dataz)) {
+		warnx("Bad oFFs chunk, skipping.");
+		return;
+	}
+	printf("oFFs: x position: %d\n", offs.data.x_position);
+	printf("oFFs: y position: %d\n", offs.data.y_position);
+	printf("oFFs: unit specifier: %s\n", offsunitspecifiermap[offs.data.unitspecifier]);
 }
 
 void
