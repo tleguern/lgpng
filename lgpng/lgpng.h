@@ -44,6 +44,7 @@ enum chunktype {
 	CHUNK_TYPE_hIST,
 	CHUNK_TYPE_pHYs,
 	CHUNK_TYPE_sPLT,
+	CHUNK_TYPE_eXIf,
 	CHUNK_TYPE_tIME,
 	CHUNK_TYPE__MAX,
 };
@@ -334,6 +335,16 @@ struct sPLT {
 	} __attribute__((packed)) data;
 };
 
+/* eXIf chunk */
+struct eXIf {
+	uint32_t         length;
+	enum chunktype   type;
+	uint32_t         crc;
+	struct {
+		uint8_t	*profile;
+	} __attribute__((packed)) data;
+};
+
 /* tIME chunk */
 struct tIME {
 	uint32_t         length;
@@ -371,6 +382,7 @@ int		lgpng_create_bKGD_from_data(struct bKGD *, struct IHDR *, struct PLTE *, ui
 int		lgpng_create_hIST_from_data(struct hIST *, struct PLTE *, uint8_t *, size_t);
 int		lgpng_create_pHYs_from_data(struct pHYs *, uint8_t *, size_t);
 int		lgpng_create_sPLT_from_data(struct sPLT *, uint8_t *, size_t);
+int		lgpng_create_eXIf_from_data(struct eXIf *, uint8_t *, size_t);
 int		lgpng_create_tIME_from_data(struct tIME *, uint8_t *, size_t);
 
 /* data */

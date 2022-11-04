@@ -45,6 +45,7 @@ const char *chunktypemap[CHUNK_TYPE__MAX] = {
 	"hIST",
 	"pHYs",
 	"sPLT",
+	"eXIf",
 	"tIME"
 };
 
@@ -606,6 +607,15 @@ lgpng_create_sPLT_from_data(struct sPLT *splt, uint8_t *data, size_t dataz)
 		}
 	}
 	/* TODO: Can't do the rest without allocations */
+	return(0);
+}
+
+int
+lgpng_create_eXIf_from_data(struct eXIf *exif, uint8_t *data, size_t dataz)
+{
+	exif->length = dataz;
+	exif->type = CHUNK_TYPE_eXIf;
+	exif->data.profile = data;
 	return(0);
 }
 
