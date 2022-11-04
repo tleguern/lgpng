@@ -52,6 +52,7 @@ enum chunktype {
 	CHUNK_TYPE_oFFs,
 	CHUNK_TYPE_vpAg,
 	CHUNK_TYPE_caNv,
+	CHUNK_TYPE_orNt,
 	CHUNK_TYPE__MAX,
 };
 
@@ -486,6 +487,32 @@ struct caNv {
 	} __attribute__((packed)) data;
 };
 
+/* orNt chunk */
+typedef enum
+{
+	ORIENTATION_UNDEFINED,
+	ORIENTATION_TOPLEFT,
+	ORIENTATION_TOPRIGHT,
+	ORIENTATION_BOTTOMRIGHT,
+	ORIENTATION_BOTTOMLEFT,
+	ORIENTATION_LEFTTOP,
+	ORIENTATION_RIGHTTOP,
+	ORIENTATION_RIGHTBOTTOM,
+	ORIENTATION_LEFTBOTTOM,
+	ORIENTATION__MAX,
+} orientation;
+
+extern const char *orientationmap[ORIENTATION__MAX];
+
+struct orNt {
+	uint32_t         length;
+	enum chunktype   type;
+	uint32_t         crc;
+	struct {
+		uint8_t	orientation;
+	} __attribute__((packed)) data;
+};
+
 /* chunks */
 bool		lgpng_validate_keyword(uint8_t *, size_t);
 bool		lgpng_is_official_keyword(uint8_t *, size_t);
@@ -517,6 +544,7 @@ int		lgpng_create_oFFs_from_data(struct oFFs *, uint8_t *, size_t);
 /* chunks_extra */
 int		lgpng_create_vpAg_from_data(struct vpAg *, uint8_t *, size_t);
 int		lgpng_create_caNv_from_data(struct caNv *, uint8_t *, size_t);
+int		lgpng_create_orNt_from_data(struct orNt *, uint8_t *, size_t);
 
 /* data */
 bool	lgpng_data_is_png(uint8_t *, size_t);

@@ -25,6 +25,18 @@ const char *vpagunitspecifiermap[VPAG_UNITSPECIFIER__MAX] = {
 	"pixel",
 };
 
+const char *orientationmap[ORIENTATION__MAX] = {
+	"undefined",
+	"top left",
+	"top right",
+	"bottom right",
+	"bottom left",
+	"left top",
+	"right top",
+	"right bottom",
+	"left bottom",
+};
+
 int
 lgpng_create_vpAg_from_data(struct vpAg *vpag, uint8_t *data, size_t dataz)
 {
@@ -56,6 +68,19 @@ lgpng_create_caNv_from_data(struct caNv *canv, uint8_t *data, size_t dataz)
 	canv->data.height = ntohl(canv->data.height);
 	canv->data.x_position = ntohl(canv->data.x_position);
 	canv->data.y_position = ntohl(canv->data.y_position);
+	return(0);
+}
+
+int
+lgpng_create_orNt_from_data(struct orNt *ornt, uint8_t *data, size_t dataz)
+{
+	if (1 != dataz) {
+		return(-1);
+	}
+	ornt->data.orientation = data[0];
+	if (ornt->data.orientation >= ORIENTATION__MAX) {
+		return(-1);
+	}
 	return(0);
 }
 
