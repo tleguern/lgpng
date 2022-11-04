@@ -49,6 +49,7 @@ enum chunktype {
 	CHUNK_TYPE_acTL,
 	CHUNK_TYPE_fcTL,
 	CHUNK_TYPE_fdAT,
+	CHUNK_TYPE_oFFs,
 	CHUNK_TYPE__MAX,
 };
 
@@ -421,6 +422,26 @@ struct fdAT {
 	} __attribute__((packed)) data;
 };
 
+/* oFFs chunk */
+enum offs_unitspecifier {
+	OFFS_UNITSPECIFIER_PIXEL,
+	OFFS_UNITSPECIFIER_MICROMETER,
+	OFFS_UNITSPECIFIER__MAX,
+};
+
+extern const char *offsunitspecifiermap[OFFS_UNITSPECIFIER__MAX];
+
+struct oFFs {
+	uint32_t         length;
+	enum chunktype   type;
+	uint32_t         crc;
+	struct {
+		int32_t	 x_position;
+		int32_t	 y_position;
+		uint8_t	 unitspecifier; /* enum offs_unitspecifier */
+	} __attribute__((packed)) data;
+};
+
 
 /* chunks extra */
 bool		lgpng_validate_keyword(uint8_t *, size_t);
@@ -449,6 +470,7 @@ int		lgpng_create_tIME_from_data(struct tIME *, uint8_t *, size_t);
 int		lgpng_create_acTL_from_data(struct acTL *, uint8_t *, size_t);
 int		lgpng_create_fcTL_from_data(struct fcTL *, uint8_t *, size_t);
 int		lgpng_create_fdAT_from_data(struct fdAT *, uint8_t *, size_t);
+int		lgpng_create_oFFs_from_data(struct oFFs *, uint8_t *, size_t);
 
 /* data */
 bool	lgpng_data_is_png(uint8_t *, size_t);

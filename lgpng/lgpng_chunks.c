@@ -50,6 +50,7 @@ const char *chunktypemap[CHUNK_TYPE__MAX] = {
 	"acTL",
 	"fcTL",
 	"fdAT",
+	"oFFs",
 };
 
 const char *colourtypemap[COLOUR_TYPE__MAX] = {
@@ -96,6 +97,11 @@ const char *dispose_opmap[DISPOSE_OP__MAX] = {
 const char *blend_opmap[BLEND_OP__MAX] = {
 	"source",
 	"over",
+};
+
+const char *offsunitspecifiermap[OFFS_UNITSPECIFIER__MAX] = {
+	"pixel",
+	"micrometer",
 };
 
 bool
@@ -716,6 +722,25 @@ lgpng_create_fdAT_from_data(struct fdAT *fdat, uint8_t *data, size_t dataz)
 	(void)memcpy(&(fdat->data.sequence_number), data, 4);
 	fdat->data.sequence_number = ntohl(fdat->data.sequence_number);
 	fdat->data.frame_data = data + 4;
+	return(0);
+}
+
+int
+lgpng_create_oFFs_from_data(struct oFFs *offs, uint8_t *data, size_t dataz)
+{
+	if (5 > dataz) {
+		return(-1);
+	}
+	offs->length = dataz;
+	offs->type = CHUNK_TYPE_oFFs;
+	(void)memcpy(&(offs->data.x_position), data, 4);
+	(void)memcpy(&(offs->data.y_position), data, 4);
+	offs->data.x_position = ntohl(offs->data.x_position);
+	offs->data.y_position = ntohl(offs->data.y_position);
+	offs->data.unitspecifier = data[8];
+	if (offs->data.unitspecifier >= OFFS_UNITSPECIFIER__MAX) {
+		return(-1);
+	}
 	return(0);
 }
 
