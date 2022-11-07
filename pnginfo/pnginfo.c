@@ -31,6 +31,7 @@
 #include "icc.h"
 
 void usage(void);
+int  info_zlib(uint8_t, uint8_t, uint8_t [4]);
 void info_IHDR(struct IHDR *);
 void info_PLTE(struct PLTE *);
 void info_IDAT(uint8_t *, size_t);
@@ -293,6 +294,51 @@ stop:
 	return(EXIT_SUCCESS);
 }
 
+int
+info_zlib(uint8_t cmf, uint8_t flg, uint8_t chunk[4])
+{
+	uint8_t          cm, cinfo;
+	uint8_t          fcheck, fdict, flevel;
+	char            *level;
+
+	/* See RFC1950 ZLIB Data Format */
+	/* cmf */
+	cm = cmf & 0x0f;
+	if (cm != 8) {
+		fprintf(stderr, "%.4s: zlib invalid compression method %i\n",
+		    chunk, cm);
+		return(-1);
+	}
+	cinfo = (cmf & 0xf0) >> 4;
+	if (cinfo > 7) {
+		fprintf(stderr, "%.4s: zlib invalid compression info %i\n",
+		     chunk, cinfo);
+		return(-1);
+	}
+	/* flg */
+	fcheck = (flg & 0xf0) >> 4;
+	fdict = flg & (0x01 << 5);
+	if (fdict == 1) {
+		fprintf(stderr, "%.4s: zlib invalid compression info: "
+		    "preset dictionary\n", chunk);
+	}
+	flevel = (flg & 0xc0) >> 6;
+        switch (flevel) {
+                case 0: level = "fastest"; break;
+                case 1: level = "fast"; break;
+                case 2: level = "default"; break;
+                case 3: level = "slowest"; break;
+                default: level = "error"; break;
+        }
+        printf("%.4s: zlib compression method: %i\n", chunk, cm);
+        printf("%.4s: zlib window size: %i\n", chunk, cinfo);
+        printf("%.4s: zlib check bits: %i\n", chunk, fcheck);
+        printf("%.4s: zlib presset dictionnary: %s\n", chunk,
+	    fdict ? "true" : "false");
+        printf("%.4s: zlib compression level: %s\n", chunk, level);
+	return(0);
+}
+
 void
 info_IHDR(struct IHDR *ihdr)
 {
@@ -372,10 +418,11 @@ info_PLTE(struct PLTE *plte)
 void
 info_IDAT(uint8_t *data, size_t dataz)
 {
-	struct IDAT idat;
+	struct IDAT	 idat;
 
 	(void)lgpng_create_IDAT_from_data(&idat, data, dataz);
 	printf("IDAT: compressed bytes %u\n", idat.length);
+	info_zlib(data[0], data[1], (uint8_t *)"IDAT");
 }
 
 void
@@ -469,6 +516,7 @@ info_iCCP(uint8_t *data, size_t dataz)
 	printf("iCCP: profile name: %s\n", iccp.data.name);
 	printf("iCCP: compression method: %s\n",
 	    compressiontypemap[iccp.data.compression]);
+	info_zlib(iccp.data.profile[0], iccp.data.profile[1], (uint8_t *)"iCCP");
 	do {
 		outtmpz = iccp.data.profilez * retry;
 		if (NULL == (outtmp = realloc(out, outtmpz + 1))) {
@@ -629,6 +677,7 @@ info_zTXt(uint8_t *data, size_t dataz)
 	}
 	printf("zTXt: compression method: %s\n",
 	    compressiontypemap[ztxt.data.compression]);
+	info_zlib(ztxt.data.text[0], ztxt.data.text[1], (uint8_t *)"zTXt");
 	do {
 		outtmpz = ztxt.data.textz * retry;
 		if (NULL == (outtmp = realloc(out, outtmpz + 1))) {
