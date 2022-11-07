@@ -14,7 +14,7 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include <arpa/inet.h>
+#include <endian.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -45,8 +45,8 @@ lgpng_create_vpAg_from_data(struct vpAg *vpag, uint8_t *data, size_t dataz)
 	}
 	(void)memcpy(&(vpag->data.width), data, 4);
 	(void)memcpy(&(vpag->data.height), data + 4, 4);
-	vpag->data.width = ntohl(vpag->data.width);
-	vpag->data.height = ntohl(vpag->data.height);
+	vpag->data.width = be32toh(vpag->data.width);
+	vpag->data.height = be32toh(vpag->data.height);
 	vpag->data.unitspecifier = data[8];
 	if (0 != vpag->data.unitspecifier) {
 		return(-1);
@@ -64,10 +64,10 @@ lgpng_create_caNv_from_data(struct caNv *canv, uint8_t *data, size_t dataz)
 	(void)memcpy(&(canv->data.height), data + 4, 4);
 	(void)memcpy(&(canv->data.x_position), data + 8, 4);
 	(void)memcpy(&(canv->data.y_position), data + 12, 4);
-	canv->data.width = ntohl(canv->data.width);
-	canv->data.height = ntohl(canv->data.height);
-	canv->data.x_position = ntohl(canv->data.x_position);
-	canv->data.y_position = ntohl(canv->data.y_position);
+	canv->data.width = be32toh(canv->data.width);
+	canv->data.height = be32toh(canv->data.height);
+	canv->data.x_position = be32toh(canv->data.x_position);
+	canv->data.y_position = be32toh(canv->data.y_position);
 	return(0);
 }
 

@@ -14,9 +14,8 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include <arpa/inet.h>
-
 #include <ctype.h>
+#include <endian.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -162,8 +161,8 @@ lgpng_create_IHDR_from_data(struct IHDR *ihdr, uint8_t *data, size_t dataz)
 	ihdr->data.compression = data[10];
 	ihdr->data.filter = data[11];
 	ihdr->data.interlace = data[12];
-	ihdr->data.width = ntohl(ihdr->data.width);
-	ihdr->data.height = ntohl(ihdr->data.height);
+	ihdr->data.width = be32toh(ihdr->data.width);
+	ihdr->data.height = be32toh(ihdr->data.height);
 	return(0);
 }
 
@@ -216,18 +215,18 @@ lgpng_create_tRNS_from_data(struct tRNS *trns, struct IHDR *ihdr, uint8_t *data,
 			return(-1);
 		}
 		(void)memcpy(&(trns->data.gray), data, 2);
-		trns->data.gray = ntohs(trns->data.gray);
+		trns->data.gray = be16toh(trns->data.gray);
 		break;
 	case COLOUR_TYPE_TRUECOLOUR:
 		if (6 != dataz) {
 			return(-1);
 		}
 		(void)memcpy(&(trns->data.red), data, 2);
-		trns->data.red = ntohs(trns->data.red);
+		trns->data.red = be16toh(trns->data.red);
 		(void)memcpy(&(trns->data.green), data, 2);
-		trns->data.green = ntohs(trns->data.green);
+		trns->data.green = be16toh(trns->data.green);
 		(void)memcpy(&(trns->data.blue), data, 2);
-		trns->data.blue = ntohs(trns->data.blue);
+		trns->data.blue = be16toh(trns->data.blue);
 		break;
 	case COLOUR_TYPE_INDEXED:
 		if (dataz > 256) {
@@ -352,14 +351,14 @@ lgpng_create_cHRM_from_data(struct cHRM *chrm, uint8_t *data, size_t dataz)
 		return(-1);
 	}
 	(void)memcpy(&(chrm->data), data, dataz);
-	chrm->data.whitex = ntohl(chrm->data.whitex);
-	chrm->data.whitey = ntohl(chrm->data.whitey);
-	chrm->data.redx = ntohl(chrm->data.redx);
-	chrm->data.redy = ntohl(chrm->data.redy);
-	chrm->data.greenx = ntohl(chrm->data.greenx);
-	chrm->data.greeny = ntohl(chrm->data.greeny);
-	chrm->data.bluex = ntohl(chrm->data.bluex);
-	chrm->data.bluey = ntohl(chrm->data.bluey);
+	chrm->data.whitex = be32toh(chrm->data.whitex);
+	chrm->data.whitey = be32toh(chrm->data.whitey);
+	chrm->data.redx = be32toh(chrm->data.redx);
+	chrm->data.redy = be32toh(chrm->data.redy);
+	chrm->data.greenx = be32toh(chrm->data.greenx);
+	chrm->data.greeny = be32toh(chrm->data.greeny);
+	chrm->data.bluex = be32toh(chrm->data.bluex);
+	chrm->data.bluey = be32toh(chrm->data.bluey);
 	return(0);
 }
 
@@ -372,7 +371,7 @@ lgpng_create_gAMA_from_data(struct gAMA *gama, uint8_t *data, size_t dataz)
 	gama->length = 4;
 	gama->type = CHUNK_TYPE_gAMA;
 	(void)memcpy(&(gama->data.gamma), data, 4);
-	gama->data.gamma = ntohl(gama->data.gamma);
+	gama->data.gamma = be32toh(gama->data.gamma);
 	return(0);
 }
 
@@ -539,7 +538,7 @@ lgpng_create_bKGD_from_data(struct bKGD *bkgd, struct IHDR *ihdr, struct PLTE *p
 			return(-1);
 		}
 		bkgd->data.greyscale = *(uint16_t *)data;
-		bkgd->data.greyscale = ntohs(bkgd->data.greyscale);
+		bkgd->data.greyscale = be16toh(bkgd->data.greyscale);
 		break;
 	case COLOUR_TYPE_TRUECOLOUR:
 		/* FALLTHROUGH */
@@ -548,9 +547,9 @@ lgpng_create_bKGD_from_data(struct bKGD *bkgd, struct IHDR *ihdr, struct PLTE *p
 			return(-1);
 		}
 		rgb = (struct rgb16 *)data;
-		bkgd->data.rgb.red = ntohs(rgb->red);
-		bkgd->data.rgb.green = ntohs(rgb->green);
-		bkgd->data.rgb.blue = ntohs(rgb->blue);
+		bkgd->data.rgb.red = be16toh(rgb->red);
+		bkgd->data.rgb.green = be16toh(rgb->green);
+		bkgd->data.rgb.blue = be16toh(rgb->blue);
 		break;
 	case COLOUR_TYPE_INDEXED:
 		if (1 != dataz) {
@@ -603,8 +602,8 @@ lgpng_create_pHYs_from_data(struct pHYs *phys, uint8_t *data, size_t dataz)
 	phys->type = CHUNK_TYPE_pHYs;
 	(void)memcpy(&(phys->data.ppux), data, 4);
 	(void)memcpy(&(phys->data.ppuy), data + 4, 4);
-	phys->data.ppux = ntohl(phys->data.ppux);
-	phys->data.ppuy = ntohl(phys->data.ppuy);
+	phys->data.ppux = be32toh(phys->data.ppux);
+	phys->data.ppuy = be32toh(phys->data.ppuy);
 	phys->data.unitspecifier = data[9];
 	return(0);
 }
@@ -669,7 +668,7 @@ lgpng_create_tIME_from_data(struct tIME *time, uint8_t *data, size_t dataz)
 	time->length = dataz;
 	time->type = CHUNK_TYPE_tIME;
 	(void)memcpy(&(time->data.year), data, 2);
-	time->data.year = ntohs(time->data.year);
+	time->data.year = be16toh(time->data.year);
 	time->data.month = data[2];
 	time->data.day = data[3];
 	time->data.hour = data[4];
@@ -688,8 +687,8 @@ lgpng_create_acTL_from_data(struct acTL *actl, uint8_t *data, size_t dataz)
 	actl->type = CHUNK_TYPE_acTL;
 	(void)memcpy(&(actl->data.num_frames), data, 4);
 	(void)memcpy(&(actl->data.num_plays), data + 4, 4);
-	actl->data.num_frames = ntohl(actl->data.num_frames);
-	actl->data.num_plays = ntohl(actl->data.num_plays);
+	actl->data.num_frames = be32toh(actl->data.num_frames);
+	actl->data.num_plays = be32toh(actl->data.num_plays);
 	if (0 == actl->data.num_frames) {
 		return(-1);
 	}
@@ -711,13 +710,13 @@ lgpng_create_fcTL_from_data(struct fcTL *fctl, uint8_t *data, size_t dataz)
 	(void)memcpy(&(fctl->data.y_offset), data + 16, 4);
 	(void)memcpy(&(fctl->data.delay_num), data + 20, 2);
 	(void)memcpy(&(fctl->data.delay_den), data + 22, 2);
-	fctl->data.sequence_number = ntohl(fctl->data.sequence_number);
-	fctl->data.width = ntohl(fctl->data.width);
-	fctl->data.height = ntohl(fctl->data.height);
-	fctl->data.x_offset = ntohl(fctl->data.x_offset);
-	fctl->data.y_offset = ntohl(fctl->data.y_offset);
-	fctl->data.delay_num = ntohs(fctl->data.delay_num);
-	fctl->data.delay_den = ntohs(fctl->data.delay_den);
+	fctl->data.sequence_number = be32toh(fctl->data.sequence_number);
+	fctl->data.width = be32toh(fctl->data.width);
+	fctl->data.height = be32toh(fctl->data.height);
+	fctl->data.x_offset = be32toh(fctl->data.x_offset);
+	fctl->data.y_offset = be32toh(fctl->data.y_offset);
+	fctl->data.delay_num = be16toh(fctl->data.delay_num);
+	fctl->data.delay_den = be16toh(fctl->data.delay_den);
 	fctl->data.dispose_op = data[24];
 	fctl->data.blend_op = data[25];
 	if (fctl->data.width == 0 || fctl->data.height == 0) {
@@ -741,7 +740,7 @@ lgpng_create_fdAT_from_data(struct fdAT *fdat, uint8_t *data, size_t dataz)
 	fdat->length = dataz;
 	fdat->type = CHUNK_TYPE_fdAT;
 	(void)memcpy(&(fdat->data.sequence_number), data, 4);
-	fdat->data.sequence_number = ntohl(fdat->data.sequence_number);
+	fdat->data.sequence_number = be32toh(fdat->data.sequence_number);
 	fdat->data.frame_data = data + 4;
 	return(0);
 }
@@ -756,8 +755,8 @@ lgpng_create_oFFs_from_data(struct oFFs *offs, uint8_t *data, size_t dataz)
 	offs->type = CHUNK_TYPE_oFFs;
 	(void)memcpy(&(offs->data.x_position), data, 4);
 	(void)memcpy(&(offs->data.y_position), data, 4);
-	offs->data.x_position = ntohl(offs->data.x_position);
-	offs->data.y_position = ntohl(offs->data.y_position);
+	offs->data.x_position = be32toh(offs->data.x_position);
+	offs->data.y_position = be32toh(offs->data.y_position);
 	offs->data.unitspecifier = data[8];
 	if (offs->data.unitspecifier >= OFFS_UNITSPECIFIER__MAX) {
 		return(-1);

@@ -14,9 +14,8 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include <arpa/inet.h>
-
 #include <ctype.h>
+#include <endian.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -51,7 +50,7 @@ lgpng_data_get_length(uint8_t *src, size_t srcz, uint32_t *length)
 	}
 	/* Read the first four bytes to gather the length of the data part */
 	(void)memcpy(length, src, 4);
-	*length = ntohl(*length);
+	*length = be32toh(*length);
 	if (*length > INT32_MAX) {
 		fprintf(stderr, "Chunk length is too big (%u)\n", *length);
 		return(false);
@@ -130,7 +129,7 @@ lgpng_data_get_crc(uint8_t *src, size_t srcz, uint32_t *crc)
 	}
 
 	(void)memcpy(crc, src, 4);
-	*crc = ntohl(*crc);
+	*crc = be32toh(*crc);
 	return(true);
 }
 

@@ -16,8 +16,6 @@
 
 #include "config.h"
 
-#include <arpa/inet.h>
-
 #include <ctype.h>
 #if HAVE_ERR
 # include <err.h>

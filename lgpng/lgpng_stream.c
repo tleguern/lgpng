@@ -14,9 +14,8 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include <arpa/inet.h>
-
 #include <ctype.h>
+#include <endian.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -53,7 +52,7 @@ lgpng_stream_get_length(FILE *src, uint32_t *length)
 		fprintf(stderr, "Not enough data to read chunk's length\n");
 		return(false);
 	}
-	*length = ntohl(*length);
+	*length = be32toh(*length);
 	if (*length > INT32_MAX) {
 		fprintf(stderr, "Chunk length is too big (%d)\n", *length);
 		return(false);
@@ -141,7 +140,7 @@ lgpng_stream_get_crc(FILE *src, uint32_t *crc)
 		fprintf(stderr, "Not enough data to read chunk's CRC\n");
 		return(false);
 	}
-	*crc = ntohl(*crc);
+	*crc = be32toh(*crc);
 	return(true);
 }
 

@@ -16,8 +16,6 @@
 
 #include "config.h"
 
-#include <arpa/inet.h>
-
 #include <ctype.h>
 #include <err.h>
 #include <stdbool.h>
