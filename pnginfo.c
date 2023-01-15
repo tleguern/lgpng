@@ -16,8 +16,6 @@
 
 #include "config.h"
 
-#include <arpa/inet.h>
-
 #include <ctype.h>
 #if HAVE_ERR
 # include <err.h>
@@ -27,24 +25,38 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <zlib.h>
 
 #include "lgpng.h"
 
 void usage(void);
+int  info_zlib(uint8_t, uint8_t, uint8_t [4]);
 void info_IHDR(struct IHDR *);
 void info_PLTE(struct PLTE *);
+void info_IDAT(uint8_t *, size_t);
 void info_tRNS(struct IHDR *, struct PLTE *, uint8_t *, size_t);
 void info_cHRM(uint8_t *, size_t);
 void info_gAMA(uint8_t *, size_t);
+void info_iCCP(uint8_t *, size_t);
 void info_sBIT(struct IHDR *, uint8_t *, size_t);
 void info_sRGB(uint8_t *, size_t);
+void info_cICP(uint8_t *, size_t);
 void info_tEXt(uint8_t *, size_t);
 void info_zTXt(uint8_t *, size_t);
 void info_bKGD(struct IHDR *, struct PLTE *, uint8_t *, size_t);
 void info_hIST(struct PLTE *, uint8_t *, size_t);
 void info_pHYs(uint8_t *, size_t);
 void info_sPLT(uint8_t *, size_t);
+void info_eXIf(uint8_t *, size_t);
 void info_tIME(uint8_t *, size_t);
+void info_acTL(uint8_t *, size_t);
+void info_fcTL(uint8_t *, size_t);
+void info_fdAT(uint8_t *, size_t);
+void info_oFFs(uint8_t *, size_t);
+void info_vpAg(uint8_t *, size_t);
+void info_caNv(uint8_t *, size_t);
+void info_orNt(uint8_t *, size_t);
+void info_unknown(uint8_t [5], uint8_t *, size_t);
 
 int
 main(int argc, char *argv[])
@@ -57,6 +69,7 @@ main(int argc, char *argv[])
 	struct IHDR	 ihdr;
 	struct PLTE	 plte;
 	FILE		*source = stdin;
+	uint8_t		 str_cflag[4] = {0, 0, 0, 0};
 
 #if HAVE_PLEDGE
 	pledge("stdio rpath", NULL);
@@ -74,9 +87,8 @@ main(int argc, char *argv[])
 					break;
 				}
 			}
-			/* TODO: Allow arbitrary chunk ? */
 			if (CHUNK_TYPE__MAX == chunk) {
-				errx(EXIT_FAILURE, "%s: invalid chunk", optarg);
+				(void)memcpy(str_cflag, optarg, 4);
 			}
 			break;
 		case 'f':
@@ -128,109 +140,202 @@ main(int argc, char *argv[])
 		    (uint8_t *)str_type)) {
 			break;
 		}
-		if (NULL == (data = malloc(length + 1))) {
-			warn("malloc(length + 1)");
+		/*
+		 * Do not bother allocating memory in -l mode
+		 */
+		if (cflag) {
+			if (NULL == (data = malloc(length + 1))) {
+				warn("malloc(length + 1)");
+				break;
+			}
+			if (false == lgpng_stream_get_data(source, length, &data)) {
+				goto stop;
+			}
+		} else if (lflag) {
+			lgpng_stream_skip_data(source, length);
+		} else {
+			warnx("Internal error");
 			break;
-		}
-		if (false == lgpng_stream_get_data(source, length, &data)) {
-			goto stop;
 		}
 		if (false == lgpng_stream_get_crc(source, &chunk_crc)) {
 			goto stop;
 		}
-		if (false == lgpng_chunk_crc(length, str_type, data,
+		if (cflag && false == lgpng_chunk_crc(length, str_type, data,
 		    &calc_crc)) {
 			warnx("Invalid CRC for chunk %s, skipping", str_type);
 			goto stop;
 		}
 		if (lflag) {
 			/* Simply list chunks' name */
-			printf("%s\n", str_type);
-		}
-		/*
-		 * The IHDR chunk contains important information used to
-		 * decode other chunks, such as bKGD, sBIT and tRNS.
-		 */
-		if (CHUNK_TYPE_IHDR == chunktype) {
-			if (-1 == lgpng_create_IHDR_from_data(&ihdr, data, length)) {
-				warnx("IHDR: Invalid IHDR chunk");
-				loopexit = true;
-				goto stop;
+			printf("%.4s\n", str_type);
+		} else if (cflag) {
+			/*
+			 * The IHDR chunk contains important information used to
+			 * decode other chunks, such as bKGD, sBIT and tRNS.
+			 */
+			if (CHUNK_TYPE_IHDR == chunktype) {
+				if (-1 == lgpng_create_IHDR_from_data(&ihdr,
+				    data, length)) {
+					warnx("IHDR: Invalid IHDR chunk");
+					loopexit = true;
+					goto stop;
+				}
 			}
-		}
-		/*
-		 * The hIST chunk mirrors the size of the PLTE chunk,
-		 * so it is important to keep it around if it is encountered.
-		 */
-		if (CHUNK_TYPE_PLTE == chunktype) {
-			if (-1 == lgpng_create_PLTE_from_data(&plte, data, length)) {
-				loopexit = true;
-				warnx("PLTE: Invalid PLTE chunk");
-				goto stop;
+			/*
+			 * The hIST chunk mirrors the size of the PLTE chunk,
+			 * so it is important to keep it around if it is encountered.
+			 */
+			if (CHUNK_TYPE_PLTE == chunktype) {
+				if (-1 == lgpng_create_PLTE_from_data(&plte,
+				    data, length)) {
+					loopexit = true;
+					warnx("PLTE: Invalid PLTE chunk");
+					goto stop;
+				}
 			}
-
-		}
-		if (cflag && chunktype == chunk) {
-			size_t dataz = length;
-
-			switch (chunktype) {
-			case CHUNK_TYPE_IHDR:
-				info_IHDR(&ihdr);
-				break;
-			case CHUNK_TYPE_PLTE:
-				info_PLTE(&plte);
-				break;
-			case CHUNK_TYPE_tRNS:
-				info_tRNS(&ihdr, &plte, data, dataz);
-				break;
-			case CHUNK_TYPE_cHRM:
-				info_cHRM(data, dataz);
-				break;
-			case CHUNK_TYPE_gAMA:
-				info_gAMA(data, dataz);
-				break;
-			case CHUNK_TYPE_sBIT:
-				info_sBIT(&ihdr, data, dataz);
-				break;
-			case CHUNK_TYPE_sRGB:
-				info_sRGB(data, dataz);
-				break;
-			case CHUNK_TYPE_tEXt:
-				info_tEXt(data, dataz);
-				break;
-			case CHUNK_TYPE_zTXt:
-				info_zTXt(data, dataz);
-				break;
-			case CHUNK_TYPE_bKGD:
-				info_bKGD(&ihdr, &plte, data, dataz);
-				break;
-			case CHUNK_TYPE_hIST:
-				info_hIST(&plte, data, dataz);
-				break;
-			case CHUNK_TYPE_pHYs:
-				info_pHYs(data, dataz);
-				break;
-			case CHUNK_TYPE_sPLT:
-				info_sPLT(data, dataz);
-				break;
-			case CHUNK_TYPE_tIME:
-				info_tIME(data, dataz);
-				break;
-			case CHUNK_TYPE__MAX:
-				/* FALLTHROUGH */
-			default:
-				errx(EXIT_FAILURE, "Unsupported chunk type");
+			if (chunktype == chunk) {
+				switch (chunktype) {
+				case CHUNK_TYPE_IHDR:
+					info_IHDR(&ihdr);
+					break;
+				case CHUNK_TYPE_PLTE:
+					info_PLTE(&plte);
+					break;
+				case CHUNK_TYPE_IDAT:
+					info_IDAT(data, length);
+					break;
+				case CHUNK_TYPE_tRNS:
+					info_tRNS(&ihdr, &plte, data, length);
+					break;
+				case CHUNK_TYPE_cHRM:
+					info_cHRM(data, length);
+					break;
+				case CHUNK_TYPE_gAMA:
+					info_gAMA(data, length);
+					break;
+				case CHUNK_TYPE_iCCP:
+					info_iCCP(data, length);
+					break;
+				case CHUNK_TYPE_sBIT:
+					info_sBIT(&ihdr, data, length);
+					break;
+				case CHUNK_TYPE_sRGB:
+					info_sRGB(data, length);
+					break;
+				case CHUNK_TYPE_cICP:
+					info_cICP(data, length);
+					break;
+				case CHUNK_TYPE_tEXt:
+					info_tEXt(data, length);
+					break;
+				case CHUNK_TYPE_zTXt:
+					info_zTXt(data, length);
+					break;
+				case CHUNK_TYPE_bKGD:
+					info_bKGD(&ihdr, &plte, data, length);
+					break;
+				case CHUNK_TYPE_hIST:
+					info_hIST(&plte, data, length);
+					break;
+				case CHUNK_TYPE_pHYs:
+					info_pHYs(data, length);
+					break;
+				case CHUNK_TYPE_sPLT:
+					info_sPLT(data, length);
+					break;
+				case CHUNK_TYPE_eXIf:
+					info_eXIf(data, length);
+					break;
+				case CHUNK_TYPE_tIME:
+					info_tIME(data, length);
+					break;
+				case CHUNK_TYPE_acTL:
+					info_acTL(data, length);
+					break;
+				case CHUNK_TYPE_fcTL:
+					info_fcTL(data, length);
+					break;
+				case CHUNK_TYPE_fdAT:
+					info_fdAT(data, length);
+					break;
+				case CHUNK_TYPE_oFFs:
+					info_oFFs(data, length);
+					break;
+				case CHUNK_TYPE_vpAg:
+					info_vpAg(data, length);
+					break;
+				case CHUNK_TYPE_caNv:
+					info_caNv(data, length);
+					break;
+				case CHUNK_TYPE_orNt:
+					info_orNt(data, length);
+					break;
+				case CHUNK_TYPE__MAX:
+					/* FALLTHROUGH */
+				default:
+					if (0 == memcmp(str_type, str_cflag, 4)) {
+						info_unknown(str_type, data, length);
+					}
+				}
 			}
+			free(data);
+			data = NULL;
+		} else {
+			warnx("Internal error");
+			break;
 		}
 stop:
 		if (CHUNK_TYPE_IEND == chunktype) {
 			loopexit = true;
 		}
-		free(data);
-		data = NULL;
 	} while(! loopexit);
 	fclose(source);
 	return(EXIT_SUCCESS);
+}
+
+int
+info_zlib(uint8_t cmf, uint8_t flg, uint8_t chunk[4])
+{
+	uint8_t          cm, cinfo;
+	uint8_t          fcheck, fdict, flevel;
+	char            *level;
+
+	/* See RFC1950 ZLIB Data Format */
+	/* cmf */
+	cm = cmf & 0x0f;
+	if (cm != 8) {
+		fprintf(stderr, "%.4s: zlib invalid compression method %i\n",
+		    chunk, cm);
+		return(-1);
+	}
+	cinfo = (cmf & 0xf0) >> 4;
+	if (cinfo > 7) {
+		fprintf(stderr, "%.4s: zlib invalid compression info %i\n",
+		     chunk, cinfo);
+		return(-1);
+	}
+	/* flg */
+	fcheck = (flg & 0xf0) >> 4;
+	fdict = flg & (0x01 << 5);
+	if (fdict == 1) {
+		fprintf(stderr, "%.4s: zlib invalid compression info: "
+		    "preset dictionary\n", chunk);
+	}
+	flevel = (flg & 0xc0) >> 6;
+        switch (flevel) {
+                case 0: level = "fastest"; break;
+                case 1: level = "fast"; break;
+                case 2: level = "default"; break;
+                case 3: level = "slowest"; break;
+                default: level = "error"; break;
+        }
+        printf("%.4s: zlib compression method: %i\n", chunk, cm);
+        printf("%.4s: zlib window size: %i\n", chunk, cinfo);
+        printf("%.4s: zlib check bits: %i\n", chunk, fcheck);
+        printf("%.4s: zlib presset dictionnary: %s\n", chunk,
+	    fdict ? "true" : "false");
+        printf("%.4s: zlib compression level: %s\n", chunk, level);
+	return(0);
 }
 
 void
@@ -310,6 +415,16 @@ info_PLTE(struct PLTE *plte)
 }
 
 void
+info_IDAT(uint8_t *data, size_t dataz)
+{
+	struct IDAT	 idat;
+
+	(void)lgpng_create_IDAT_from_data(&idat, data, dataz);
+	printf("IDAT: compressed bytes %u\n", idat.length);
+	info_zlib(data[0], data[1], (uint8_t *)"IDAT");
+}
+
+void
 info_tRNS(struct IHDR *ihdr, struct PLTE *plte, uint8_t *data, size_t dataz)
 {
 	struct tRNS trns;
@@ -328,7 +443,7 @@ info_tRNS(struct IHDR *ihdr, struct PLTE *plte, uint8_t *data, size_t dataz)
 		printf("tRNS: blue: %u\n", trns.data.blue);
 		break;
 	case COLOUR_TYPE_INDEXED:
-		if (trns.data.entries >= plte->data.entries) {
+		if (trns.data.entries > plte->data.entries) {
 			warnx("tRNS should not have more entries than PLTE");
 		}
 		for (size_t i = 0; i < trns.data.entries; i++) {
@@ -385,6 +500,21 @@ info_gAMA(uint8_t *data, size_t dataz)
 }
 
 void
+info_iCCP(uint8_t *data, size_t dataz)
+{
+	struct iCCP		 iccp;
+
+	if (-1 == lgpng_create_iCCP_from_data(&iccp, data, dataz)) {
+		warnx("Bad iCCP chunk, skipping.");
+		return;
+	}
+	printf("iCCP: profile name: %s\n", iccp.data.name);
+	printf("iCCP: compression method: %s\n",
+	    compressiontypemap[iccp.data.compression]);
+	info_zlib(iccp.data.profile[0], iccp.data.profile[1], (uint8_t *)"iCCP");
+}
+
+void
 info_sBIT(struct IHDR *ihdr, uint8_t *data, size_t dataz)
 {
 	struct sBIT sbit;
@@ -433,49 +563,99 @@ info_sRGB(uint8_t *data, size_t dataz)
 }
 
 void
+info_cICP(uint8_t *data, size_t dataz)
+{
+	struct cICP cicp;
+
+	if (-1 == lgpng_create_cICP_from_data(&cicp, data, dataz)) {
+		warnx("Bad cICP chunk, skipping.");
+		return;
+	}
+	printf("cICP: colour primaries: %d\n", cicp.data.colour_primaries);
+	printf("cICP: transfer function: %d\n", cicp.data.transfer_function);
+	printf("cICP: matrix coefficients: %d\n", cicp.data.matrix_coefficients);
+	printf("cICP: video full range flag: %d\n", cicp.data.video_full_range);
+}
+
+void
 info_tEXt(uint8_t *data, size_t dataz)
 {
 	struct tEXt	text;
 
 	if (-1 == lgpng_create_tEXt_from_data(&text, data, dataz)) {
-		warnx("Bad sRGB chunk, skipping.");
+		warnx("Bad tEXt chunk, skipping.");
 		return;
 	}
 
-	/* TODO: Check if keywords are from the registered list or not */
-	printf("tEXt: keyword: %s\n", text.data.keyword);
-	printf("tEXt: text: %s\n", text.data.text);
+	if (!lgpng_is_official_keyword(text.data.keyword,
+	    strlen((char *)text.data.keyword))) {
+		printf("tEXt: %s is not an official keyword\n",
+		    text.data.keyword);
+	}
+	printf("tEXt: %s: %s\n", text.data.keyword, text.data.text);
 }
 
 void
 info_zTXt(uint8_t *data, size_t dataz)
 {
-	struct zTXt	ztxt;
+	int		 retry = 2, zret;
+	size_t		 outz, outtmpz;
+	struct zTXt	 ztxt;
+	uint8_t		*out = NULL, *outtmp = NULL;
 
-	lgpng_create_zTXt_from_data(&ztxt, data, dataz);
+	if (-1 == lgpng_create_zTXt_from_data(&ztxt, data, dataz)) {
+		warnx("Bad zTXt chunk, skipping.");
+		return;
+	}
+	if (!lgpng_is_official_keyword(ztxt.data.keyword,
+	    strlen((char *)ztxt.data.keyword))) {
+		printf("zTXt: %s is not an official keyword\n",
+		    ztxt.data.keyword);
+	}
+	printf("zTXt: compression method: %s\n",
+	    compressiontypemap[ztxt.data.compression]);
+	info_zlib(ztxt.data.text[0], ztxt.data.text[1], (uint8_t *)"zTXt");
+	do {
+		outtmpz = ztxt.data.textz * retry;
+		if (NULL == (outtmp = realloc(out, outtmpz + 1))) {
+			warn("realloc(outtmpz + 1)");
+			goto error;
+		}
+		out = outtmp;
+		outz = outtmpz;
+		zret = uncompress(out, &outz, ztxt.data.text, ztxt.data.textz);
+		if (Z_BUF_ERROR != zret && Z_OK != zret) {
+			if (Z_MEM_ERROR == zret) {
+				warn("uncompress(ztxt.data.textz)");
+			} else if (Z_DATA_ERROR == zret) {
+				warnx("Invalid input data");
+			}
+			warnx("zTXt: Failed decompression");
+			goto error;
+		}
+		out[outz] = '\0';
+		retry += 1;
+	} while (Z_OK != zret);
+	if (outz > ztxt.data.textz) {
+		printf("zTXt: compressed data is bigger than uncompressed\n");
+	}
+	printf("zTXt: keyword: %s\n", ztxt.data.keyword);
+	printf("zTXt: text: %s\n", out);
+error:
+	free(out);
+	out = NULL;
+	outz = 0;
 }
-
-#define BINARY_PATTERN_INT8 "%c%c%c%c%c%c%c%c"
-#define BYTE_TO_BINARY_INT8(i)    \
-	(((i) & 0x80ll) ? '1' : '0'), \
-	(((i) & 0x40ll) ? '1' : '0'), \
-	(((i) & 0x20ll) ? '1' : '0'), \
-	(((i) & 0x10ll) ? '1' : '0'), \
-	(((i) & 0x08ll) ? '1' : '0'), \
-	(((i) & 0x04ll) ? '1' : '0'), \
-	(((i) & 0x02ll) ? '1' : '0'), \
-	(((i) & 0x01ll) ? '1' : '0')
-#define BINARY_PATTERN_INT16 \
-	BINARY_PATTERN_INT8 " " BINARY_PATTERN_INT8
-#define BYTE_TO_BINARY_INT16(i) \
-	BYTE_TO_BINARY_INT8((i) >> 8), BYTE_TO_BINARY_INT8(i)
 
 void
 info_bKGD(struct IHDR *ihdr, struct PLTE *plte, uint8_t *data, size_t dataz)
 {
 	struct bKGD bkgd;
 
-	lgpng_create_bKGD_from_data(&bkgd, ihdr, plte, data, dataz);
+	if (-1 == lgpng_create_bKGD_from_data(&bkgd, ihdr, plte, data, dataz)) {
+		warnx("Bad bKGD chunk");
+		return;
+	}
 	switch (ihdr->data.colourtype) {
 	case COLOUR_TYPE_GREYSCALE:
 		/* FALLTHROUGH */
@@ -544,7 +724,10 @@ info_pHYs(uint8_t *data, size_t dataz)
 {
 	struct pHYs phys;
 
-	lgpng_create_pHYs_from_data(&phys, data, dataz);
+	if (-1 == lgpng_create_pHYs_from_data(&phys, data, dataz)) {
+		warnx("Bad pHYs chunk");
+		return;
+	}
 	printf("pHYs: pixel per unit, X axis: %i\n", phys.data.ppux);
 	printf("pHYs: pixel per unit, Y axis: %i\n", phys.data.ppuy);
 	printf("pHYs: unit specifier: %s\n",
@@ -556,10 +739,30 @@ info_sPLT(uint8_t *data, size_t dataz)
 {
 	struct sPLT splt;
 
-	lgpng_create_sPLT_from_data(&splt, data, dataz);
+	if (-1 == lgpng_create_sPLT_from_data(&splt, data, dataz)) {
+		warnx("Bad sPLT chunk, skipping.");
+		return;
+	}
 	printf("sPLT: palette name: %s\n", splt.data.palettename);
 	printf("sPLT: sample depth: %i\n", splt.data.sampledepth);
 	printf("sPLT: %zu entries\n", splt.data.entries);
+}
+
+void
+info_eXIf(uint8_t *data, size_t dataz)
+{
+	struct eXIf exif;
+	uint8_t little_endian[4] = { 73, 73, 42, 0};
+	uint8_t big_endian[4] = { 77, 77, 0, 42};
+
+	lgpng_create_eXIf_from_data(&exif, data, dataz);
+	if (0 == memcmp(exif.data.profile, little_endian, 4)) {
+		printf("eXIf: endianese: little-endian\n");
+	} else if (0 == memcmp(exif.data.profile, big_endian, 4)) {
+		printf("eXIf: endianese: big-endian\n");
+	} else {
+		printf("eXIf: endianese: weird\n");
+	}
 }
 
 void
@@ -567,7 +770,10 @@ info_tIME(uint8_t *data, size_t dataz)
 {
 	struct tIME time;
 
-	lgpng_create_tIME_from_data(&time, data, dataz);
+	if (-1 == lgpng_create_tIME_from_data(&time, data, dataz)) {
+		warnx("Bad tIME chunk, skipping.");
+		return;
+	}
 	if (time.data.month == 0 || time.data.month > 12) {
 		warnx("tIME: invalid month value");
 	}
@@ -583,9 +789,121 @@ info_tIME(uint8_t *data, size_t dataz)
 	if (time.data.second > 60) {
 		warnx("tIME: invalid second value");
 	}
-	printf("tIME: %i-%i-%i %i:%i:%i\n",
+	printf("tIME: %i-%02i-%02i %02i:%02i:%02i\n",
 	    time.data.year, time.data.month, time.data.day,
 	    time.data.hour, time.data.minute, time.data.second);
+}
+
+void
+info_acTL(uint8_t *data, size_t dataz)
+{
+	struct acTL actl;
+
+	if (-1 == lgpng_create_acTL_from_data(&actl, data, dataz)) {
+		warnx("Bad acTL chunk, skipping.");
+		return;
+	}
+	printf("acTL: number of frames: %u\n", actl.data.num_frames);
+	if (0 == actl.data.num_plays) {
+		printf("acTL: number of plays: indefinitely\n");
+	} else {
+		printf("acTL: number of plays: %u\n", actl.data.num_plays);
+	}
+}
+
+void
+info_fcTL(uint8_t *data, size_t dataz)
+{
+	struct fcTL fctl;
+
+	if (-1 == lgpng_create_fcTL_from_data(&fctl, data, dataz)) {
+		warnx("Bad fcTL chunk, skipping.");
+		return;
+	}
+	printf("fcTL: squence number: %d\n", fctl.data.sequence_number);
+	printf("fcTL: width: %d\n", fctl.data.width);
+	printf("fcTL: height: %d\n", fctl.data.height);
+	printf("fcTL: x_offset: %d\n", fctl.data.x_offset);
+	printf("fcTL: y_offset: %d\n", fctl.data.y_offset);
+	printf("fcTL: delay_num: %d\n", fctl.data.delay_num);
+	printf("fcTL: delay_den: %d\n", fctl.data.delay_den);
+	printf("fcTL: dispose_op: %s\n", dispose_opmap[fctl.data.dispose_op]);
+	printf("fcTL: blend_op: %s\n", blend_opmap[fctl.data.blend_op]);
+}
+
+void
+info_fdAT(uint8_t *data, size_t dataz)
+{
+	struct fdAT fdat;
+
+	if (-1 == lgpng_create_fdAT_from_data(&fdat, data, dataz)) {
+		warnx("Bad fdAT chunk, skipping.");
+		return;
+	}
+	printf("fdAT: squence number: %d\n", fdat.data.sequence_number);
+}
+
+void
+info_oFFs(uint8_t *data, size_t dataz)
+{
+	struct oFFs offs;
+
+	if (-1 == lgpng_create_oFFs_from_data(&offs, data, dataz)) {
+		warnx("Bad oFFs chunk, skipping.");
+		return;
+	}
+	printf("oFFs: x position: %d\n", offs.data.x_position);
+	printf("oFFs: y position: %d\n", offs.data.y_position);
+	printf("oFFs: unit specifier: %s\n", offsunitspecifiermap[offs.data.unitspecifier]);
+}
+
+void
+info_vpAg(uint8_t *data, size_t dataz)
+{
+	struct vpAg vpag;
+
+	if (-1 == lgpng_create_vpAg_from_data(&vpag, data, dataz)) {
+		warnx("Bad vpAg chunk, skipping.");
+		return;
+	}
+	printf("vpAg: width: %d\n", vpag.data.width);
+	printf("vpAg: height: %d\n", vpag.data.height);
+	printf("vpAg: unit specifier: %s\n", vpagunitspecifiermap[vpag.data.unitspecifier]);
+}
+
+
+void
+info_caNv(uint8_t *data, size_t dataz)
+{
+	struct caNv canv;
+
+	if (-1 == lgpng_create_caNv_from_data(&canv, data, dataz)) {
+		warnx("Bad caNv chunk, skipping.");
+		return;
+	}
+	printf("caNv: width: %d\n", canv.data.width);
+	printf("caNv: height: %d\n", canv.data.height);
+	printf("caNv: x position: %d\n", canv.data.x_position);
+	printf("caNv: y position: %d\n", canv.data.y_position);
+}
+
+void
+info_orNt(uint8_t *data, size_t dataz)
+{
+	struct orNt ornt;
+
+	if (-1 == lgpng_create_orNt_from_data(&ornt, data, dataz)) {
+		warnx("Bad orNt chunk, skipping.");
+		return;
+	}
+	printf("orNt: orientation: %s\n", orientationmap[ornt.data.orientation]);
+}
+
+void
+info_unknown(uint8_t name[5], uint8_t *data, size_t dataz)
+{
+	(void)data;
+	printf("%s: bytes %zu\n", name, dataz);
 }
 
 void

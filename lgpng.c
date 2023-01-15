@@ -14,9 +14,8 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include <arpa/inet.h>
-
 #include <ctype.h>
+#include <endian.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -37,6 +36,7 @@ const char *chunktypemap[CHUNK_TYPE__MAX] = {
 	"iCCP",
 	"sBIT",
 	"sRGB",
+	"cICP",
 	"iTXt",
 	"tEXt",
 	"zTXt",
@@ -44,7 +44,15 @@ const char *chunktypemap[CHUNK_TYPE__MAX] = {
 	"hIST",
 	"pHYs",
 	"sPLT",
-	"tIME"
+	"eXIf",
+	"tIME",
+	"acTL",
+	"fcTL",
+	"fdAT",
+	"oFFs",
+	"vpAg",
+	"caNv",
+	"orNt",
 };
 
 const char *colourtypemap[COLOUR_TYPE__MAX] = {
@@ -82,6 +90,62 @@ const char *unitspecifiermap[UNITSPECIFIER__MAX] = {
 	"metre",
 };
 
+const char *dispose_opmap[DISPOSE_OP__MAX] = {
+	"none",
+	"background",
+	"previous",
+};
+
+const char *blend_opmap[BLEND_OP__MAX] = {
+	"source",
+	"over",
+};
+
+const char *offsunitspecifiermap[OFFS_UNITSPECIFIER__MAX] = {
+	"pixel",
+	"micrometer",
+};
+
+bool
+lgpng_validate_keyword(uint8_t *keyword, size_t keywordz)
+{
+	if (' ' == keyword[0]) {
+		return(false);
+	}
+	if (' ' == keyword[keywordz - 1]) {
+		return(false);
+	}
+	if (NULL != memmem(keyword, keywordz,"  ", 2)) {
+		return(false);
+	}
+	for (size_t i = 0; i < keywordz; i++) {
+		if (keyword[i] < 32
+		    || (keyword[i] > 126 && keyword[i] < 161)
+		    || keyword[i] > 255) {
+			return(false);
+		}
+	}
+	return(true);
+}
+
+bool
+lgpng_is_official_keyword(uint8_t *keyword, size_t keywordz)
+{
+	if (0 != memcmp(keyword, "Title", keywordz)
+	    && 0 != memcmp(keyword, "Author", keywordz)
+	    && 0 != memcmp(keyword, "Description", keywordz)
+	    && 0 != memcmp(keyword, "Copyright", keywordz)
+	    && 0 != memcmp(keyword, "Creation Time", keywordz)
+	    && 0 != memcmp(keyword, "Software", keywordz)
+	    && 0 != memcmp(keyword, "Disclaimer", keywordz)
+	    && 0 != memcmp(keyword, "Warning", keywordz)
+	    && 0 != memcmp(keyword, "Source", keywordz)
+	    && 0 != memcmp(keyword, "Comment", keywordz)) {
+		return(false);
+	}
+	return(true);
+}
+
 int
 lgpng_create_IHDR_from_data(struct IHDR *ihdr, uint8_t *data, size_t dataz)
 {
@@ -97,8 +161,8 @@ lgpng_create_IHDR_from_data(struct IHDR *ihdr, uint8_t *data, size_t dataz)
 	ihdr->data.compression = data[10];
 	ihdr->data.filter = data[11];
 	ihdr->data.interlace = data[12];
-	ihdr->data.width = ntohl(ihdr->data.width);
-	ihdr->data.height = ntohl(ihdr->data.height);
+	ihdr->data.width = be32toh(ihdr->data.width);
+	ihdr->data.height = be32toh(ihdr->data.height);
 	return(0);
 }
 
@@ -123,6 +187,15 @@ lgpng_create_PLTE_from_data(struct PLTE *plte, uint8_t *data, size_t dataz)
 }
 
 int
+lgpng_create_IDAT_from_data(struct IDAT *idat, uint8_t *data, size_t dataz)
+{
+	idat->length = dataz;
+	idat->type = CHUNK_TYPE_IDAT;
+	idat->data.data = data;
+	return(0);
+}
+
+int
 lgpng_create_tRNS_from_data(struct tRNS *trns, struct IHDR *ihdr, uint8_t *data, size_t dataz)
 {
 	if (NULL == ihdr) {
@@ -138,18 +211,27 @@ lgpng_create_tRNS_from_data(struct tRNS *trns, struct IHDR *ihdr, uint8_t *data,
 	(void)memset(&(trns->data.palette), 0, sizeof(trns->data.palette));
 	switch (ihdr->data.colourtype) {
 	case COLOUR_TYPE_GREYSCALE:
+		if (2 != dataz) {
+			return(-1);
+		}
 		(void)memcpy(&(trns->data.gray), data, 2);
-		trns->data.gray = ntohs(trns->data.gray);
+		trns->data.gray = be16toh(trns->data.gray);
 		break;
 	case COLOUR_TYPE_TRUECOLOUR:
+		if (6 != dataz) {
+			return(-1);
+		}
 		(void)memcpy(&(trns->data.red), data, 2);
-		trns->data.red = ntohs(trns->data.red);
+		trns->data.red = be16toh(trns->data.red);
 		(void)memcpy(&(trns->data.green), data, 2);
-		trns->data.green = ntohs(trns->data.green);
+		trns->data.green = be16toh(trns->data.green);
 		(void)memcpy(&(trns->data.blue), data, 2);
-		trns->data.blue = ntohs(trns->data.blue);
+		trns->data.blue = be16toh(trns->data.blue);
 		break;
 	case COLOUR_TYPE_INDEXED:
+		if (dataz > 256) {
+			return(-1);
+		}
 		trns->data.entries = dataz;
 		(void)memcpy(&(trns->data.palette), data, dataz);
 		break;
@@ -269,14 +351,14 @@ lgpng_create_cHRM_from_data(struct cHRM *chrm, uint8_t *data, size_t dataz)
 		return(-1);
 	}
 	(void)memcpy(&(chrm->data), data, dataz);
-	chrm->data.whitex = ntohl(chrm->data.whitex);
-	chrm->data.whitey = ntohl(chrm->data.whitey);
-	chrm->data.redx = ntohl(chrm->data.redx);
-	chrm->data.redy = ntohl(chrm->data.redy);
-	chrm->data.greenx = ntohl(chrm->data.greenx);
-	chrm->data.greeny = ntohl(chrm->data.greeny);
-	chrm->data.bluex = ntohl(chrm->data.bluex);
-	chrm->data.bluey = ntohl(chrm->data.bluey);
+	chrm->data.whitex = be32toh(chrm->data.whitex);
+	chrm->data.whitey = be32toh(chrm->data.whitey);
+	chrm->data.redx = be32toh(chrm->data.redx);
+	chrm->data.redy = be32toh(chrm->data.redy);
+	chrm->data.greenx = be32toh(chrm->data.greenx);
+	chrm->data.greeny = be32toh(chrm->data.greeny);
+	chrm->data.bluex = be32toh(chrm->data.bluex);
+	chrm->data.bluey = be32toh(chrm->data.bluey);
 	return(0);
 }
 
@@ -284,11 +366,51 @@ int
 lgpng_create_gAMA_from_data(struct gAMA *gama, uint8_t *data, size_t dataz)
 {
 	if (4 != dataz) {
-		gama->length = 4;
+		return(-1);
 	}
+	gama->length = 4;
 	gama->type = CHUNK_TYPE_gAMA;
 	(void)memcpy(&(gama->data.gamma), data, 4);
-	gama->data.gamma = ntohl(gama->data.gamma);
+	gama->data.gamma = be32toh(gama->data.gamma);
+	return(0);
+}
+
+int
+lgpng_create_iCCP_from_data(struct iCCP *iccp, uint8_t *data, size_t dataz)
+{
+	size_t	  offset;
+	uint8_t	 *nul;
+
+	iccp->length = dataz;
+	iccp->type = CHUNK_TYPE_iCCP;
+	if (NULL == (nul = memchr(data, '\0', 80))) {
+		return(-1);
+	}
+	offset = nul - data;
+	if (1 > offset || 79 < offset) {
+		return(-1);
+	}
+	(void)memset(iccp->data.name, 0, sizeof(iccp->data.name));
+	(void)memcpy(iccp->data.name, data, offset);
+	iccp->data.namez = offset;
+	if (!lgpng_validate_keyword(iccp->data.name, offset)) {
+		return(-1);
+	}
+	/*
+	 * Only one compression type allowed here too but check anyway
+	 */
+	if (offset + 1 > dataz) {
+		return(-1);
+	}
+	iccp->data.compression = data[offset + 1];
+	if (COMPRESSION_TYPE_DEFLATE != iccp->data.compression) {
+		return(-1);
+	}
+	if (offset + 2 > dataz) {
+		return(-1);
+	}
+	iccp->data.profile = data + offset + 2;
+	iccp->data.profilez = dataz - offset - 2;
 	return(0);
 }
 
@@ -305,22 +427,90 @@ lgpng_create_sRGB_from_data(struct sRGB *srgb, uint8_t *data, size_t dataz)
 }
 
 int
+lgpng_create_cICP_from_data(struct cICP *cicp, uint8_t *data, size_t dataz)
+{
+	if (4 != dataz) {
+		return(-1);
+	}
+	cicp->length = dataz;
+	cicp->type = CHUNK_TYPE_cICP;
+	cicp->data.colour_primaries = data[0];
+	cicp->data.transfer_function = data[1];
+	cicp->data.matrix_coefficients = data[2];
+	cicp->data.video_full_range = data[3];
+	if (0 != cicp->data.matrix_coefficients) {
+		return(-1);
+	}
+	if (0 != cicp->data.video_full_range && 1 != cicp->data.video_full_range) {
+		return(-1);
+	}
+	/*
+	 * TODO: find the name of the transfer functions
+	 * -> Tables 2, 3 & 4 of ITU-T H.273 ?
+	 * */
+	return(0);
+}
+
+int
 lgpng_create_tEXt_from_data(struct tEXt *text, uint8_t *data, size_t dataz)
 {
-	/* XXX: Depends on the lifetime of data */
+	size_t	 offset;
+	uint8_t	*nul;
+
 	text->length = dataz;
 	text->type = CHUNK_TYPE_tEXt;
-	text->data.keyword = (char *)data;
-	text->data.text = (char *)data + strlen((char *)data) + 1;
+	if (NULL == (nul = memchr(data, '\0', 80))) {
+		return(-1);
+	}
+	offset = nul - data;
+	(void)memset(text->data.keyword, 0, sizeof(text->data.keyword));
+	(void)memcpy(text->data.keyword, data, offset);
+	if (1 > offset || 79 < offset) {
+		return(-1);
+	}
+	if (!lgpng_validate_keyword(text->data.keyword, offset)) {
+		return(-1);
+	}
+	text->data.text = data + offset + 1;
 	return(0);
 }
 
 int
 lgpng_create_zTXt_from_data(struct zTXt *ztxt, uint8_t *data, size_t dataz)
 {
+	size_t	 offset;
+	uint8_t	*nul;
+
 	ztxt->length = dataz;
 	ztxt->type = CHUNK_TYPE_zTXt;
-	fprintf(stderr, "[zTXT: TODO]\n");
+	if (NULL == (nul = memchr(data, '\0', 80))) {
+		return(-1);
+	}
+	offset = nul - data;
+	(void)memset(ztxt->data.keyword, 0, sizeof(ztxt->data.keyword));
+	(void)memcpy(ztxt->data.keyword, data, offset);
+	ztxt->data.keywordz = offset;
+	if (1 > offset || 79 < offset) {
+		return(-1);
+	}
+	if (!lgpng_validate_keyword(ztxt->data.keyword, offset)) {
+		return(-1);
+	}
+	/*
+	 * Only one compression type allowed here but check anyway
+	 */
+	if (offset + 1 > dataz) {
+		return(-1);
+	}
+	ztxt->data.compression = data[offset + 1];
+	if (COMPRESSION_TYPE_DEFLATE != ztxt->data.compression) {
+		return(-1);
+	}
+	if (offset + 2 > dataz) {
+		return(-1);
+	}
+	ztxt->data.text = data + offset + 2;
+	ztxt->data.textz = dataz - offset - 2;
 	return(0);
 }
 
@@ -348,7 +538,7 @@ lgpng_create_bKGD_from_data(struct bKGD *bkgd, struct IHDR *ihdr, struct PLTE *p
 			return(-1);
 		}
 		bkgd->data.greyscale = *(uint16_t *)data;
-		bkgd->data.greyscale = ntohs(bkgd->data.greyscale);
+		bkgd->data.greyscale = be16toh(bkgd->data.greyscale);
 		break;
 	case COLOUR_TYPE_TRUECOLOUR:
 		/* FALLTHROUGH */
@@ -357,9 +547,9 @@ lgpng_create_bKGD_from_data(struct bKGD *bkgd, struct IHDR *ihdr, struct PLTE *p
 			return(-1);
 		}
 		rgb = (struct rgb16 *)data;
-		bkgd->data.rgb.red = ntohs(rgb->red);
-		bkgd->data.rgb.green = ntohs(rgb->green);
-		bkgd->data.rgb.blue = ntohs(rgb->blue);
+		bkgd->data.rgb.red = be16toh(rgb->red);
+		bkgd->data.rgb.green = be16toh(rgb->green);
+		bkgd->data.rgb.blue = be16toh(rgb->blue);
 		break;
 	case COLOUR_TYPE_INDEXED:
 		if (1 != dataz) {
@@ -412,8 +602,8 @@ lgpng_create_pHYs_from_data(struct pHYs *phys, uint8_t *data, size_t dataz)
 	phys->type = CHUNK_TYPE_pHYs;
 	(void)memcpy(&(phys->data.ppux), data, 4);
 	(void)memcpy(&(phys->data.ppuy), data + 4, 4);
-	phys->data.ppux = ntohl(phys->data.ppux);
-	phys->data.ppuy = ntohl(phys->data.ppuy);
+	phys->data.ppux = be32toh(phys->data.ppux);
+	phys->data.ppuy = be32toh(phys->data.ppuy);
 	phys->data.unitspecifier = data[9];
 	return(0);
 }
@@ -421,17 +611,24 @@ lgpng_create_pHYs_from_data(struct pHYs *phys, uint8_t *data, size_t dataz)
 int
 lgpng_create_sPLT_from_data(struct sPLT *splt, uint8_t *data, size_t dataz)
 {
-	size_t	palettenamez;
-	int	offset;
+	int	 offset;
+	uint8_t	*nul;
 
 	splt->length = dataz;
 	splt->type = CHUNK_TYPE_sPLT;
-	splt->data.palettename = (char *)data;
-	palettenamez = strlen(splt->data.palettename);
-	if (palettenamez > 80) {
+	if (NULL == (nul = memchr(data, '\0', 80))) {
 		return(-1);
 	}
-	offset = palettenamez + 1;
+	offset = nul - data;
+	(void)memset(splt->data.palettename, 0, sizeof(splt->data.palettename));
+	(void)memcpy(splt->data.palettename, data, offset);
+	if (1 > offset || 79 < offset) {
+		return(-1);
+	}
+	if (!lgpng_validate_keyword((uint8_t *)splt->data.palettename, offset)) {
+		return(-1);
+	}
+	offset += 1;
 	splt->data.sampledepth = data[offset];
 	if (8 != splt->data.sampledepth && 16 != splt->data.sampledepth) {
 		return(-1);
@@ -454,6 +651,15 @@ lgpng_create_sPLT_from_data(struct sPLT *splt, uint8_t *data, size_t dataz)
 }
 
 int
+lgpng_create_eXIf_from_data(struct eXIf *exif, uint8_t *data, size_t dataz)
+{
+	exif->length = dataz;
+	exif->type = CHUNK_TYPE_eXIf;
+	exif->data.profile = data;
+	return(0);
+}
+
+int
 lgpng_create_tIME_from_data(struct tIME *time, uint8_t *data, size_t dataz)
 {
 	if (7 != dataz) {
@@ -462,12 +668,185 @@ lgpng_create_tIME_from_data(struct tIME *time, uint8_t *data, size_t dataz)
 	time->length = dataz;
 	time->type = CHUNK_TYPE_tIME;
 	(void)memcpy(&(time->data.year), data, 2);
-	time->data.year = ntohs(time->data.year);
-	time->data.month = data[3];
-	time->data.day = data[4];
-	time->data.hour = data[5];
-	time->data.minute = data[6];
-	time->data.second = data[7];
+	time->data.year = be16toh(time->data.year);
+	time->data.month = data[2];
+	time->data.day = data[3];
+	time->data.hour = data[4];
+	time->data.minute = data[5];
+	time->data.second = data[6];
+	return(0);
+}
+
+int
+lgpng_create_acTL_from_data(struct acTL *actl, uint8_t *data, size_t dataz)
+{
+	if (8 != dataz) {
+		return(-1);
+	}
+	actl->length = dataz;
+	actl->type = CHUNK_TYPE_acTL;
+	(void)memcpy(&(actl->data.num_frames), data, 4);
+	(void)memcpy(&(actl->data.num_plays), data + 4, 4);
+	actl->data.num_frames = be32toh(actl->data.num_frames);
+	actl->data.num_plays = be32toh(actl->data.num_plays);
+	if (0 == actl->data.num_frames) {
+		return(-1);
+	}
+	return(0);
+}
+
+int
+lgpng_create_fcTL_from_data(struct fcTL *fctl, uint8_t *data, size_t dataz)
+{
+	if (26 != dataz) {
+		return(-1);
+	}
+	fctl->length = dataz;
+	fctl->type = CHUNK_TYPE_fcTL;
+	(void)memcpy(&(fctl->data.sequence_number), data, 4);
+	(void)memcpy(&(fctl->data.width), data + 4, 4);
+	(void)memcpy(&(fctl->data.height), data + 8, 4);
+	(void)memcpy(&(fctl->data.x_offset), data + 12, 4);
+	(void)memcpy(&(fctl->data.y_offset), data + 16, 4);
+	(void)memcpy(&(fctl->data.delay_num), data + 20, 2);
+	(void)memcpy(&(fctl->data.delay_den), data + 22, 2);
+	fctl->data.sequence_number = be32toh(fctl->data.sequence_number);
+	fctl->data.width = be32toh(fctl->data.width);
+	fctl->data.height = be32toh(fctl->data.height);
+	fctl->data.x_offset = be32toh(fctl->data.x_offset);
+	fctl->data.y_offset = be32toh(fctl->data.y_offset);
+	fctl->data.delay_num = be16toh(fctl->data.delay_num);
+	fctl->data.delay_den = be16toh(fctl->data.delay_den);
+	fctl->data.dispose_op = data[24];
+	fctl->data.blend_op = data[25];
+	if (fctl->data.width == 0 || fctl->data.height == 0) {
+		return(-1);
+	}
+	if (fctl->data.dispose_op >= DISPOSE_OP__MAX) {
+		return(-1);
+	}
+	if (fctl->data.blend_op >= BLEND_OP__MAX) {
+		return(-1);
+	}
+	return(0);
+}
+
+int
+lgpng_create_fdAT_from_data(struct fdAT *fdat, uint8_t *data, size_t dataz)
+{
+	if (5 > dataz) {
+		return(-1);
+	}
+	fdat->length = dataz;
+	fdat->type = CHUNK_TYPE_fdAT;
+	(void)memcpy(&(fdat->data.sequence_number), data, 4);
+	fdat->data.sequence_number = be32toh(fdat->data.sequence_number);
+	fdat->data.frame_data = data + 4;
+	return(0);
+}
+
+int
+lgpng_create_oFFs_from_data(struct oFFs *offs, uint8_t *data, size_t dataz)
+{
+	if (5 > dataz) {
+		return(-1);
+	}
+	offs->length = dataz;
+	offs->type = CHUNK_TYPE_oFFs;
+	(void)memcpy(&(offs->data.x_position), data, 4);
+	(void)memcpy(&(offs->data.y_position), data, 4);
+	offs->data.x_position = be32toh(offs->data.x_position);
+	offs->data.y_position = be32toh(offs->data.y_position);
+	offs->data.unitspecifier = data[8];
+	if (offs->data.unitspecifier >= OFFS_UNITSPECIFIER__MAX) {
+		return(-1);
+	}
+	return(0);
+}
+
+/*
+ * Copyright (c) 2022 Tristan Le Guern <tleguern@bouledef.eu>
+ *
+ * Permission to use, copy, modify, and distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ */
+
+#include <endian.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "lgpng.h"
+
+const char *vpagunitspecifiermap[VPAG_UNITSPECIFIER__MAX] = {
+	"pixel",
+};
+
+const char *orientationmap[ORIENTATION__MAX] = {
+	"undefined",
+	"top left",
+	"top right",
+	"bottom right",
+	"bottom left",
+	"left top",
+	"right top",
+	"right bottom",
+	"left bottom",
+};
+
+int
+lgpng_create_vpAg_from_data(struct vpAg *vpag, uint8_t *data, size_t dataz)
+{
+	if (9 != dataz) {
+		return(-1);
+	}
+	(void)memcpy(&(vpag->data.width), data, 4);
+	(void)memcpy(&(vpag->data.height), data + 4, 4);
+	vpag->data.width = be32toh(vpag->data.width);
+	vpag->data.height = be32toh(vpag->data.height);
+	vpag->data.unitspecifier = data[8];
+	if (0 != vpag->data.unitspecifier) {
+		return(-1);
+	}
+	return(0);
+}
+
+int
+lgpng_create_caNv_from_data(struct caNv *canv, uint8_t *data, size_t dataz)
+{
+	if (16 != dataz) {
+		return(-1);
+	}
+	(void)memcpy(&(canv->data.width), data, 4);
+	(void)memcpy(&(canv->data.height), data + 4, 4);
+	(void)memcpy(&(canv->data.x_position), data + 8, 4);
+	(void)memcpy(&(canv->data.y_position), data + 12, 4);
+	canv->data.width = be32toh(canv->data.width);
+	canv->data.height = be32toh(canv->data.height);
+	canv->data.x_position = be32toh(canv->data.x_position);
+	canv->data.y_position = be32toh(canv->data.y_position);
+	return(0);
+}
+
+int
+lgpng_create_orNt_from_data(struct orNt *ornt, uint8_t *data, size_t dataz)
+{
+	if (1 != dataz) {
+		return(-1);
+	}
+	ornt->data.orientation = data[0];
+	if (ornt->data.orientation >= ORIENTATION__MAX) {
+		return(-1);
+	}
 	return(0);
 }
 
@@ -597,9 +976,8 @@ lgpng_chunk_crc(uint32_t length, uint8_t type[4], uint8_t *data, uint32_t *crc)
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include <arpa/inet.h>
-
 #include <ctype.h>
+#include <endian.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -634,7 +1012,7 @@ lgpng_data_get_length(uint8_t *src, size_t srcz, uint32_t *length)
 	}
 	/* Read the first four bytes to gather the length of the data part */
 	(void)memcpy(length, src, 4);
-	*length = ntohl(*length);
+	*length = be32toh(*length);
 	if (*length > INT32_MAX) {
 		fprintf(stderr, "Chunk length is too big (%u)\n", *length);
 		return(false);
@@ -713,7 +1091,7 @@ lgpng_data_get_crc(uint8_t *src, size_t srcz, uint32_t *crc)
 	}
 
 	(void)memcpy(crc, src, 4);
-	*crc = ntohl(*crc);
+	*crc = be32toh(*crc);
 	return(true);
 }
 
@@ -733,9 +1111,8 @@ lgpng_data_get_crc(uint8_t *src, size_t srcz, uint32_t *crc)
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include <arpa/inet.h>
-
 #include <ctype.h>
+#include <endian.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -772,7 +1149,7 @@ lgpng_stream_get_length(FILE *src, uint32_t *length)
 		fprintf(stderr, "Not enough data to read chunk's length\n");
 		return(false);
 	}
-	*length = ntohl(*length);
+	*length = be32toh(*length);
 	if (*length > INT32_MAX) {
 		fprintf(stderr, "Chunk length is too big (%d)\n", *length);
 		return(false);
@@ -833,6 +1210,21 @@ lgpng_stream_get_data(FILE *src, uint32_t length, uint8_t **data)
 }
 
 bool
+lgpng_stream_skip_data(FILE *src, uint32_t length)
+{
+	if (NULL == src) {
+		return(false);
+	}
+	if (0 != length) {
+		if (-1 == fseek(src, length, SEEK_CUR)) {
+			fprintf(stderr, "Not enough data to skip chunk's data\n");
+			return(false);
+		}
+	}
+	return(true);
+}
+
+bool
 lgpng_stream_get_crc(FILE *src, uint32_t *crc)
 {
 	if (NULL == src) {
@@ -845,7 +1237,7 @@ lgpng_stream_get_crc(FILE *src, uint32_t *crc)
 		fprintf(stderr, "Not enough data to read chunk's CRC\n");
 		return(false);
 	}
-	*crc = ntohl(*crc);
+	*crc = be32toh(*crc);
 	return(true);
 }
 
