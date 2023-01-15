@@ -20,6 +20,12 @@ The pnginfo utility explores the content of PNG files.
     $ make
     # make install
 
+Alternatively install in your `$HOME/bin`:
+
+    $ ./configure PREFIX=~/
+    $ make
+    $ make install
+
 ## Instructions
 
 It is possible to list the chunks in a given PNG file or to request the content of a specific chunk.
