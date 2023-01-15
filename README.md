@@ -44,24 +44,38 @@ $ pnginfo -c sRGB -f lena.png
 sRGB: rendering intent: perceptual
 ```
 
-Only the following chunks are implemented right now:
+Here is a list of supported chunks:
 
-* IHDR ;
-* PLTE ;
-* tRNS ;
-* IEND ;
-* cHRM ;
-* gAMA ;
-* sBIT ;
-* sRGB ;
-* tEXt ;
-* bKGD ;
-* hIST ;
-* pHYs ;
-* sPLT ;
-* tIME.
+* PNG specification (Third edition):
+  * IHDR
+  * PLTE
+  * IDAT
+  * IDEN
+  * tRNS
+  * cHRM
+  * gAMA
+  * iCCP
+  * sBIT
+  * sRGB
+  * cICP
+  * tEXt
+  * zTXt
+  * bKGD
+  * hIST
+  * pHYs
+  * sPLT
+  * eXIf
+  * tIME
+  * acTL
+  * fcTL
+  * fdAT
+* ImageMagick private chunks:
+  * oFFs
+  * vpAg
+  * caNv
+  * orNt
 
-Chunks that are not part of the 2003 PNG specification, either because they are custom made or part of an extension, are still listed but can't be queried.
+Unknown chunks can still be listed and queried but only very basic informations will be displayed.
 
 The `-s` option can be handy if garbage is placed at the begining of a file. `pnginfo -s` will try to skip said garbage until it finds an acceptable PNG signature.
 
