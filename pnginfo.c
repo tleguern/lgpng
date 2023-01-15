@@ -63,7 +63,8 @@ main(int argc, char *argv[])
 {
 	int		 ch;
 	long		 offset;
-	bool		 cflag = false, lflag = true, sflag = false;
+	bool		 cflag = false, dflag = false;
+	bool		 lflag = true, sflag = false;
 	bool		 loopexit = false;
 	int		 chunk = CHUNK_TYPE__MAX;
 	struct IHDR	 ihdr;
@@ -76,7 +77,7 @@ main(int argc, char *argv[])
 #endif
 	(void)memset(&ihdr, 0, sizeof(ihdr));
 	(void)memset(&plte, 0, sizeof(plte));
-	while (-1 != (ch = getopt(argc, argv, "c:f:ls")))
+	while (-1 != (ch = getopt(argc, argv, "c:df:ls")))
 		switch (ch) {
 		case 'c':
 			cflag = true;
@@ -90,6 +91,9 @@ main(int argc, char *argv[])
 			if (CHUNK_TYPE__MAX == chunk) {
 				(void)memcpy(str_cflag, optarg, 4);
 			}
+			break;
+		case 'd':
+			dflag = true;
 			break;
 		case 'f':
 			if (NULL == (source = fopen(optarg, "r"))) {
@@ -108,6 +112,10 @@ main(int argc, char *argv[])
 		}
 	argc -= optind;
 	argv += optind;
+
+	if (dflag && ! cflag) {
+		errx(EXIT_FAILURE, "-d is only valid with -c");
+	}
 
 	/* Read the file byte by byte until the PNG signature is found */
 	offset = 0;
@@ -160,6 +168,7 @@ main(int argc, char *argv[])
 		if (false == lgpng_stream_get_crc(source, &chunk_crc)) {
 			goto stop;
 		}
+		/* Validate the CRC in chunk mode */
 		if (cflag && false == lgpng_chunk_crc(length, str_type, data,
 		    &calc_crc)) {
 			warnx("Invalid CRC for chunk %s, skipping", str_type);
@@ -193,7 +202,12 @@ main(int argc, char *argv[])
 					goto stop;
 				}
 			}
-			if (chunktype == chunk) {
+			if (chunktype == chunk && dflag) {
+				/* Dump the chunk's data */
+				if (length != fwrite(data, 1, length, stdout)) {
+					warn("I/O error");
+				}
+			} else if (chunktype == chunk && !dflag) {
 				switch (chunktype) {
 				case CHUNK_TYPE_IHDR:
 					info_IHDR(&ihdr);

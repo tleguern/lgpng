@@ -27,12 +27,12 @@ It is possible to list the chunks in a given PNG file or to request the content 
 Examples:
 
 ```
-$ pnginfo -l -f lena.png 
+$ pnginfo -f lena.png -l
 IHDR
 sRGB
 IDAT
 IEND
-$ pnginfo -c IHDR -f lena.png
+$ pnginfo -f lena.png -c IHDR
 IHDR: width: 512
 IHDR: height: 512
 IHDR: bitdepth: 8
@@ -40,8 +40,10 @@ IHDR: colourtype: truecolour
 IHDR: compression: deflate
 IHDR: filter: adaptive
 IHDR: interlace method: standard
-$ pnginfo -c sRGB -f lena.png
+$ pnginfo -f lena.png -c sRGB
 sRGB: rendering intent: perceptual
+$ pnginfo -f lena.png -c sRGB -d | xxd
+00000000: 00
 ```
 
 Here is a list of supported chunks:
@@ -77,7 +79,7 @@ Here is a list of supported chunks:
 
 Unknown chunks can still be listed and queried but only very basic informations will be displayed.
 
-The `-s` option can be handy if garbage is placed at the begining of a file. `pnginfo -s` will try to skip said garbage until it finds an acceptable PNG signature.
+The `-s` option can be handy if garbage is placed at the beginning of a file. `pnginfo -s` will try to skip said garbage until it finds an acceptable PNG signature.
 
 ## License
 
