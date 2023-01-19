@@ -50,6 +50,8 @@ const char *chunktypemap[CHUNK_TYPE__MAX] = {
 	"fcTL",
 	"fdAT",
 	"oFFs",
+	"gIFg",
+	"gIFx",
 	"vpAg",
 	"caNv",
 	"orNt",
@@ -104,6 +106,22 @@ const char *blend_opmap[BLEND_OP__MAX] = {
 const char *offsunitspecifiermap[OFFS_UNITSPECIFIER__MAX] = {
 	"pixel",
 	"micrometer",
+};
+
+const char *disposal_methodmap[DISPOSAL_METHOD__MAX] = {
+	"none",
+	"do not dispose",
+	"restore to background color",
+	"restore to previous",
+	"reserved",
+	"reserved",
+	"reserved",
+	"reserved",
+};
+
+const char *user_inputmap[USER_INPUT__MAX] = {
+	"user input is not expected",
+	"user input is expected",
 };
 
 bool
@@ -761,6 +779,41 @@ lgpng_create_oFFs_from_data(struct oFFs *offs, uint8_t *data, size_t dataz)
 	if (offs->data.unitspecifier >= OFFS_UNITSPECIFIER__MAX) {
 		return(-1);
 	}
+	return(0);
+}
+
+int
+lgpng_create_gIFg_from_data(struct gIFg *gifg, uint8_t *data, size_t dataz)
+{
+	if (4 > dataz) {
+		return(-1);
+	}
+	gifg->length = dataz;
+	gifg->type = CHUNK_TYPE_gIFg;
+	gifg->data.disposal_method = data[0];
+	gifg->data.user_input = data[1];
+	(void)memcpy(&(gifg->data.delay_time), data, 2);
+	gifg->data.delay_time = be16toh(gifg->data.delay_time);
+	if (gifg->data.disposal_method >= 8) {
+		return(-1);
+	}
+	if (gifg->data.user_input >= 2) {
+		return(-1);
+	}
+	return(0);
+}
+
+int
+lgpng_create_gIFx_from_data(struct gIFx *gifx, uint8_t *data, size_t dataz)
+{
+	if (11 < dataz) {
+		return(-1);
+	}
+	gifx->length = dataz;
+	gifx->type = CHUNK_TYPE_gIFx;
+	(void)memcpy(gifx->data.identifier, data, 8);
+	(void)memcpy(gifx->data.code, data + 8, 3);
+	gifx->data.data = data + 11;
 	return(0);
 }
 
