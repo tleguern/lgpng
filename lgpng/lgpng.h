@@ -50,6 +50,8 @@ enum chunktype {
 	CHUNK_TYPE_fcTL,
 	CHUNK_TYPE_fdAT,
 	CHUNK_TYPE_oFFs,
+	CHUNK_TYPE_gIFg,
+	CHUNK_TYPE_gIFx,
 	CHUNK_TYPE_vpAg,
 	CHUNK_TYPE_caNv,
 	CHUNK_TYPE_orNt,
@@ -455,6 +457,53 @@ struct oFFs {
 	} __attribute__((packed)) data;
 };
 
+/* gIFg chunk */
+/* Values found un gif89a section 23 Graphic Control Extension */
+enum disposal_method {
+	DISPOSAL_METHOD_NONE,
+	DISPOSAL_METHOD_DO_NOT,
+	DISPOSAL_METHOD_RESTORE_BACKGROUND,
+	DISPOSAL_METHOD_RESTORE_PREVIOUS,
+	DISPOSAL_METHOD_RESERVED1,
+	DISPOSAL_METHOD_RESERVED2,
+	DISPOSAL_METHOD_RESERVED3,
+	DISPOSAL_METHOD_RESERVED4,
+	DISPOSAL_METHOD__MAX,
+};
+
+extern const char *disposal_methodmap[DISPOSAL_METHOD__MAX];
+
+enum user_input {
+	USER_INPUT_NO,
+	USER_INPUT_YES,
+	USER_INPUT__MAX,
+};
+
+extern const char *user_inputmap[USER_INPUT__MAX];
+
+struct gIFg {
+	uint32_t         length;
+	enum chunktype   type;
+	uint32_t         crc;
+	struct {
+		uint8_t	 	disposal_method;
+		uint8_t	 	user_input;
+		uint16_t	delay_time;
+	} __attribute__((packed)) data;
+};
+
+/* gIFx chunk */
+struct gIFx {
+	uint32_t         length;
+	enum chunktype   type;
+	uint32_t         crc;
+	struct {
+		uint8_t	 identifier[8];
+		uint8_t	 code[3];
+		uint8_t	*data;
+	} __attribute__((packed)) data;
+};
+
 /* vpAg chunk */
 enum vpag_unitspecifier {
 	VPAG_UNITSPECIFIER_PIXEL,
@@ -540,6 +589,8 @@ int		lgpng_create_acTL_from_data(struct acTL *, uint8_t *, size_t);
 int		lgpng_create_fcTL_from_data(struct fcTL *, uint8_t *, size_t);
 int		lgpng_create_fdAT_from_data(struct fdAT *, uint8_t *, size_t);
 int		lgpng_create_oFFs_from_data(struct oFFs *, uint8_t *, size_t);
+int		lgpng_create_gIFg_from_data(struct gIFg *, uint8_t *, size_t);
+int		lgpng_create_gIFx_from_data(struct gIFx *, uint8_t *, size_t);
 
 /* chunks_extra */
 int		lgpng_create_vpAg_from_data(struct vpAg *, uint8_t *, size_t);
