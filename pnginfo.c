@@ -53,6 +53,8 @@ void info_acTL(uint8_t *, size_t);
 void info_fcTL(uint8_t *, size_t);
 void info_fdAT(uint8_t *, size_t);
 void info_oFFs(uint8_t *, size_t);
+void info_gIFg(uint8_t *, size_t);
+void info_gIFx(uint8_t *, size_t);
 void info_vpAg(uint8_t *, size_t);
 void info_caNv(uint8_t *, size_t);
 void info_orNt(uint8_t *, size_t);
@@ -274,6 +276,12 @@ main(int argc, char *argv[])
 					break;
 				case CHUNK_TYPE_oFFs:
 					info_oFFs(data, length);
+					break;
+				case CHUNK_TYPE_gIFg:
+					info_gIFg(data, length);
+					break;
+				case CHUNK_TYPE_gIFx:
+					info_gIFx(data, length);
 					break;
 				case CHUNK_TYPE_vpAg:
 					info_vpAg(data, length);
@@ -869,6 +877,31 @@ info_oFFs(uint8_t *data, size_t dataz)
 	printf("oFFs: x position: %d\n", offs.data.x_position);
 	printf("oFFs: y position: %d\n", offs.data.y_position);
 	printf("oFFs: unit specifier: %s\n", offsunitspecifiermap[offs.data.unitspecifier]);
+}
+
+void
+info_gIFg(uint8_t *data, size_t dataz)
+{
+	struct gIFg gifg;
+
+	if (-1 == lgpng_create_gIFg_from_data(&gifg, data, dataz)) {
+		warnx("Bad gIFg chunk, skipping.");
+		return;
+	}
+	printf("gIFg: disposal method: %s\n", disposal_methodmap[gifg.data.disposal_method]);
+	printf("gIFg: user input: %s\n", user_inputmap[gifg.data.user_input]);
+	printf("gIFg: delay time: %hu\n", gifg.data.delay_time);
+}
+
+void
+info_gIFx(uint8_t *data, size_t dataz)
+{
+	struct gIFx gifx;
+
+	(void)lgpng_create_gIFx_from_data(&gifx, data, dataz);
+	printf("gIFx: application identifier: %8s\n", gifx.data.identifier);
+	printf("gIFx: application code: %3s\n", gifx.data.code);
+	// TODO: application data
 }
 
 void
