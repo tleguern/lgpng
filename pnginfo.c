@@ -750,8 +750,8 @@ info_pHYs(uint8_t *data, size_t dataz)
 		warnx("Bad pHYs chunk");
 		return;
 	}
-	printf("pHYs: pixel per unit, X axis: %i\n", phys.data.ppux);
-	printf("pHYs: pixel per unit, Y axis: %i\n", phys.data.ppuy);
+	printf("pHYs: pixel per unit, X axis: %u\n", phys.data.ppux);
+	printf("pHYs: pixel per unit, Y axis: %u\n", phys.data.ppuy);
 	printf("pHYs: unit specifier: %s\n",
 	    unitspecifiermap[phys.data.unitspecifier]);
 }
@@ -842,13 +842,13 @@ info_fcTL(uint8_t *data, size_t dataz)
 		warnx("Bad fcTL chunk, skipping.");
 		return;
 	}
-	printf("fcTL: squence number: %d\n", fctl.data.sequence_number);
-	printf("fcTL: width: %d\n", fctl.data.width);
-	printf("fcTL: height: %d\n", fctl.data.height);
-	printf("fcTL: x_offset: %d\n", fctl.data.x_offset);
-	printf("fcTL: y_offset: %d\n", fctl.data.y_offset);
-	printf("fcTL: delay_num: %d\n", fctl.data.delay_num);
-	printf("fcTL: delay_den: %d\n", fctl.data.delay_den);
+	printf("fcTL: squence number: %u\n", fctl.data.sequence_number);
+	printf("fcTL: width: %u\n", fctl.data.width);
+	printf("fcTL: height: %u\n", fctl.data.height);
+	printf("fcTL: x_offset: %u\n", fctl.data.x_offset);
+	printf("fcTL: y_offset: %u\n", fctl.data.y_offset);
+	printf("fcTL: delay_num: %u\n", fctl.data.delay_num);
+	printf("fcTL: delay_den: %u\n", fctl.data.delay_den);
 	printf("fcTL: dispose_op: %s\n", dispose_opmap[fctl.data.dispose_op]);
 	printf("fcTL: blend_op: %s\n", blend_opmap[fctl.data.blend_op]);
 }
@@ -862,7 +862,7 @@ info_fdAT(uint8_t *data, size_t dataz)
 		warnx("Bad fdAT chunk, skipping.");
 		return;
 	}
-	printf("fdAT: squence number: %d\n", fdat.data.sequence_number);
+	printf("fdAT: squence number: %u\n", fdat.data.sequence_number);
 }
 
 void
@@ -913,8 +913,8 @@ info_vpAg(uint8_t *data, size_t dataz)
 		warnx("Bad vpAg chunk, skipping.");
 		return;
 	}
-	printf("vpAg: width: %d\n", vpag.data.width);
-	printf("vpAg: height: %d\n", vpag.data.height);
+	printf("vpAg: width: %u\n", vpag.data.width);
+	printf("vpAg: height: %u\n", vpag.data.height);
 	printf("vpAg: unit specifier: %s\n", vpagunitspecifiermap[vpag.data.unitspecifier]);
 }
 
@@ -928,8 +928,8 @@ info_caNv(uint8_t *data, size_t dataz)
 		warnx("Bad caNv chunk, skipping.");
 		return;
 	}
-	printf("caNv: width: %d\n", canv.data.width);
-	printf("caNv: height: %d\n", canv.data.height);
+	printf("caNv: width: %u\n", canv.data.width);
+	printf("caNv: height: %u\n", canv.data.height);
 	printf("caNv: x position: %d\n", canv.data.x_position);
 	printf("caNv: y position: %d\n", canv.data.y_position);
 }
