@@ -133,3 +133,24 @@ lgpng_data_get_crc(uint8_t *src, size_t srcz, uint32_t *crc)
 	return(true);
 }
 
+int
+lgpng_data_write_sig(uint8_t *dest)
+{
+	(void)memcpy(dest, png_sig, sizeof(png_sig));
+	return(sizeof(png_sig));
+}
+
+int
+lgpng_data_write_chunk(uint8_t *dest, uint32_t length, uint8_t *type,
+    uint8_t *data, uint32_t crc)
+{
+	uint32_t nlength = htonl(length);
+	uint32_t ncrc = htonl(crc);
+
+	(void)memcpy(dest, (uint8_t *)&nlength, 4);
+	(void)memcpy(dest + 4, type, 4);
+	(void)memcpy(dest + 8, data, length);
+	(void)memcpy(dest + 8 + length, (uint8_t *)&ncrc, 4);
+	return(12 + length);
+}
+
