@@ -320,7 +320,7 @@ info_zlib(uint8_t cmf, uint8_t flg, uint8_t chunk[4])
 {
 	uint8_t          cm, cinfo;
 	uint8_t          fcheck, fdict, flevel;
-	char            *level;
+	const char	*level;
 
 	/* See RFC1950 ZLIB Data Format */
 	/* cmf */
