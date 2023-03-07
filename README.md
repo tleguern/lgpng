@@ -77,6 +77,9 @@ Here is a list of supported chunks:
   * acTL
   * fcTL
   * fdAT
+* Extensions to the PNG specification (Version 1.6.0):
+  * gIFg
+  * gIFx
 * ImageMagick private chunks:
   * oFFs
   * vpAg
