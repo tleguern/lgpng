@@ -443,7 +443,9 @@ info_IDAT(uint8_t *data, size_t dataz)
 
 	(void)lgpng_create_IDAT_from_data(&idat, data, dataz);
 	printf("IDAT: compressed bytes %u\n", idat.length);
-	info_zlib(data[0], data[1], (uint8_t *)"IDAT");
+	if (dataz) {
+		info_zlib(data[0], data[1], (uint8_t *)"IDAT");
+	}
 }
 
 void
