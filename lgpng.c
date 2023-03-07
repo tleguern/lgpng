@@ -14,9 +14,12 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+#include "config.h"
+
 #include <ctype.h>
-#include <endian.h>
+#include COMPAT_ENDIAN_H
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <zlib.h>
@@ -817,29 +820,6 @@ lgpng_create_gIFx_from_data(struct gIFx *gifx, uint8_t *data, size_t dataz)
 	return(0);
 }
 
-/*
- * Copyright (c) 2022 Tristan Le Guern <tleguern@bouledef.eu>
- *
- * Permission to use, copy, modify, and distribute this software for any
- * purpose with or without fee is hereby granted, provided that the above
- * copyright notice and this permission notice appear in all copies.
- *
- * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
- * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
- * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
- * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
- * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
- * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
- * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
- */
-
-#include <endian.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
-
-#include "lgpng.h"
-
 const char *vpagunitspecifiermap[VPAG_UNITSPECIFIER__MAX] = {
 	"pixel",
 };
@@ -902,24 +882,6 @@ lgpng_create_orNt_from_data(struct orNt *ornt, uint8_t *data, size_t dataz)
 	}
 	return(0);
 }
-
-/*
- * Copyright (c) 2022 Tristan Le Guern <tleguern@bouledef.eu>
- *
- * Permission to use, copy, modify, and distribute this software for any
- * purpose with or without fee is hereby granted, provided that the above
- * copyright notice and this permission notice appear in all copies.
- *
- * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
- * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
- * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
- * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
- * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
- * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
- * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
- */
-
-#include "lgpng.h"
 
 uint32_t lgpng_crc_table[256] = {
 	0x00000000, 0x77073096, 0xee0e612c, 0x990951ba, 0x076dc419, 0x706af48f,
@@ -1012,30 +974,6 @@ lgpng_chunk_crc(uint32_t length, uint8_t type[4], uint8_t *data, uint32_t *crc)
 	(*crc) = lgpng_crc_finalize(*crc);
 	return(true);
 }
-
-/*
- * Copyright (c) 2022 Tristan Le Guern <tleguern@bouledef.eu>
- *
- * Permission to use, copy, modify, and distribute this software for any
- * purpose with or without fee is hereby granted, provided that the above
- * copyright notice and this permission notice appear in all copies.
- *
- * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
- * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
- * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
- * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
- * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
- * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
- * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
- */
-
-#include <ctype.h>
-#include <endian.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-#include "lgpng.h"
 
 bool
 lgpng_data_is_png(uint8_t *src, size_t srcz)
@@ -1168,30 +1106,6 @@ lgpng_data_write_chunk(uint8_t *dest, uint32_t length, uint8_t type[4],
 	(void)memcpy(dest + 8 + length, (uint8_t *)&ncrc, 4);
 	return(12 + length);
 }
-
-/*
- * Copyright (c) 2022 Tristan Le Guern <tleguern@bouledef.eu>
- *
- * Permission to use, copy, modify, and distribute this software for any
- * purpose with or without fee is hereby granted, provided that the above
- * copyright notice and this permission notice appear in all copies.
- *
- * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
- * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
- * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
- * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
- * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
- * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
- * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
- */
-
-#include <ctype.h>
-#include <endian.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-#include "lgpng.h"
 
 bool
 lgpng_stream_is_png(FILE *src)
