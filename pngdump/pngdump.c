@@ -33,7 +33,7 @@ main(int argc, char *argv[])
 {
 	int	 ch;
 	long	 offset;
-	bool	 sflag = false;
+	bool	 dflag = false, sflag = false;
 	bool	 loopexit = false;
 	int	 chunk = CHUNK_TYPE__MAX;
 	FILE	*source = stdin;
@@ -41,8 +41,11 @@ main(int argc, char *argv[])
 #if HAVE_PLEDGE
 	pledge("stdio rpath", NULL);
 #endif
-	while (-1 != (ch = getopt(argc, argv, "f:s")))
+	while (-1 != (ch = getopt(argc, argv, "df:s")))
 		switch (ch) {
+		case 'd':
+			dflag = true;
+			break;
 		case 'f':
 			if (NULL == (source = fopen(optarg, "r"))) {
 				err(EXIT_FAILURE, "%s", optarg);
@@ -105,7 +108,7 @@ main(int argc, char *argv[])
 			break;
 		}
 		if (NULL == (data = malloc(length + 1))) {
-			fprintf(stderr, "malloc(length + 1)\n");
+			fprintf(stderr, "malloc\n");
 			break;
 		}
 		if (false == lgpng_stream_get_data(source, length, &data)) {
@@ -116,8 +119,12 @@ main(int argc, char *argv[])
 		}
 		/* Ignore invalid CRC */
 		if (chunktype == chunk) {
-			(void)lgpng_stream_write_chunk(stdout, length,
-			    str_type, data, crc);
+			if (dflag) {
+				(void)fwrite(data, 1, length, stdout);
+			} else {
+				(void)lgpng_stream_write_chunk(stdout, length,
+				   str_type, data, crc);
+			}
 			loopexit = true;
 		}
 stop:
@@ -133,7 +140,7 @@ stop:
 void
 usage(void)
 {
-	fprintf(stderr, "usage: %s [-s] [-f file] chunk\n", getprogname());
+	fprintf(stderr, "usage: %s [-ds] [-f file] chunk\n", getprogname());
 	exit(EXIT_FAILURE);
 }
 
