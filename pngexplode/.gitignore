@@ -1,3 +1,4 @@
 Makefile.configure
 config.h
 config.log
+*.dat
