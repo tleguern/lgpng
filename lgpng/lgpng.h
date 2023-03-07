@@ -604,7 +604,7 @@ bool	lgpng_data_get_type(uint8_t *, size_t, int *, uint8_t *);
 bool	lgpng_data_get_data(uint8_t *, size_t, uint32_t, uint8_t **);
 bool	lgpng_data_get_crc(uint8_t *, size_t, uint32_t *);
 int	lgpng_data_write_sig(uint8_t *);
-int	lgpng_data_write_chunk(uint8_t *, uint32_t, uint8_t *, uint8_t *, uint32_t);
+int	lgpng_data_write_chunk(uint8_t *, uint32_t, uint8_t [4], uint8_t *, uint32_t);
 
 /* stream */
 bool	lgpng_stream_is_png(FILE *);
@@ -614,7 +614,7 @@ bool	lgpng_stream_get_data(FILE *, uint32_t, uint8_t **);
 bool	lgpng_stream_skip_data(FILE *, uint32_t);
 bool	lgpng_stream_get_crc(FILE *, uint32_t *);
 bool	lgpng_stream_write_sig(FILE *);
-bool	lgpng_stream_write_chunk(FILE *, uint32_t, uint8_t *, uint8_t *, uint32_t);
+bool	lgpng_stream_write_chunk(FILE *, uint32_t, uint8_t [4], uint8_t *, uint32_t);
 
 /* crc */
 extern uint32_t	lgpng_crc_table[256];

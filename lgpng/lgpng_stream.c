@@ -154,7 +154,7 @@ lgpng_stream_write_sig(FILE *output)
 }
 
 bool
-lgpng_stream_write_chunk(FILE *output, uint32_t length, uint8_t *type,
+lgpng_stream_write_chunk(FILE *output, uint32_t length, uint8_t type[4],
     uint8_t *data, uint32_t crc)
 {
 	uint32_t nlength = htonl(length);

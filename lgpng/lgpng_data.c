@@ -141,7 +141,7 @@ lgpng_data_write_sig(uint8_t *dest)
 }
 
 int
-lgpng_data_write_chunk(uint8_t *dest, uint32_t length, uint8_t *type,
+lgpng_data_write_chunk(uint8_t *dest, uint32_t length, uint8_t type[4],
     uint8_t *data, uint32_t crc)
 {
 	uint32_t nlength = htonl(length);
