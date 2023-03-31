@@ -138,8 +138,7 @@ lgpng_validate_keyword(uint8_t *keyword, size_t keywordz)
 	}
 	for (size_t i = 0; i < keywordz; i++) {
 		if (keyword[i] < 32
-		    || (keyword[i] > 126 && keyword[i] < 161)
-		    || keyword[i] > 255) {
+		    || (keyword[i] > 126 && keyword[i] < 161)) {
 			return(false);
 		}
 	}

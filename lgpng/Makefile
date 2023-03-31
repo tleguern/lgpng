@@ -5,7 +5,7 @@ OBJS= ${SRCS:.c=.o}
 LIBVER= 0.1
 LDADD+=
 LDFLAGS+=
-CFLAGS= -Wall -Wextra
+CFLAGS= -Wall -Wextra -Wtype-limits
 CFLAGS+= -std=c99 -Wpointer-sign
 NOMAN= yes
 
