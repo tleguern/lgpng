@@ -141,8 +141,7 @@ lgpng_validate_keyword(uint8_t *keyword, size_t keywordz)
 	}
 	for (size_t i = 0; i < keywordz; i++) {
 		if (keyword[i] < 32
-		    || (keyword[i] > 126 && keyword[i] < 161)
-		    || keyword[i] > 255) {
+		    || (keyword[i] > 126 && keyword[i] < 161)) {
 			return(false);
 		}
 	}
@@ -1097,8 +1096,8 @@ int
 lgpng_data_write_chunk(uint8_t *dest, uint32_t length, uint8_t type[4],
     uint8_t *data, uint32_t crc)
 {
-	uint32_t nlength = htonl(length);
-	uint32_t ncrc = htonl(crc);
+	uint32_t nlength = htobe32(length);
+	uint32_t ncrc = htobe32(crc);
 
 	(void)memcpy(dest, (uint8_t *)&nlength, 4);
 	(void)memcpy(dest + 4, type, 4);
@@ -1242,8 +1241,8 @@ bool
 lgpng_stream_write_chunk(FILE *output, uint32_t length, uint8_t type[4],
     uint8_t *data, uint32_t crc)
 {
-	uint32_t nlength = htonl(length);
-	uint32_t ncrc = htonl(crc);
+	uint32_t nlength = htobe32(length);
+	uint32_t ncrc = htobe32(crc);
 
 	if (4 != fwrite((uint8_t *)&nlength, 1, 4, output)) {
 		return(false);
