@@ -35,7 +35,6 @@ main(int argc, char *argv[])
 	long	 offset;
 	bool	 dflag = false, sflag = false;
 	bool	 loopexit = false;
-	int	 chunk = CHUNK_TYPE__MAX;
 	FILE	*source = stdin;
 
 #if HAVE_PLEDGE
@@ -64,16 +63,6 @@ main(int argc, char *argv[])
 		fclose(source);
 		warnx("%s: chunk parameter is mandatory", getprogname());
 		usage();
-	}
-	for (int i = 0; i < CHUNK_TYPE__MAX; i++) {
-		if (strcmp(argv[0], chunktypemap[i]) == 0) {
-			chunk = i;
-			break;
-		}
-	}
-	/* TODO: Allow arbitrary chunk ? */
-	if (CHUNK_TYPE__MAX == chunk) {
-		errx(EXIT_FAILURE, "%s: invalid chunk", argv[0]);
 	}
 
 	/* Read the file byte by byte until the PNG signature is found */
@@ -118,7 +107,7 @@ main(int argc, char *argv[])
 			goto stop;
 		}
 		/* Ignore invalid CRC */
-		if (chunktype == chunk) {
+		if (0 == memcmp(str_type, argv[0], 4)) {
 			if (dflag) {
 				(void)fwrite(data, 1, length, stdout);
 			} else {
