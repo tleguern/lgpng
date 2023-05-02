@@ -31,16 +31,17 @@ void usage(void);
 int
 main(int argc, char *argv[])
 {
-	int	 ch;
-	long	 offset;
-	bool	 dflag = false, sflag = false;
-	bool	 loopexit = false;
-	FILE	*source = stdin;
+	int		 ch, oflag = 0;
+	long		 offset;
+	bool		 dflag = false, sflag = false;
+	bool		 loopexit = false;
+	const char	*errstr = NULL;
+	FILE		*source = stdin;
 
 #if HAVE_PLEDGE
 	pledge("stdio rpath", NULL);
 #endif
-	while (-1 != (ch = getopt(argc, argv, "df:s")))
+	while (-1 != (ch = getopt(argc, argv, "df:o:s")))
 		switch (ch) {
 		case 'd':
 			dflag = true;
@@ -48,6 +49,12 @@ main(int argc, char *argv[])
 		case 'f':
 			if (NULL == (source = fopen(optarg, "r"))) {
 				err(EXIT_FAILURE, "%s", optarg);
+			}
+			break;
+		case 'o':
+			if (0 == (oflag = strtonum(optarg, 1, 256, &errstr))) {
+				fprintf(stderr, "value is %s -- b\n", errstr);
+				return(EXIT_FAILURE);
 			}
 			break;
 		case 's':
@@ -58,6 +65,12 @@ main(int argc, char *argv[])
 		}
 	argc -= optind;
 	argv += optind;
+
+	if (oflag != 0 && !dflag) {
+		fclose(source);
+		warnx("%s: -o can only be used with -d", getprogname());
+		usage();
+	}
 
 	if (argc != 1) {
 		fclose(source);
@@ -109,7 +122,7 @@ main(int argc, char *argv[])
 		/* Ignore invalid CRC */
 		if (0 == memcmp(str_type, argv[0], 4)) {
 			if (dflag) {
-				(void)fwrite(data, 1, length, stdout);
+				(void)fwrite(data + oflag, 1, length - oflag, stdout);
 			} else {
 				(void)lgpng_stream_write_chunk(stdout, length,
 				   str_type, data, crc);
@@ -129,7 +142,8 @@ stop:
 void
 usage(void)
 {
-	fprintf(stderr, "usage: %s [-ds] [-f file] chunk\n", getprogname());
+	fprintf(stderr, "usage: %s [-s] [-f file] [-d [-o offset]] chunk\n",
+	    getprogname());
 	exit(EXIT_FAILURE);
 }
 
