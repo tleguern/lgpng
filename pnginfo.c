@@ -33,7 +33,7 @@ void usage(void);
 int  info_zlib(uint8_t, uint8_t, uint8_t [4]);
 void info_IHDR(struct IHDR *);
 void info_PLTE(struct PLTE *);
-void info_IDAT(uint8_t *, size_t);
+void info_IDAT(uint8_t *, size_t, int);
 void info_tRNS(struct IHDR *, struct PLTE *, uint8_t *, size_t);
 void info_cHRM(uint8_t *, size_t);
 void info_gAMA(uint8_t *, size_t);
@@ -63,7 +63,7 @@ void info_unknown(uint8_t [5], uint8_t *, size_t);
 int
 main(int argc, char *argv[])
 {
-	int		 ch;
+	int		 ch, idatnum = 0;
 	long		 offset;
 	bool		 cflag = false, dflag = false;
 	bool		 lflag = true, sflag = false;
@@ -218,7 +218,8 @@ main(int argc, char *argv[])
 					info_PLTE(&plte);
 					break;
 				case CHUNK_TYPE_IDAT:
-					info_IDAT(data, length);
+					info_IDAT(data, length, idatnum);
+					idatnum += 1;
 					break;
 				case CHUNK_TYPE_tRNS:
 					info_tRNS(&ihdr, &plte, data, length);
@@ -437,13 +438,13 @@ info_PLTE(struct PLTE *plte)
 }
 
 void
-info_IDAT(uint8_t *data, size_t dataz)
+info_IDAT(uint8_t *data, size_t dataz, int idatnum)
 {
 	struct IDAT	 idat;
 
 	(void)lgpng_create_IDAT_from_data(&idat, data, dataz);
 	printf("IDAT: compressed bytes %u\n", idat.length);
-	if (dataz) {
+	if (dataz && idatnum == 0) {
 		info_zlib(data[0], data[1], (uint8_t *)"IDAT");
 	}
 }
