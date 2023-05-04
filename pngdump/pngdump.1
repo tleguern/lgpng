@@ -1,0 +1,45 @@
+.\"	$OpenBSD: mdoc.template,v 1.15 2014/03/31 00:09:54 dlg Exp $
+.\"
+.\" Copyright (c) 2023 Tristan Le Guern <tleguern@bouledef.eu>
+.\"
+.Dd $Mdocdate$
+.Dt PNGDUMP 1
+.Os
+.Sh NAME
+.Nm pngdump
+.Nd dump chunks from PNG images
+.Sh SYNOPSIS
+.Nm
+.Op Fl s
+.Op Fl d Op Fl o Ar offset
+.Op Fl f Ar file
+.Ar chunk
+.Sh DESCRIPTION
+The
+.Nm
+utility dumps arbitrary chunk from a given PNG image or standard input.
+If no file is supplied using
+.Fl f
+then standard input is read.
+.Pp
+The options are as follows:
+.Bl -tag -width Ds
+.It Fl d
+Causes
+.Nm
+to dump the data part instead of the whole chunk.
+.It Fl f
+Specifies the PNG file instead of reading from stdin.
+.It Fl o
+Specifies the number of bytes to skip at the begining of the data part.
+Requires
+.Fl d .
+.It Fl s
+Skip the first bytes until a valid PNG signature is found or the end of file.
+This is useful to pipe after a call to
+.Xr curl .
+.Sh AUTHORS
+The
+.Nm
+utility was written by
+.An Tristan Le Guern Aq Mt tleguern@bouledef.eu .
