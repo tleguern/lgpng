@@ -55,6 +55,8 @@ enum chunktype {
 	CHUNK_TYPE_vpAg,
 	CHUNK_TYPE_caNv,
 	CHUNK_TYPE_orNt,
+	CHUNK_TYPE_skMf,
+	CHUNK_TYPE_skRf,
 	CHUNK_TYPE__MAX,
 };
 
@@ -562,6 +564,27 @@ struct orNt {
 	} __attribute__((packed)) data;
 };
 
+/* skMf chunk */
+struct skMf {
+	uint32_t         length;
+	enum chunktype   type;
+	uint32_t         crc;
+	struct {
+		uint8_t	*json;
+	} __attribute__((packed)) data;
+};
+
+/* skRf chunk */
+struct skRf {
+	uint32_t         length;
+	enum chunktype   type;
+	uint32_t         crc;
+	struct {
+		uint8_t	 header[16];
+		uint8_t	*data;
+	} __attribute__((packed)) data;
+};
+
 /* chunks */
 bool		lgpng_validate_keyword(uint8_t *, size_t);
 bool		lgpng_is_official_keyword(uint8_t *, size_t);
@@ -596,6 +619,8 @@ int		lgpng_create_gIFx_from_data(struct gIFx *, uint8_t *, size_t);
 int		lgpng_create_vpAg_from_data(struct vpAg *, uint8_t *, size_t);
 int		lgpng_create_caNv_from_data(struct caNv *, uint8_t *, size_t);
 int		lgpng_create_orNt_from_data(struct orNt *, uint8_t *, size_t);
+int		lgpng_create_skMf_from_data(struct skMf *, uint8_t *, size_t);
+int		lgpng_create_skRf_from_data(struct skRf *, uint8_t *, size_t);
 
 /* data */
 bool	lgpng_data_is_png(uint8_t *, size_t);

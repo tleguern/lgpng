@@ -55,6 +55,8 @@ const char *chunktypemap[CHUNK_TYPE__MAX] = {
 	"vpAg",
 	"caNv",
 	"orNt",
+	"skMf",
+	"skRf",
 };
 
 const char *colourtypemap[COLOUR_TYPE__MAX] = {

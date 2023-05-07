@@ -84,3 +84,25 @@ lgpng_create_orNt_from_data(struct orNt *ornt, uint8_t *data, size_t dataz)
 	return(0);
 }
 
+int
+lgpng_create_skMf_from_data(struct skMf *skmf, uint8_t *data, size_t dataz)
+{
+	skmf->length = dataz;
+	skmf->type = CHUNK_TYPE_skMf;
+	skmf->data.json = data;
+	return(0);
+}
+
+int
+lgpng_create_skRf_from_data(struct skRf *skrf, uint8_t *data, size_t dataz)
+{
+	if (dataz < 16) {
+		return(-1);
+	}
+	skrf->length = dataz;
+	skrf->type = CHUNK_TYPE_skRf;
+	(void)memcpy(&(skrf->data.header), data, 16);
+	skrf->data.data = data + 16;
+	return(0);
+}
+
