@@ -58,6 +58,8 @@ void info_gIFx(uint8_t *, size_t);
 void info_vpAg(uint8_t *, size_t);
 void info_caNv(uint8_t *, size_t);
 void info_orNt(uint8_t *, size_t);
+void info_skMf(uint8_t *, size_t);
+void info_skRf(uint8_t *, size_t);
 void info_unknown(uint8_t [5], uint8_t *, size_t);
 
 int
@@ -293,6 +295,13 @@ main(int argc, char *argv[])
 				case CHUNK_TYPE_orNt:
 					info_orNt(data, length);
 					break;
+				case CHUNK_TYPE_skMf:
+					info_skMf(data, length);
+					break;
+				case CHUNK_TYPE_skRf:
+					info_skRf(data, length);
+					break;
+
 				case CHUNK_TYPE__MAX:
 					/* FALLTHROUGH */
 				default:
@@ -947,6 +956,36 @@ info_orNt(uint8_t *data, size_t dataz)
 		return;
 	}
 	printf("orNt: orientation: %s\n", orientationmap[ornt.data.orientation]);
+}
+
+void
+info_skMf(uint8_t *data, size_t dataz)
+{
+	struct skMf skmf;
+
+	if (-1 == lgpng_create_skMf_from_data(&skmf, data, dataz)) {
+		warnx("Bad skMf chunk, skipping.");
+		return;
+	}
+	printf("skMf: json data: %s\n", skmf.data.json);
+}
+
+void
+info_skRf(uint8_t *data, size_t dataz)
+{
+	struct skRf skrf;
+
+	if (-1 == lgpng_create_skRf_from_data(&skrf, data, dataz)) {
+		warnx("Bad skRf chunk, skipping.");
+		return;
+	}
+	printf("skRf: header: %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x\n",
+	    skrf.data.header[0], skrf.data.header[1], skrf.data.header[2],
+	    skrf.data.header[3], skrf.data.header[4], skrf.data.header[5],
+	    skrf.data.header[6], skrf.data.header[7], skrf.data.header[8],
+	    skrf.data.header[9], skrf.data.header[11], skrf.data.header[12],
+	    skrf.data.header[13], skrf.data.header[14], skrf.data.header[15]);
+	printf("skRf: embeded PNG image size: %u bytes\n", skrf.length - 16);
 }
 
 void
