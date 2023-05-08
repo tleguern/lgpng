@@ -807,7 +807,7 @@ lgpng_create_gIFg_from_data(struct gIFg *gifg, uint8_t *data, size_t dataz)
 int
 lgpng_create_gIFx_from_data(struct gIFx *gifx, uint8_t *data, size_t dataz)
 {
-	if (11 < dataz) {
+	if (dataz < 11) {
 		return(-1);
 	}
 	gifx->length = dataz;

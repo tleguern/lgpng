@@ -542,7 +542,7 @@ info_iCCP(uint8_t *data, size_t dataz)
 		warnx("Bad iCCP chunk, skipping.");
 		return;
 	}
-	printf("iCCP: profile name: %s\n", iccp.data.name);
+	printf("iCCP: profile name: %.80s\n", iccp.data.name);
 	printf("iCCP: compression method: %s\n",
 	    compressiontypemap[iccp.data.compression]);
 	info_zlib(iccp.data.profile[0], iccp.data.profile[1], (uint8_t *)"iCCP");
@@ -908,11 +908,15 @@ info_gIFg(uint8_t *data, size_t dataz)
 void
 info_gIFx(uint8_t *data, size_t dataz)
 {
-	struct gIFx gifx;
+	struct gIFx	gifx;
 
-	(void)lgpng_create_gIFx_from_data(&gifx, data, dataz);
-	printf("gIFx: application identifier: %8s\n", gifx.data.identifier);
-	printf("gIFx: application code: %3s\n", gifx.data.code);
+	if (-1 == lgpng_create_gIFx_from_data(&gifx, data, dataz)) {
+		warnx("Bad gIFx chunk, skipping.");
+		return;
+	}
+	printf("gIFx: application identifier: %.8s\n", gifx.data.identifier);
+	printf("gIFx: application code: %.3s\n", gifx.data.code);
+
 	// TODO: application data
 }
 
