@@ -67,14 +67,13 @@ main(int argc, char *argv[])
 {
 	int		 ch, idatnum = 0;
 	long		 offset;
-	bool		 cflag = false, dflag = false;
+	bool		 cflag = false;
 	bool		 lflag = true, sflag = false;
 	bool		 loopexit = false;
-	int		 chunk = CHUNK_TYPE__MAX;
 	struct IHDR	 ihdr;
 	struct PLTE	 plte;
 	FILE		*source = stdin;
-	uint8_t		 str_cflag[4] = {0, 0, 0, 0};
+	uint8_t		 target_chunk[4] = {0, 0, 0, 0};
 
 #if HAVE_PLEDGE
 	pledge("stdio rpath", NULL);
@@ -86,18 +85,7 @@ main(int argc, char *argv[])
 		case 'c':
 			cflag = true;
 			lflag = false;
-			for (int i = 0; i < CHUNK_TYPE__MAX; i++) {
-				if (strcmp(optarg, chunktypemap[i]) == 0) {
-					chunk = i;
-					break;
-				}
-			}
-			if (CHUNK_TYPE__MAX == chunk) {
-				(void)memcpy(str_cflag, optarg, 4);
-			}
-			break;
-		case 'd':
-			dflag = true;
+			(void)memcpy(target_chunk, optarg, 4);
 			break;
 		case 'f':
 			if (NULL == (source = fopen(optarg, "r"))) {
@@ -116,10 +104,6 @@ main(int argc, char *argv[])
 		}
 	argc -= optind;
 	argv += optind;
-
-	if (dflag && ! cflag) {
-		errx(EXIT_FAILURE, "-d is only valid with -c");
-	}
 
 	/* Read the file byte by byte until the PNG signature is found */
 	offset = 0;
@@ -140,16 +124,14 @@ main(int argc, char *argv[])
 	}
 
 	do {
-		int		 chunktype = CHUNK_TYPE__MAX;
 		uint32_t	 length = 0, chunk_crc = 0, calc_crc = 0;
 		uint8_t		*data = NULL;
-		uint8_t		 str_type[5] = {0, 0, 0, 0, 0};
+		uint8_t		 current_chunk[4] = {0, 0, 0, 0};
 
 		if (false == lgpng_stream_get_length(source, &length)) {
 			break;
 		}
-		if (false == lgpng_stream_get_type(source, &chunktype,
-		    (uint8_t *)str_type)) {
+		if (false == lgpng_stream_get_type(source, current_chunk)) {
 			break;
 		}
 		/*
@@ -173,23 +155,24 @@ main(int argc, char *argv[])
 			goto stop;
 		}
 		/* Validate the CRC in chunk mode */
-		if (cflag && false == lgpng_chunk_crc(length, str_type, data,
-		    &calc_crc)) {
-			warnx("Invalid CRC for chunk %s, skipping", str_type);
+		if (cflag && false == lgpng_chunk_crc(length, current_chunk,
+		    data, &calc_crc)) {
+			warnx("Invalid CRC for chunk %.4s, skipping",
+			    current_chunk);
 			goto stop;
 		}
 		if (lflag) {
 			/* Simply list chunks' name */
-			printf("%.4s\n", str_type);
+			printf("%.4s\n", current_chunk);
 		} else if (cflag) {
 			if (calc_crc != chunk_crc) {
-				warnx("Difference between CRC and reality for chunk %s (%u vs %u)", str_type, chunk_crc, calc_crc);
+				warnx("Difference between CRC and reality for chunk %.4s (%u vs %u)", current_chunk, chunk_crc, calc_crc);
 			}
 			/*
 			 * The IHDR chunk contains important information used to
 			 * decode other chunks, such as bKGD, sBIT and tRNS.
 			 */
-			if (CHUNK_TYPE_IHDR == chunktype) {
+			if (0 == memcmp(current_chunk, "IHDR", 4)) {
 				if (-1 == lgpng_create_IHDR_from_data(&ihdr,
 				    data, length)) {
 					warnx("IHDR: Invalid IHDR chunk");
@@ -201,7 +184,7 @@ main(int argc, char *argv[])
 			 * The hIST chunk mirrors the size of the PLTE chunk,
 			 * so it is important to keep it around if it is encountered.
 			 */
-			if (CHUNK_TYPE_PLTE == chunktype) {
+			if (0 == memcmp(current_chunk, "PLTE", 4)) {
 				if (-1 == lgpng_create_PLTE_from_data(&plte,
 				    data, length)) {
 					loopexit = true;
@@ -209,108 +192,71 @@ main(int argc, char *argv[])
 					goto stop;
 				}
 			}
-			if (chunktype == chunk && dflag) {
-				/* Dump the chunk's data */
-				if (length != fwrite(data, 1, length, stdout)) {
-					warn("I/O error");
-				}
-			} else if (chunktype == chunk && !dflag) {
-				switch (chunktype) {
-				case CHUNK_TYPE_IHDR:
+			/*
+			 * Now handle the current chunk.
+			 */
+			if (0 == memcmp(current_chunk, target_chunk, 4)) {
+				if (0 == memcmp(current_chunk, "IHDR", 4)) {
 					info_IHDR(&ihdr);
-					break;
-				case CHUNK_TYPE_PLTE:
+				} else if (0 == memcmp(current_chunk, "PLTE", 4)) {
 					info_PLTE(&plte);
-					break;
-				case CHUNK_TYPE_IDAT:
+				} else if (0 == memcmp(current_chunk, "IDAT", 4)) {
 					info_IDAT(data, length, idatnum);
 					idatnum += 1;
-					break;
-				case CHUNK_TYPE_tRNS:
+				} else if (0 == memcmp(current_chunk, "tRNS", 4)) {
 					info_tRNS(&ihdr, &plte, data, length);
-					break;
-				case CHUNK_TYPE_cHRM:
+				} else if (0 == memcmp(current_chunk, "cHRM", 4)) {
 					info_cHRM(data, length);
-					break;
-				case CHUNK_TYPE_gAMA:
+				} else if (0 == memcmp(current_chunk, "gAMA", 4)) {
 					info_gAMA(data, length);
-					break;
-				case CHUNK_TYPE_iCCP:
+				} else if (0 == memcmp(current_chunk, "iCCP", 4)) {
 					info_iCCP(data, length);
-					break;
-				case CHUNK_TYPE_sBIT:
+				} else if (0 == memcmp(current_chunk, "sBIT", 4)) {
 					info_sBIT(&ihdr, data, length);
-					break;
-				case CHUNK_TYPE_sRGB:
+				} else if (0 == memcmp(current_chunk, "sRGB", 4)) {
 					info_sRGB(data, length);
-					break;
-				case CHUNK_TYPE_cICP:
+				} else if (0 == memcmp(current_chunk, "cICP", 4)) {
 					info_cICP(data, length);
-					break;
-				case CHUNK_TYPE_tEXt:
+				} else if (0 == memcmp(current_chunk, "tEXt", 4)) {
 					info_tEXt(data, length);
-					break;
-				case CHUNK_TYPE_zTXt:
+				} else if (0 == memcmp(current_chunk, "zTXt", 4)) {
 					info_zTXt(data, length);
-					break;
-				case CHUNK_TYPE_bKGD:
+				} else if (0 == memcmp(current_chunk, "bKGD", 4)) {
 					info_bKGD(&ihdr, &plte, data, length);
-					break;
-				case CHUNK_TYPE_hIST:
+				} else if (0 == memcmp(current_chunk, "hIST", 4)) {
 					info_hIST(&plte, data, length);
-					break;
-				case CHUNK_TYPE_pHYs:
+				} else if (0 == memcmp(current_chunk, "pHYs", 4)) {
 					info_pHYs(data, length);
-					break;
-				case CHUNK_TYPE_sPLT:
+				} else if (0 == memcmp(current_chunk, "sPLT", 4)) {
 					info_sPLT(data, length);
-					break;
-				case CHUNK_TYPE_eXIf:
+				} else if (0 == memcmp(current_chunk, "eXIf", 4)) {
 					info_eXIf(data, length);
-					break;
-				case CHUNK_TYPE_tIME:
+				} else if (0 == memcmp(current_chunk, "tIME", 4)) {
 					info_tIME(data, length);
-					break;
-				case CHUNK_TYPE_acTL:
+				} else if (0 == memcmp(current_chunk, "acTL", 4)) {
 					info_acTL(data, length);
-					break;
-				case CHUNK_TYPE_fcTL:
+				} else if (0 == memcmp(current_chunk, "fcTL", 4)) {
 					info_fcTL(data, length);
-					break;
-				case CHUNK_TYPE_fdAT:
+				} else if (0 == memcmp(current_chunk, "fdAT", 4)) {
 					info_fdAT(data, length);
-					break;
-				case CHUNK_TYPE_oFFs:
+				} else if (0 == memcmp(current_chunk, "oFFs", 4)) {
 					info_oFFs(data, length);
-					break;
-				case CHUNK_TYPE_gIFg:
+				} else if (0 == memcmp(current_chunk, "gIFg", 4)) {
 					info_gIFg(data, length);
-					break;
-				case CHUNK_TYPE_gIFx:
+				} else if (0 == memcmp(current_chunk, "gIFx", 4)) {
 					info_gIFx(data, length);
-					break;
-				case CHUNK_TYPE_vpAg:
+				} else if (0 == memcmp(current_chunk, "vpAg", 4)) {
 					info_vpAg(data, length);
-					break;
-				case CHUNK_TYPE_caNv:
+				} else if (0 == memcmp(current_chunk, "caNv", 4)) {
 					info_caNv(data, length);
-					break;
-				case CHUNK_TYPE_orNt:
+				} else if (0 == memcmp(current_chunk, "orNt", 4)) {
 					info_orNt(data, length);
-					break;
-				case CHUNK_TYPE_skMf:
+				} else if (0 == memcmp(current_chunk, "skMf", 4)) {
 					info_skMf(data, length);
-					break;
-				case CHUNK_TYPE_skRf:
+				} else if (0 == memcmp(current_chunk, "skRf", 4)) {
 					info_skRf(data, length);
-					break;
-
-				case CHUNK_TYPE__MAX:
-					/* FALLTHROUGH */
-				default:
-					if (0 == memcmp(str_type, str_cflag, 4)) {
-						info_unknown(str_type, data, length);
-					}
+				} else {
+					info_unknown(current_chunk, data, length);
 				}
 			}
 			free(data);
@@ -320,7 +266,7 @@ main(int argc, char *argv[])
 			break;
 		}
 stop:
-		if (CHUNK_TYPE_IEND == chunktype) {
+		if (0 == memcmp(current_chunk, "IEND", 4)) {
 			loopexit = true;
 		}
 	} while(! loopexit);
