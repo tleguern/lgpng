@@ -78,19 +78,17 @@ main(int argc, char *argv[])
 	srandom(0);
 #endif
 	/* Write the PNG magic bytes */
-	(void)fwrite(png_sig, sizeof(png_sig), 1, stdout);
+	(void)lgpng_stream_write_sig(stdout);
 	do {
-		int		 chunktype = CHUNK_TYPE__MAX;
 		uint32_t	 length = 0, crc = 0;
 		uint8_t		*data = NULL;
-		uint8_t		 str_type[5] = {0, 0, 0, 0, 0};
+		uint8_t		 type[4] = {0, 0, 0, 0};
 		struct PLTE	 plte;
 
 		if (false == lgpng_stream_get_length(source, &length)) {
 			break;
 		}
-		if (false == lgpng_stream_get_type(source, &chunktype,
-		    (uint8_t *)str_type)) {
+		if (false == lgpng_stream_get_type(source, type)) {
 			break;
 		}
 		if (NULL == (data = malloc(length + 1))) {
@@ -105,7 +103,7 @@ main(int argc, char *argv[])
 		}
 
 		/* If it is PLTE shuffle it, otherwise just write it */
-		if (CHUNK_TYPE_PLTE == chunktype) {
+		if (0 == memcmp(type, "PLTE", 4)) {
 			int		permutations;
 
 			if (-1 == lgpng_create_PLTE_from_data(&plte, data, length)) {
@@ -138,12 +136,11 @@ main(int argc, char *argv[])
 				data[src] = g;
 				data[src] = b;
 			}
-			lgpng_chunk_crc(length, str_type, data, &crc);
+			lgpng_chunk_crc(length, type, data, &crc);
 		}
-		(void)lgpng_stream_write_chunk(stdout, length, str_type,
-		    data, crc);
+		(void)lgpng_stream_write_chunk(stdout, length, type, data, crc);
 stop:
-		if (CHUNK_TYPE_IEND == chunktype) {
+		if (0 == memcmp(type, "IEND", 4)) {
 			loopexit = true;
 		}
 		free(data);

@@ -9,9 +9,9 @@
 int
 main(void)
 {
-	int		 chunktype = CHUNK_TYPE__MAX, test = 0;
+	int		 test = 0;
 	uint32_t	 length = 0, crc = 0;
-	uint8_t		 str_type[5] = {0, 0, 0, 0, 0};
+	uint8_t		 type[4] = {0, 0, 0, 0};
 	uint8_t		*data = NULL;
 	FILE		*source = NULL;
 	char		*subject, *status;
@@ -77,17 +77,7 @@ main(void)
 
 	/* Type */
 	subject = "%s %d - lgpng_stream_get_type with source NULL\n";
-	if (false == lgpng_stream_get_type(NULL, &chunktype,
-	    (uint8_t *)str_type)) {
-		status = "ok";
-	} else {
-		status = "not ok";
-	}
-	printf(subject, status, ++test);
-
-	subject = "%s %d - lgpng_stream_get_type with type NULL\n";
-	if (false == lgpng_stream_get_type(source, NULL,
-	    (uint8_t *)str_type)) {
+	if (false == lgpng_stream_get_type(NULL, type)) {
 		status = "ok";
 	} else {
 		status = "not ok";
@@ -95,24 +85,15 @@ main(void)
 	printf(subject, status, ++test);
 
 	subject = "%s %d - lgpng_stream_get_type\n";
-	if (false != lgpng_stream_get_type(source, &chunktype,
-	    (uint8_t *)str_type)) {
+	if (false != lgpng_stream_get_type(source, type)) {
 		status = "ok";
 	} else {
 		status = "not ok";
 	}
 	printf(subject, status, ++test);
 
-	subject = "%s %d - chunktype should be CHUNK_TYPE_IHDR\n";
-	if (CHUNK_TYPE_IHDR == chunktype) {
-		status = "ok";
-	} else {
-		status = "not ok";
-	}
-	printf(subject, status, ++test);
-
-	subject = "%s %d - str_type should be IHDR\n";
-	if (0 == strncmp((char *)str_type, "IHDR", 4)) {
+	subject = "%s %d - chunk type should be IHDR\n";
+	if (0 == memcmp(type, "IHDR", 4)) {
 		status = "ok";
 	} else {
 		status = "not ok";

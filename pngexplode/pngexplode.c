@@ -87,16 +87,14 @@ main(int argc, char *argv[])
 	(void)fclose(output);
 
 	do {
-		int		 chunktype = CHUNK_TYPE__MAX;
 		uint32_t	 length = 0, crc = 0;
 		uint8_t		*data = NULL;
-		uint8_t		 str_type[5] = {0, 0, 0, 0, 0};
+		uint8_t		 type[4] = {0, 0, 0, 0};
 
 		if (false == lgpng_stream_get_length(source, &length)) {
 			break;
 		}
-		if (false == lgpng_stream_get_type(source, &chunktype,
-		    (uint8_t *)str_type)) {
+		if (false == lgpng_stream_get_type(source, type)) {
 			break;
 		}
 		if (NULL == (data = malloc(length + 1))) {
@@ -115,17 +113,16 @@ main(int argc, char *argv[])
 		nchunk += 1;
 		(void)memset(output_file_name, 0, sizeof(output_file_name));
 		(void)snprintf(output_file_name, sizeof(output_file_name),
-		    "__pure_%03d_%s.dat", nchunk, str_type);
+		    "__pure_%03d_%.4s.dat", nchunk, type);
 		if (NULL == (output = fopen(output_file_name, "w"))) {
 			warn("%s", output_file_name);
 			fclose(source);
 			free(data);
 			return(EXIT_FAILURE);
 		}
-		(void)lgpng_stream_write_chunk(output, length, str_type,
-		    data, crc);
+		(void)lgpng_stream_write_chunk(output, length, type, data, crc);
 		(void)fclose(output);
-		if (CHUNK_TYPE_IEND == chunktype) {
+		if (0 == memcmp(type, "IEND", 4)) {
 			loopexit = true;
 		}
 stop:

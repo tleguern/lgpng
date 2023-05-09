@@ -59,14 +59,11 @@ lgpng_data_get_length(uint8_t *src, size_t srcz, uint32_t *length)
 }
 
 bool
-lgpng_data_get_type(uint8_t *src, size_t srcz, int *type, uint8_t *name)
+lgpng_data_get_type(uint8_t *src, size_t srcz, uint8_t name[4])
 {
-	uint8_t	str_type[4];
+	uint8_t	type[4];
 
 	if (NULL == src) {
-		return(false);
-	}
-	if (NULL == type) {
 		return(false);
 	}
 	if (srcz < 4) {
@@ -74,21 +71,15 @@ lgpng_data_get_type(uint8_t *src, size_t srcz, int *type, uint8_t *name)
 		return(false);
 	}
 
-	(void)memcpy(str_type, src, 4);
+	(void)memcpy(type, src, 4);
 	for (size_t i = 0; i < 4; i++) {
-		if (isalpha(str_type[i]) == 0) {
+		if (isalpha(type[i]) == 0) {
 			fprintf(stderr, "Invalid chunk type\n");
 			return(false);
 		}
 	}
 	for (size_t i = 0; i < 4; i++) {
-		name[i] = str_type[i];
-	}
-	for (int i = 0; i < CHUNK_TYPE__MAX; i++) {
-		if (strncmp((char *)str_type, chunktypemap[i], 4) == 0) {
-			(*type) = i;
-			break;
-		}
+		name[i] = type[i];
 	}
 	return(true);
 }

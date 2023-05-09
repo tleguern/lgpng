@@ -31,9 +31,9 @@ uint8_t source[] = {
 int
 main(void)
 {
-	int		 chunktype = CHUNK_TYPE__MAX, test = 0, offset = 0;
+	int		 test = 0, offset = 0;
 	uint32_t	 length = 0, crc = 0;
-	uint8_t		 str_type[5] = {0, 0, 0, 0, 0};
+	uint8_t		 type[4] = {0, 0, 0, 0};
 	size_t		 sourcez = sizeof(source);
 	uint8_t		*data = NULL;
 	char		*subject, *status;
@@ -114,17 +114,7 @@ main(void)
 	offset += 4;
 	sourcez -= 4;
 	subject = "%s %d - lgpng_data_get_type with data NULL\n";
-	if (false == lgpng_data_get_type(NULL, 0, &chunktype,
-	    (uint8_t *)str_type)) {
-		status = "ok";
-	} else {
-		status = "not ok";
-	}
-	printf(subject, status, ++test);
-
-	subject = "%s %d - lgpng_data_get_type with type NULL\n";
-	if (false == lgpng_data_get_type(source + offset, sourcez, NULL,
-	    (uint8_t *)str_type)) {
+	if (false == lgpng_data_get_type(NULL, 0, type)) {
 		status = "ok";
 	} else {
 		status = "not ok";
@@ -132,8 +122,7 @@ main(void)
 	printf(subject, status, ++test);
 
 	subject = "%s %d - lgpng_data_get_type with short srcz\n";
-	if (false == lgpng_data_get_type(source + offset, 1, &chunktype,
-	    (uint8_t *)str_type)) {
+	if (false == lgpng_data_get_type(source + offset, 1, type)) {
 		status = "ok";
 	} else {
 		status = "not ok";
@@ -141,24 +130,15 @@ main(void)
 	printf(subject, status, ++test);
 
 	subject = "%s %d - lgpng_data_get_type\n";
-	if (false != lgpng_data_get_type(source + offset, sourcez, &chunktype,
-	    (uint8_t *)str_type)) {
+	if (false != lgpng_data_get_type(source + offset, sourcez, type)) {
 		status = "ok";
 	} else {
 		status = "not ok";
 	}
 	printf(subject, status, ++test);
 
-	subject = "%s %d - chunktype should be CHUNK_TYPE_IHDR\n";
-	if (CHUNK_TYPE_IHDR == chunktype) {
-		status = "ok";
-	} else {
-		status = "not ok";
-	}
-	printf(subject, status, ++test);
-
-	subject = "%s %d - str_type should be IHDR\n";
-	if (0 == strncmp((char *)str_type, "IHDR", 4)) {
+	subject = "%s %d - chunk type should be IHDR\n";
+	if (0 == memcmp(type, "IHDR", 4)) {
 		status = "ok";
 	} else {
 		status = "not ok";

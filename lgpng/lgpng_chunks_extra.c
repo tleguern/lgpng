@@ -43,6 +43,8 @@ lgpng_create_vpAg_from_data(struct vpAg *vpag, uint8_t *data, size_t dataz)
 	if (9 != dataz) {
 		return(-1);
 	}
+	vpag->length = dataz;
+	(void)memcpy(&(vpag->type), "vpAg", 4);
 	(void)memcpy(&(vpag->data.width), data, 4);
 	(void)memcpy(&(vpag->data.height), data + 4, 4);
 	vpag->data.width = be32toh(vpag->data.width);
@@ -60,6 +62,8 @@ lgpng_create_caNv_from_data(struct caNv *canv, uint8_t *data, size_t dataz)
 	if (16 != dataz) {
 		return(-1);
 	}
+	canv->length = dataz;
+	(void)memcpy(&(canv->type), "caNv", 4);
 	(void)memcpy(&(canv->data.width), data, 4);
 	(void)memcpy(&(canv->data.height), data + 4, 4);
 	(void)memcpy(&(canv->data.x_position), data + 8, 4);
@@ -77,6 +81,8 @@ lgpng_create_orNt_from_data(struct orNt *ornt, uint8_t *data, size_t dataz)
 	if (1 != dataz) {
 		return(-1);
 	}
+	ornt->length = dataz;
+	(void)memcpy(&(ornt->type), "orNt", 4);
 	ornt->data.orientation = data[0];
 	if (ornt->data.orientation >= ORIENTATION__MAX) {
 		return(-1);
@@ -88,7 +94,7 @@ int
 lgpng_create_skMf_from_data(struct skMf *skmf, uint8_t *data, size_t dataz)
 {
 	skmf->length = dataz;
-	skmf->type = CHUNK_TYPE_skMf;
+	(void)memcpy(&(skmf->type), "skMf", 4);
 	skmf->data.json = data;
 	return(0);
 }
@@ -100,7 +106,7 @@ lgpng_create_skRf_from_data(struct skRf *skrf, uint8_t *data, size_t dataz)
 		return(-1);
 	}
 	skrf->length = dataz;
-	skrf->type = CHUNK_TYPE_skRf;
+	(void)memcpy(&(skrf->type), "skRf", 4);
 	(void)memcpy(&(skrf->data.header), data, 16);
 	skrf->data.data = data + 16;
 	return(0);

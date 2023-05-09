@@ -25,40 +25,6 @@
 
 char png_sig[8] = {137, 80, 78, 71, 13, 10, 26, 10};
 
-const char *chunktypemap[CHUNK_TYPE__MAX] = {
-	"IHDR",
-	"PLTE",
-	"IDAT",
-	"IEND",
-	"tRNS",
-	"cHRM",
-	"gAMA",
-	"iCCP",
-	"sBIT",
-	"sRGB",
-	"cICP",
-	"iTXt",
-	"tEXt",
-	"zTXt",
-	"bKGD",
-	"hIST",
-	"pHYs",
-	"sPLT",
-	"eXIf",
-	"tIME",
-	"acTL",
-	"fcTL",
-	"fdAT",
-	"oFFs",
-	"gIFg",
-	"gIFx",
-	"vpAg",
-	"caNv",
-	"orNt",
-	"skMf",
-	"skRf",
-};
-
 const char *colourtypemap[COLOUR_TYPE__MAX] = {
 	"greyscale",
 	"error",
@@ -172,7 +138,7 @@ lgpng_create_IHDR_from_data(struct IHDR *ihdr, uint8_t *data, size_t dataz)
 		return(-1);
 	}
 	ihdr->length = dataz;
-	ihdr->type = CHUNK_TYPE_IHDR;
+	(void)memcpy(&(ihdr->type), "IHDR", 4);
 	(void)memcpy(&(ihdr->data.width), data, 4);
 	(void)memcpy(&(ihdr->data.height), data + 4, 4);
 	ihdr->data.bitdepth = data[8];
@@ -195,7 +161,7 @@ lgpng_create_PLTE_from_data(struct PLTE *plte, uint8_t *data, size_t dataz)
 		return(-1);
 	}
 	plte->length = elemz;
-	plte->type = CHUNK_TYPE_PLTE;
+	(void)memcpy(&(plte->type), "PLTE", 4);
 	plte->data.entries = elemz;
 	for (size_t i = 0, j = 0; i < elemz; i++, j += 3) {
 		plte->data.entry[i].red = data[j];
@@ -209,7 +175,7 @@ int
 lgpng_create_IDAT_from_data(struct IDAT *idat, uint8_t *data, size_t dataz)
 {
 	idat->length = dataz;
-	idat->type = CHUNK_TYPE_IDAT;
+	(void)memcpy(&(idat->type), "IDAT", 4);
 	idat->data.data = data;
 	return(0);
 }
@@ -221,7 +187,7 @@ lgpng_create_tRNS_from_data(struct tRNS *trns, struct IHDR *ihdr, uint8_t *data,
 		return(-1);
 	}
 	trns->length = dataz;
-	trns->type = CHUNK_TYPE_tRNS;
+	(void)memcpy(&(trns->type), "tRNS", 4);
 	trns->data.gray = -1;
 	trns->data.red = -1;
 	trns->data.green = -1;
@@ -267,7 +233,7 @@ lgpng_create_sBIT_from_data(struct sBIT *sbit, struct IHDR *ihdr, uint8_t *data,
 		return(-1);
 	}
 	sbit->length = dataz;
-	sbit->type = CHUNK_TYPE_sBIT;
+	(void)memcpy(&(sbit->type), "sBIT", 4);
 	sbit->data.sgreyscale = -1;
 	sbit->data.sred = -1;
 	sbit->data.sgreen = -1;
@@ -365,7 +331,7 @@ lgpng_create_sBIT_from_data(struct sBIT *sbit, struct IHDR *ihdr, uint8_t *data,
 int
 lgpng_create_cHRM_from_data(struct cHRM *chrm, uint8_t *data, size_t dataz)
 {
-	chrm->type = CHUNK_TYPE_cHRM;
+	(void)memcpy(&(chrm->type), "cHRM", 4);
 	if (32 != dataz) {
 		return(-1);
 	}
@@ -388,7 +354,7 @@ lgpng_create_gAMA_from_data(struct gAMA *gama, uint8_t *data, size_t dataz)
 		return(-1);
 	}
 	gama->length = 4;
-	gama->type = CHUNK_TYPE_gAMA;
+	(void)memcpy(&(gama->type), "gAMA", 4);
 	(void)memcpy(&(gama->data.gamma), data, 4);
 	gama->data.gamma = be32toh(gama->data.gamma);
 	return(0);
@@ -401,7 +367,7 @@ lgpng_create_iCCP_from_data(struct iCCP *iccp, uint8_t *data, size_t dataz)
 	uint8_t	 *nul;
 
 	iccp->length = dataz;
-	iccp->type = CHUNK_TYPE_iCCP;
+	(void)memcpy(&(iccp->type), "iCCP", 4);
 	if (NULL == (nul = memchr(data, '\0', 80))) {
 		return(-1);
 	}
@@ -440,7 +406,7 @@ lgpng_create_sRGB_from_data(struct sRGB *srgb, uint8_t *data, size_t dataz)
 		return(-1);
 	}
 	srgb->length = dataz;
-	srgb->type = CHUNK_TYPE_sRGB;
+	(void)memcpy(&(srgb->type), "sRGB", 4);
 	srgb->data.intent = data[0];
 	return(0);
 }
@@ -452,7 +418,7 @@ lgpng_create_cICP_from_data(struct cICP *cicp, uint8_t *data, size_t dataz)
 		return(-1);
 	}
 	cicp->length = dataz;
-	cicp->type = CHUNK_TYPE_cICP;
+	(void)memcpy(&(cicp->type), "cICP", 4);
 	cicp->data.colour_primaries = data[0];
 	cicp->data.transfer_function = data[1];
 	cicp->data.matrix_coefficients = data[2];
@@ -477,7 +443,7 @@ lgpng_create_tEXt_from_data(struct tEXt *text, uint8_t *data, size_t dataz)
 	uint8_t	*nul;
 
 	text->length = dataz;
-	text->type = CHUNK_TYPE_tEXt;
+	(void)memcpy(&(text->type), "tEXt", 4);
 	if (NULL == (nul = memchr(data, '\0', 80))) {
 		return(-1);
 	}
@@ -501,7 +467,7 @@ lgpng_create_zTXt_from_data(struct zTXt *ztxt, uint8_t *data, size_t dataz)
 	uint8_t	*nul;
 
 	ztxt->length = dataz;
-	ztxt->type = CHUNK_TYPE_zTXt;
+	(void)memcpy(&(ztxt->type), "zTXt", 4);
 	if (NULL == (nul = memchr(data, '\0', 80))) {
 		return(-1);
 	}
@@ -539,16 +505,16 @@ lgpng_create_bKGD_from_data(struct bKGD *bkgd, struct IHDR *ihdr, struct PLTE *p
 	struct rgb16	*rgb;
 
 	/* Detect uninitialized IHDR chunk */
-	if (NULL == ihdr || CHUNK_TYPE_IHDR != ihdr->type) {
+	if (NULL == ihdr) {
 		return(-1);
 	}
 	/* Same with PLTE */
-	if ((NULL == plte || CHUNK_TYPE_PLTE != plte->type)
+	if ((NULL == plte)
 	    && COLOUR_TYPE_INDEXED == ihdr->data.colourtype) {
 		return(-1);
 	}
 	bkgd->length = dataz;
-	bkgd->type = CHUNK_TYPE_bKGD;
+	(void)memcpy(&(bkgd->type), "bKGD", 4);
 	switch (ihdr->data.colourtype) {
 	case COLOUR_TYPE_GREYSCALE:
 		/* FALLTHROUGH */
@@ -591,10 +557,10 @@ lgpng_create_hIST_from_data(struct hIST *hist, struct PLTE *plte, uint8_t *data,
 	uint16_t	*frequency;
 
 	/* Detect uninitialized PLTE chunk */
-	if (CHUNK_TYPE_PLTE != plte->type || 0 == plte->data.entries) {
+	if (0 == plte->data.entries) {
 		return(-1);
 	}
-	hist->type = CHUNK_TYPE_hIST;
+	(void)memcpy(&(hist->type), "hIST", 4);
 	hist->length = dataz;
 	/* dataz is a series of 16-bit integers */
 	elemz = dataz / 2;
@@ -618,7 +584,7 @@ int
 lgpng_create_pHYs_from_data(struct pHYs *phys, uint8_t *data, size_t dataz)
 {
 	phys->length = dataz;
-	phys->type = CHUNK_TYPE_pHYs;
+	(void)memcpy(&(phys->type), "pHYs", 4);
 	(void)memcpy(&(phys->data.ppux), data, 4);
 	(void)memcpy(&(phys->data.ppuy), data + 4, 4);
 	phys->data.ppux = be32toh(phys->data.ppux);
@@ -634,7 +600,7 @@ lgpng_create_sPLT_from_data(struct sPLT *splt, uint8_t *data, size_t dataz)
 	uint8_t	*nul;
 
 	splt->length = dataz;
-	splt->type = CHUNK_TYPE_sPLT;
+	(void)memcpy(&(splt->type), "sPLT", 4);
 	if (NULL == (nul = memchr(data, '\0', 80))) {
 		return(-1);
 	}
@@ -673,7 +639,7 @@ int
 lgpng_create_eXIf_from_data(struct eXIf *exif, uint8_t *data, size_t dataz)
 {
 	exif->length = dataz;
-	exif->type = CHUNK_TYPE_eXIf;
+	(void)memcpy(&(exif->type), "eXIf", 4);
 	exif->data.profile = data;
 	return(0);
 }
@@ -685,7 +651,7 @@ lgpng_create_tIME_from_data(struct tIME *time, uint8_t *data, size_t dataz)
 		return(-1);
 	}
 	time->length = dataz;
-	time->type = CHUNK_TYPE_tIME;
+	(void)memcpy(&(time->type), "tIME", 4);
 	(void)memcpy(&(time->data.year), data, 2);
 	time->data.year = be16toh(time->data.year);
 	time->data.month = data[2];
@@ -703,7 +669,7 @@ lgpng_create_acTL_from_data(struct acTL *actl, uint8_t *data, size_t dataz)
 		return(-1);
 	}
 	actl->length = dataz;
-	actl->type = CHUNK_TYPE_acTL;
+	(void)memcpy(&(actl->type), "acTL", 4);
 	(void)memcpy(&(actl->data.num_frames), data, 4);
 	(void)memcpy(&(actl->data.num_plays), data + 4, 4);
 	actl->data.num_frames = be32toh(actl->data.num_frames);
@@ -721,7 +687,7 @@ lgpng_create_fcTL_from_data(struct fcTL *fctl, uint8_t *data, size_t dataz)
 		return(-1);
 	}
 	fctl->length = dataz;
-	fctl->type = CHUNK_TYPE_fcTL;
+	(void)memcpy(&(fctl->type), "fcTL", 4);
 	(void)memcpy(&(fctl->data.sequence_number), data, 4);
 	(void)memcpy(&(fctl->data.width), data + 4, 4);
 	(void)memcpy(&(fctl->data.height), data + 8, 4);
@@ -757,7 +723,7 @@ lgpng_create_fdAT_from_data(struct fdAT *fdat, uint8_t *data, size_t dataz)
 		return(-1);
 	}
 	fdat->length = dataz;
-	fdat->type = CHUNK_TYPE_fdAT;
+	(void)memcpy(&(fdat->type), "fdAT", 4);
 	(void)memcpy(&(fdat->data.sequence_number), data, 4);
 	fdat->data.sequence_number = be32toh(fdat->data.sequence_number);
 	fdat->data.frame_data = data + 4;
@@ -771,7 +737,7 @@ lgpng_create_oFFs_from_data(struct oFFs *offs, uint8_t *data, size_t dataz)
 		return(-1);
 	}
 	offs->length = dataz;
-	offs->type = CHUNK_TYPE_oFFs;
+	(void)memcpy(&(offs->type), "oFFs", 4);
 	(void)memcpy(&(offs->data.x_position), data, 4);
 	(void)memcpy(&(offs->data.y_position), data, 4);
 	offs->data.x_position = be32toh(offs->data.x_position);
@@ -790,7 +756,7 @@ lgpng_create_gIFg_from_data(struct gIFg *gifg, uint8_t *data, size_t dataz)
 		return(-1);
 	}
 	gifg->length = dataz;
-	gifg->type = CHUNK_TYPE_gIFg;
+	(void)memcpy(&(gifg->type), "gIFg", 4);
 	gifg->data.disposal_method = data[0];
 	gifg->data.user_input = data[1];
 	(void)memcpy(&(gifg->data.delay_time), data, 2);
@@ -811,7 +777,7 @@ lgpng_create_gIFx_from_data(struct gIFx *gifx, uint8_t *data, size_t dataz)
 		return(-1);
 	}
 	gifx->length = dataz;
-	gifx->type = CHUNK_TYPE_gIFx;
+	(void)memcpy(&(gifx->type), "gIFx", 4);
 	(void)memcpy(gifx->data.identifier, data, 8);
 	(void)memcpy(gifx->data.code, data + 8, 3);
 	gifx->data.data = data + 11;

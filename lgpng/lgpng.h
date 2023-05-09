@@ -24,47 +24,9 @@
 /* Global variables */
 extern char	png_sig[8];
 
-/* Generic chunk */
-enum chunktype {
-	CHUNK_TYPE_IHDR,
-	CHUNK_TYPE_PLTE,
-	CHUNK_TYPE_IDAT,
-	CHUNK_TYPE_IEND,
-	CHUNK_TYPE_tRNS,
-	CHUNK_TYPE_cHRM,
-	CHUNK_TYPE_gAMA,
-	CHUNK_TYPE_iCCP,
-	CHUNK_TYPE_sBIT,
-	CHUNK_TYPE_sRGB,
-	CHUNK_TYPE_cICP,
-	CHUNK_TYPE_iTXt,
-	CHUNK_TYPE_tEXt,
-	CHUNK_TYPE_zTXt,
-	CHUNK_TYPE_bKGD,
-	CHUNK_TYPE_hIST,
-	CHUNK_TYPE_pHYs,
-	CHUNK_TYPE_sPLT,
-	CHUNK_TYPE_eXIf,
-	CHUNK_TYPE_tIME,
-	CHUNK_TYPE_acTL,
-	CHUNK_TYPE_fcTL,
-	CHUNK_TYPE_fdAT,
-	CHUNK_TYPE_oFFs,
-	CHUNK_TYPE_gIFg,
-	CHUNK_TYPE_gIFx,
-	CHUNK_TYPE_vpAg,
-	CHUNK_TYPE_caNv,
-	CHUNK_TYPE_orNt,
-	CHUNK_TYPE_skMf,
-	CHUNK_TYPE_skRf,
-	CHUNK_TYPE__MAX,
-};
-
-extern const char *chunktypemap[CHUNK_TYPE__MAX];
-
 struct chunk {
 	uint32_t         length;
-	enum chunktype   type;
+	uint8_t		 type[4];
 	uint32_t         crc;
 	uint8_t          data[];
 };
@@ -107,7 +69,7 @@ extern const char *interlacemap[INTERLACE_METHOD__MAX];
 
 struct IHDR {
 	uint32_t         length;
-	enum chunktype   type;
+	uint8_t		 type[4];
 	uint32_t         crc;
 	struct {
 		uint32_t	width;
@@ -129,7 +91,7 @@ struct rgb8 {
 
 struct PLTE {
 	uint32_t         length;
-	enum chunktype   type;
+	uint8_t		 type[4];
 	uint32_t         crc;
 	struct {
 		size_t		entries;
@@ -140,7 +102,7 @@ struct PLTE {
 /* IDAT chunk */
 struct IDAT {
 	uint32_t         length;
-	enum chunktype   type;
+	uint8_t		 type[4];
 	uint32_t         crc;
 	struct {
 		uint8_t	*data;
@@ -150,7 +112,7 @@ struct IDAT {
 /* tRNS chunk */
 struct tRNS {
 	uint32_t         length;
-	enum chunktype   type;
+	uint8_t		 type[4];
 	uint32_t         crc;
 	struct {
 		uint16_t	gray;
@@ -165,7 +127,7 @@ struct tRNS {
 /* cHRM chunk */
 struct cHRM {
 	uint32_t         length;
-	enum chunktype   type;
+	uint8_t		 type[4];
 	uint32_t         crc;
 	struct {
 		uint32_t	whitex;
@@ -182,7 +144,7 @@ struct cHRM {
 /* gAMA chunk */
 struct gAMA {
 	uint32_t         length;
-	enum chunktype   type;
+	uint8_t		 type[4];
 	uint32_t         crc;
 	struct {
 		uint32_t	gamma;
@@ -192,7 +154,7 @@ struct gAMA {
 /* iCCP chunk */
 struct iCCP {
 	uint32_t         length;
-	enum chunktype   type;
+	uint8_t		 type[4];
 	uint32_t         crc;
 	struct {
 		size_t	 namez;
@@ -206,7 +168,7 @@ struct iCCP {
 /* sBIT chunk */
 struct sBIT {
 	uint32_t         length;
-	enum chunktype   type;
+	uint8_t		 type[4];
 	uint32_t         crc;
 	struct {
 		uint8_t	sgreyscale;
@@ -230,7 +192,7 @@ extern const char *rendering_intentmap[RENDERING_INTENT__MAX];
 
 struct sRGB {
 	uint32_t         length;
-	enum chunktype   type;
+	uint8_t		 type[4];
 	uint32_t         crc;
 	struct {
 		uint8_t		intent;
@@ -240,7 +202,7 @@ struct sRGB {
 /* cICP chunk */
 struct cICP {
 	uint32_t         length;
-	enum chunktype   type;
+	uint8_t		 type[4];
 	uint32_t         crc;
 	struct {
 		uint8_t	colour_primaries;
@@ -253,7 +215,7 @@ struct cICP {
 /* tEXt chunk */
 struct tEXt {
 	uint32_t         length;
-	enum chunktype   type;
+	uint8_t		 type[4];
 	uint32_t         crc;
 	struct {
 		uint8_t	 keyword[80];
@@ -264,7 +226,7 @@ struct tEXt {
 /* zTXt chunk */
 struct zTXt {
 	uint32_t         length;
-	enum chunktype   type;
+	uint8_t		 type[4];
 	uint32_t         crc;
 	struct {
 		size_t		 keywordz;
@@ -284,7 +246,7 @@ struct rgb16 {
 
 struct bKGD {
 	uint32_t         length;
-	enum chunktype   type;
+	uint8_t		 type[4];
 	uint32_t         crc;
 	struct {
 		uint16_t	greyscale;
@@ -296,7 +258,7 @@ struct bKGD {
 /* hIST chunk */
 struct hIST {
 	uint32_t         length;
-	enum chunktype   type;
+	uint8_t		 type[4];
 	uint32_t         crc;
 	struct {
 		uint16_t	frequency[256];
@@ -314,7 +276,7 @@ extern const char *unitspecifiermap[UNITSPECIFIER__MAX];
 
 struct pHYs {
 	uint32_t         length;
-	enum chunktype   type;
+	uint8_t		 type[4];
 	uint32_t         crc;
 	struct {
 		uint32_t	ppux;
@@ -346,7 +308,7 @@ struct splt_entry {
 
 struct sPLT {
 	uint32_t         length;
-	enum chunktype   type;
+	uint8_t		 type[4];
 	uint32_t         crc;
 	struct {
 		char			 palettename[80];
@@ -359,7 +321,7 @@ struct sPLT {
 /* eXIf chunk */
 struct eXIf {
 	uint32_t         length;
-	enum chunktype   type;
+	uint8_t		 type[4];
 	uint32_t         crc;
 	struct {
 		uint8_t	*profile;
@@ -369,7 +331,7 @@ struct eXIf {
 /* tIME chunk */
 struct tIME {
 	uint32_t         length;
-	enum chunktype   type;
+	uint8_t		 type[4];
 	uint32_t         crc;
 	struct {
 		uint16_t	year;
@@ -384,7 +346,7 @@ struct tIME {
 /* acTL chunk */
 struct acTL {
 	uint32_t         length;
-	enum chunktype   type;
+	uint8_t		 type[4];
 	uint32_t         crc;
 	struct {
 		uint32_t	num_frames;
@@ -412,7 +374,7 @@ extern const char *blend_opmap[BLEND_OP__MAX];
 
 struct fcTL {
 	uint32_t         length;
-	enum chunktype   type;
+	uint8_t		 type[4];
 	uint32_t         crc;
 	struct {
 		uint32_t	sequence_number;
@@ -431,7 +393,7 @@ struct fcTL {
 /* fdAT chunk */
 struct fdAT {
 	uint32_t         length;
-	enum chunktype   type;
+	uint8_t		 type[4];
 	uint32_t         crc;
 	struct {
 		uint32_t	 sequence_number;
@@ -450,7 +412,7 @@ extern const char *offsunitspecifiermap[OFFS_UNITSPECIFIER__MAX];
 
 struct oFFs {
 	uint32_t         length;
-	enum chunktype   type;
+	uint8_t		 type[4];
 	uint32_t         crc;
 	struct {
 		int32_t	 x_position;
@@ -485,7 +447,7 @@ extern const char *user_inputmap[USER_INPUT__MAX];
 
 struct gIFg {
 	uint32_t         length;
-	enum chunktype   type;
+	uint8_t		 type[4];
 	uint32_t         crc;
 	struct {
 		uint8_t	 	disposal_method;
@@ -497,7 +459,7 @@ struct gIFg {
 /* gIFx chunk */
 struct gIFx {
 	uint32_t         length;
-	enum chunktype   type;
+	uint8_t		 type[4];
 	uint32_t         crc;
 	struct {
 		uint8_t	 identifier[8];
@@ -516,7 +478,7 @@ extern const char *vpagunitspecifiermap[VPAG_UNITSPECIFIER__MAX];
 
 struct vpAg {
 	uint32_t         length;
-	enum chunktype   type;
+	uint8_t		 type[4];
 	uint32_t         crc;
 	struct {
 		uint32_t	width;
@@ -528,7 +490,7 @@ struct vpAg {
 /* caNv chunk */
 struct caNv {
 	uint32_t         length;
-	enum chunktype   type;
+	uint8_t		 type[4];
 	uint32_t         crc;
 	struct {
 		uint32_t	width;
@@ -557,7 +519,7 @@ extern const char *orientationmap[ORIENTATION__MAX];
 
 struct orNt {
 	uint32_t         length;
-	enum chunktype   type;
+	uint8_t		 type[4];
 	uint32_t         crc;
 	struct {
 		uint8_t	orientation;
@@ -567,7 +529,7 @@ struct orNt {
 /* skMf chunk */
 struct skMf {
 	uint32_t         length;
-	enum chunktype   type;
+	uint8_t		 type[4];
 	uint32_t         crc;
 	struct {
 		uint8_t	*json;
@@ -577,7 +539,7 @@ struct skMf {
 /* skRf chunk */
 struct skRf {
 	uint32_t         length;
-	enum chunktype   type;
+	uint8_t		 type[4];
 	uint32_t         crc;
 	struct {
 		uint8_t	 header[16];
@@ -625,7 +587,7 @@ int		lgpng_create_skRf_from_data(struct skRf *, uint8_t *, size_t);
 /* data */
 bool	lgpng_data_is_png(uint8_t *, size_t);
 bool	lgpng_data_get_length(uint8_t *, size_t, uint32_t *);
-bool	lgpng_data_get_type(uint8_t *, size_t, int *, uint8_t *);
+bool	lgpng_data_get_type(uint8_t *, size_t, uint8_t [4]);
 bool	lgpng_data_get_data(uint8_t *, size_t, uint32_t, uint8_t **);
 bool	lgpng_data_get_crc(uint8_t *, size_t, uint32_t *);
 int	lgpng_data_write_sig(uint8_t *);
@@ -634,7 +596,7 @@ int	lgpng_data_write_chunk(uint8_t *, uint32_t, uint8_t [4], uint8_t *, uint32_t
 /* stream */
 bool	lgpng_stream_is_png(FILE *);
 bool	lgpng_stream_get_length(FILE *, uint32_t *);
-bool	lgpng_stream_get_type(FILE *, int *, uint8_t *);
+bool	lgpng_stream_get_type(FILE *, uint8_t [4]);
 bool	lgpng_stream_get_data(FILE *, uint32_t, uint8_t **);
 bool	lgpng_stream_skip_data(FILE *, uint32_t);
 bool	lgpng_stream_get_crc(FILE *, uint32_t *);

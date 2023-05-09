@@ -97,16 +97,14 @@ main(int argc, char *argv[])
 	}
 
 	do {
-		int		 chunktype = CHUNK_TYPE__MAX;
 		uint32_t	 length = 0, crc = 0;
 		uint8_t		*data = NULL;
-		uint8_t		 str_type[5] = {0, 0, 0, 0, 0};
+		uint8_t		 type[4] = {0, 0, 0, 0};
 
 		if (false == lgpng_stream_get_length(source, &length)) {
 			break;
 		}
-		if (false == lgpng_stream_get_type(source, &chunktype,
-		    (uint8_t *)str_type)) {
+		if (false == lgpng_stream_get_type(source, type)) {
 			break;
 		}
 		if (NULL == (data = malloc(length + 1))) {
@@ -120,17 +118,17 @@ main(int argc, char *argv[])
 			goto stop;
 		}
 		/* Ignore invalid CRC */
-		if (0 == memcmp(str_type, argv[0], 4)) {
+		if (0 == memcmp(type, argv[0], 4)) {
 			if (dflag) {
 				(void)fwrite(data + oflag, 1, length - oflag, stdout);
 			} else {
 				(void)lgpng_stream_write_chunk(stdout, length,
-				   str_type, data, crc);
+				   type, data, crc);
 			}
 			loopexit = true;
 		}
 stop:
-		if (CHUNK_TYPE_IEND == chunktype) {
+		if (0 == memcmp(type, "IEND", 4)) {
 			loopexit = true;
 		}
 		free(data);
