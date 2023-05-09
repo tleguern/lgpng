@@ -916,8 +916,16 @@ info_gIFx(uint8_t *data, size_t dataz)
 	}
 	printf("gIFx: application identifier: %.8s\n", gifx.data.identifier);
 	printf("gIFx: application code: %.3s\n", gifx.data.code);
-
-	// TODO: application data
+	printf("gIFx: application data: ");
+	if (gifx.length - 11 > 0) {
+		for (unsigned long i = 0; i < gifx.length - 11; i++) {
+			printf("%x", data[i + 11]);
+			if (i != gifx.length - 12) {
+				printf(" ");
+			}
+		}
+		printf("\n");
+	}
 }
 
 void
