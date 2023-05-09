@@ -182,6 +182,9 @@ main(int argc, char *argv[])
 			/* Simply list chunks' name */
 			printf("%.4s\n", str_type);
 		} else if (cflag) {
+			if (calc_crc != chunk_crc) {
+				warnx("Difference between CRC and reality for chunk %s (%u vs %u)", str_type, chunk_crc, calc_crc);
+			}
 			/*
 			 * The IHDR chunk contains important information used to
 			 * decode other chunks, such as bKGD, sBIT and tRNS.
