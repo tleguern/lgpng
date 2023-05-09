@@ -1,13 +1,13 @@
 include Makefile.configure
 
 PROG= pnginfo
-SRCS= lgpng.c compats.c ${PROG}.c
+SRCS= ${PROG}.c compats.c
 OBJS= ${SRCS:.c=.o}
 
 LDADD+= -lz
 LDFLAGS+=
+CFLAGS+= -Wall -Wextra -I ../lgpng
 CFLAGS+= -std=c99 -Wpointer-sign
-CFLAGS+= -Wall -Wextra
 
 .SUFFIXES: .c .o
 .PHONY: clean
@@ -18,7 +18,7 @@ all: ${PROG}
 	${CC} ${CFLAGS} -c $<
 
 ${PROG}: ${OBJS}
-	${CC} ${LDFLAGS} -o $@ ${OBJS} ${LDADD}
+	${CC} ${LDFLAGS} -o $@ ${OBJS} ../lgpng/liblgpng.a ${LDADD}
 
 clean:
 	rm -f -- ${OBJS} ${PROG}
