@@ -1,5 +1,3 @@
-LDADD+= -llgpng
-LDFLAGS+= -L../lgpng
 CFLAGS= -Wall -Wextra
 CFLAGS+= -std=c99 -Wpointer-sign -I../lgpng
 NOMAN= yes
@@ -14,13 +12,13 @@ all: test-data test-stream
 	${CC} ${CFLAGS} -c $<
 
 test-data: data.o
-	${CC} ${LDFLAGS} -o $@ data.o ${LDADD}
+	${CC} -o $@ data.o ../lgpng/liblgpng.a
 
 #test-ihdr: ihdr.o
-#	${CC} ${LDFLAGS} -o $@ ihdr.o ${LDADD}
+#	${CC} -o $@ ihdr.o ../lgpng/liblgpng.a
 
 test-stream: stream.o
-	${CC} ${LDFLAGS} -o $@ stream.o ${LDADD}
+	${CC} -o $@ stream.o ../lgpng/liblgpng.a
 
 clean:
 	rm -f -- *.o test-*
