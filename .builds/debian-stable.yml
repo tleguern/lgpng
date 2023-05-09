@@ -1,0 +1,14 @@
+---
+image: debian/stable
+packages:
+  - gcc
+  - zlib1g-dev
+sources:
+  - https://git.sr.ht/~tleguern/pnginfo
+tasks:
+  - setup: |
+      cd pnginfo
+      ./configure
+  - build: |
+      cd pnginfo
+      make

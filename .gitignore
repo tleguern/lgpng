@@ -4,10 +4,12 @@ lgpng/lgpng.c
 lgpng/liblgpng.a
 lgpng/liblgpng.so.0.1
 pngdump/pngdump
-pngexplode/config.h.old
-pngexplode/config.log.old
 pngexplode/pngexplode
 pnginfo/pnginfo
-pngshuffle/config.h.old
-pngshuffle/config.log.old
 pngshuffle/pngshuffle
+pnginfo/pnginfo
+*/Makefile.configure
+*/config.h
+*/config.h.old
+*/config.log
+*/config.log.old

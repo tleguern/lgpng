@@ -1,0 +1,11 @@
+---
+image: freebsd/latest
+sources:
+  - https://git.sr.ht/~tleguern/pnginfo
+tasks:
+  - setup: |
+      cd pnginfo
+      ./configure
+  - build: |
+      cd pnginfo
+      make
