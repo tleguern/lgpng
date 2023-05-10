@@ -1,10 +1,14 @@
-#include <err.h>
+#include "../config.h"
+
+#if HAVE_ERR
+# include <err.h>
+#endif
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
-#include "lgpng.h"
+#include "../lgpng.h"
 
 int
 main(void)
@@ -14,13 +18,13 @@ main(void)
 	uint8_t		 type[4] = {0, 0, 0, 0};
 	uint8_t		*data = NULL;
 	FILE		*source = NULL;
-	char		*subject, *status;
+	const char	*subject, *status;
 
 	printf("lgpng_stream tests\n");
 	printf("TAP version 13\n");
 	printf("1..17\n");
 
-	if (NULL == (source = fopen("./blank.png", "r"))) {
+	if (NULL == (source = fopen("./regress/blank.png", "r"))) {
 		printf("Bail out!\n");
 		err(EXIT_FAILURE, "%s", optarg);
 	}

@@ -1,10 +1,14 @@
-#include <err.h>
+#include "../config.h"
+
+#if HAVE_ERR
+# include <err.h>
+#endif
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
-#include "lgpng.h"
+#include "../lgpng.h"
 
 uint8_t source[] = {
 	0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d,
@@ -31,12 +35,12 @@ uint8_t source[] = {
 int
 main(void)
 {
-	int		 test = 0, offset = 0;
+	int		 rc = EXIT_SUCCESS, test = 0, offset = 0;
 	uint32_t	 length = 0, crc = 0;
 	uint8_t		 type[4] = {0, 0, 0, 0};
 	size_t		 sourcez = sizeof(source);
 	uint8_t		*data = NULL;
-	char		*subject, *status;
+	const char	*subject, *status;
 
 	printf("lgpng_data tests\n");
 	printf("TAP version 13\n");
@@ -48,6 +52,7 @@ main(void)
 		status = "ok";
 	} else {
 		status = "not ok";
+		rc = EXIT_FAILURE;
 	}
 	printf(subject, status, ++test);
 
@@ -56,6 +61,7 @@ main(void)
 		status = "ok";
 	} else {
 		status = "not ok";
+		rc = EXIT_FAILURE;
 	}
 	printf(subject, status, ++test);
 
@@ -64,6 +70,7 @@ main(void)
 		status = "ok";
 	} else {
 		status = "not ok";
+		rc = EXIT_FAILURE;
 	}
 	printf(subject, status, ++test);
 
@@ -75,6 +82,7 @@ main(void)
 		status = "ok";
 	} else {
 		status = "not ok";
+		rc = EXIT_FAILURE;
 	}
 	printf(subject, status, ++test);
 
@@ -83,6 +91,7 @@ main(void)
 		status = "ok";
 	} else {
 		status = "not ok";
+		rc = EXIT_FAILURE;
 	}
 	printf(subject, status, ++test);
 
@@ -91,6 +100,7 @@ main(void)
 		status = "ok";
 	} else {
 		status = "not ok";
+		rc = EXIT_FAILURE;
 	}
 	printf(subject, status, ++test);
 
@@ -99,6 +109,7 @@ main(void)
 		status = "ok";
 	} else {
 		status = "not ok";
+		rc = EXIT_FAILURE;
 	}
 	printf(subject, status, ++test);
 
@@ -107,6 +118,7 @@ main(void)
 		status = "ok";
 	} else {
 		status = "not ok";
+		rc = EXIT_FAILURE;
 	}
 	printf(subject, status, ++test);
 
@@ -118,6 +130,7 @@ main(void)
 		status = "ok";
 	} else {
 		status = "not ok";
+		rc = EXIT_FAILURE;
 	}
 	printf(subject, status, ++test);
 
@@ -126,6 +139,7 @@ main(void)
 		status = "ok";
 	} else {
 		status = "not ok";
+		rc = EXIT_FAILURE;
 	}
 	printf(subject, status, ++test);
 
@@ -134,6 +148,7 @@ main(void)
 		status = "ok";
 	} else {
 		status = "not ok";
+		rc = EXIT_FAILURE;
 	}
 	printf(subject, status, ++test);
 
@@ -142,6 +157,7 @@ main(void)
 		status = "ok";
 	} else {
 		status = "not ok";
+		rc = EXIT_FAILURE;
 	}
 	printf(subject, status, ++test);
 
@@ -157,6 +173,7 @@ main(void)
 		status = "ok";
 	} else {
 		status = "not ok";
+		rc = EXIT_FAILURE;
 	}
 	printf(subject, status, ++test);
 
@@ -165,6 +182,7 @@ main(void)
 		status = "ok";
 	} else {
 		status = "not ok";
+		rc = EXIT_FAILURE;
 	}
 	printf(subject, status, ++test);
 
@@ -173,6 +191,7 @@ main(void)
 		status = "ok";
 	} else {
 		status = "not ok";
+		rc = EXIT_FAILURE;
 	}
 	printf(subject, status, ++test);
 
@@ -181,6 +200,7 @@ main(void)
 		status = "ok";
 	} else {
 		status = "not ok";
+		rc = EXIT_FAILURE;
 	}
 	printf(subject, status, ++test);
 
@@ -192,6 +212,7 @@ main(void)
 		status = "ok";
 	} else {
 		status = "not ok";
+		rc = EXIT_FAILURE;
 	}
 	printf(subject, status, ++test);
 
@@ -200,6 +221,7 @@ main(void)
 		status = "ok";
 	} else {
 		status = "not ok";
+		rc = EXIT_FAILURE;
 	}
 	printf(subject, status, ++test);
 
@@ -208,6 +230,7 @@ main(void)
 		status = "ok";
 	} else {
 		status = "not ok";
+		rc = EXIT_FAILURE;
 	}
 	printf(subject, status, ++test);
 
@@ -216,10 +239,11 @@ main(void)
 		status = "ok";
 	} else {
 		status = "not ok";
+		rc = EXIT_FAILURE;
 	}
 	printf(subject, status, ++test);
 
 	free(data);
-	return(EXIT_SUCCESS);
+	return(rc);
 }
 
