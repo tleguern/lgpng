@@ -24,7 +24,7 @@
 
 #include "lgpng.h"
 
-char png_sig[8] = {137, 80, 78, 71, 13, 10, 26, 10};
+uint8_t png_sig[8] = {137, 80, 78, 71, 13, 10, 26, 10};
 
 const char *colourtypemap[COLOUR_TYPE__MAX] = {
 	"greyscale",
@@ -142,12 +142,12 @@ lgpng_is_official_keyword(uint8_t *keyword, size_t keywordz)
 }
 
 int
-lgpng_create_IHDR_from_data(struct IHDR *ihdr, uint8_t *data, size_t dataz)
+lgpng_create_IHDR_from_data(struct IHDR *ihdr, uint8_t *data, uint32_t length)
 {
-	if (13 != dataz) {
+	if (13 != length) {
 		return(-1);
 	}
-	ihdr->length = dataz;
+	ihdr->length = length;
 	(void)memcpy(&(ihdr->type), "IHDR", 4);
 	(void)memcpy(&(ihdr->data.width), data, 4);
 	(void)memcpy(&(ihdr->data.height), data + 4, 4);
@@ -162,15 +162,15 @@ lgpng_create_IHDR_from_data(struct IHDR *ihdr, uint8_t *data, size_t dataz)
 }
 
 int
-lgpng_create_PLTE_from_data(struct PLTE *plte, uint8_t *data, size_t dataz)
+lgpng_create_PLTE_from_data(struct PLTE *plte, uint8_t *data, uint32_t length)
 {
 	size_t		 elemz;
 
-	elemz = dataz / 3;
-	if (0 != dataz % 3 || 256 < elemz) {
+	plte->length = length;
+	elemz = length / 3;
+	if (0 != length % 3 || 256 < elemz) {
 		return(-1);
 	}
-	plte->length = elemz;
 	(void)memcpy(&(plte->type), "PLTE", 4);
 	plte->data.entries = elemz;
 	for (size_t i = 0, j = 0; i < elemz; i++, j += 3) {
@@ -182,38 +182,38 @@ lgpng_create_PLTE_from_data(struct PLTE *plte, uint8_t *data, size_t dataz)
 }
 
 int
-lgpng_create_IDAT_from_data(struct IDAT *idat, uint8_t *data, size_t dataz)
+lgpng_create_IDAT_from_data(struct IDAT *idat, uint8_t *data, uint32_t length)
 {
-	idat->length = dataz;
+	idat->length = length;
 	(void)memcpy(&(idat->type), "IDAT", 4);
 	idat->data.data = data;
 	return(0);
 }
 
 int
-lgpng_create_tRNS_from_data(struct tRNS *trns, struct IHDR *ihdr, uint8_t *data, size_t dataz)
+lgpng_create_tRNS_from_data(struct tRNS *trns, struct IHDR *ihdr, uint8_t *data, uint32_t length)
 {
 	if (NULL == ihdr) {
 		return(-1);
 	}
-	trns->length = dataz;
+	trns->length = length;
 	(void)memcpy(&(trns->type), "tRNS", 4);
-	trns->data.gray = -1;
-	trns->data.red = -1;
-	trns->data.green = -1;
-	trns->data.blue = -1;
-	trns->data.entries = -1;
+	trns->data.gray = 0;
+	trns->data.red = 0;
+	trns->data.green = 0;
+	trns->data.blue = 0;
+	trns->data.entries = 0;
 	(void)memset(&(trns->data.palette), 0, sizeof(trns->data.palette));
 	switch (ihdr->data.colourtype) {
 	case COLOUR_TYPE_GREYSCALE:
-		if (2 != dataz) {
+		if (2 != length) {
 			return(-1);
 		}
 		(void)memcpy(&(trns->data.gray), data, 2);
 		trns->data.gray = be16toh(trns->data.gray);
 		break;
 	case COLOUR_TYPE_TRUECOLOUR:
-		if (6 != dataz) {
+		if (6 != length) {
 			return(-1);
 		}
 		(void)memcpy(&(trns->data.red), data, 2);
@@ -224,11 +224,11 @@ lgpng_create_tRNS_from_data(struct tRNS *trns, struct IHDR *ihdr, uint8_t *data,
 		trns->data.blue = be16toh(trns->data.blue);
 		break;
 	case COLOUR_TYPE_INDEXED:
-		if (dataz > 256) {
+		if (length > 256) {
 			return(-1);
 		}
-		trns->data.entries = dataz;
-		(void)memcpy(&(trns->data.palette), data, dataz);
+		trns->data.entries = length;
+		(void)memcpy(&(trns->data.palette), data, length);
 		break;
 	default:
 		return(-1);
@@ -237,39 +237,39 @@ lgpng_create_tRNS_from_data(struct tRNS *trns, struct IHDR *ihdr, uint8_t *data,
 }
 
 int
-lgpng_create_sBIT_from_data(struct sBIT *sbit, struct IHDR *ihdr, uint8_t *data, size_t dataz)
+lgpng_create_sBIT_from_data(struct sBIT *sbit, struct IHDR *ihdr, uint8_t *data, uint32_t length)
 {
 	if (NULL == ihdr) {
 		return(-1);
 	}
-	sbit->length = dataz;
+	sbit->length = length;
 	(void)memcpy(&(sbit->type), "sBIT", 4);
-	sbit->data.sgreyscale = -1;
-	sbit->data.sred = -1;
-	sbit->data.sgreen = -1;
-	sbit->data.sblue = -1;
-	sbit->data.salpha = -1;
+	sbit->data.sgreyscale = 0;
+	sbit->data.sred = 0;
+	sbit->data.sgreen = 0;
+	sbit->data.sblue = 0;
+	sbit->data.salpha = 0;
 	/* Reject invalid data size */
 	switch(ihdr->data.colourtype) {
 	case COLOUR_TYPE_GREYSCALE:
-		if (1 != dataz) {
+		if (1 != length) {
 			return(-1);
 		}
 		break;
 	case COLOUR_TYPE_TRUECOLOUR:
 		/* FALLTHROUGH */
 	case COLOUR_TYPE_INDEXED:
-		if (3 != dataz) {
+		if (3 != length) {
 			return(-1);
 		}
 		break;
 	case COLOUR_TYPE_GREYSCALE_ALPHA:
-		if (2 != dataz) {
+		if (2 != length) {
 			return(-1);
 		}
 		break;
 	case COLOUR_TYPE_TRUECOLOUR_ALPHA:
-		if (4 != dataz) {
+		if (4 != length) {
 			return(-1);
 		}
 		break;
@@ -339,13 +339,13 @@ lgpng_create_sBIT_from_data(struct sBIT *sbit, struct IHDR *ihdr, uint8_t *data,
 }
 
 int
-lgpng_create_cHRM_from_data(struct cHRM *chrm, uint8_t *data, size_t dataz)
+lgpng_create_cHRM_from_data(struct cHRM *chrm, uint8_t *data, uint32_t length)
 {
 	(void)memcpy(&(chrm->type), "cHRM", 4);
-	if (32 != dataz) {
+	if (32 != length) {
 		return(-1);
 	}
-	(void)memcpy(&(chrm->data), data, dataz);
+	(void)memcpy(&(chrm->data), data, length);
 	chrm->data.whitex = be32toh(chrm->data.whitex);
 	chrm->data.whitey = be32toh(chrm->data.whitey);
 	chrm->data.redx = be32toh(chrm->data.redx);
@@ -358,9 +358,9 @@ lgpng_create_cHRM_from_data(struct cHRM *chrm, uint8_t *data, size_t dataz)
 }
 
 int
-lgpng_create_gAMA_from_data(struct gAMA *gama, uint8_t *data, size_t dataz)
+lgpng_create_gAMA_from_data(struct gAMA *gama, uint8_t *data, uint32_t length)
 {
-	if (4 != dataz) {
+	if (4 != length) {
 		return(-1);
 	}
 	gama->length = 4;
@@ -371,17 +371,17 @@ lgpng_create_gAMA_from_data(struct gAMA *gama, uint8_t *data, size_t dataz)
 }
 
 int
-lgpng_create_iCCP_from_data(struct iCCP *iccp, uint8_t *data, size_t dataz)
+lgpng_create_iCCP_from_data(struct iCCP *iccp, uint8_t *data, uint32_t length)
 {
 	size_t	  offset;
 	uint8_t	 *nul;
 
-	iccp->length = dataz;
+	iccp->length = length;
 	(void)memcpy(&(iccp->type), "iCCP", 4);
 	if (NULL == (nul = memchr(data, '\0', 80))) {
 		return(-1);
 	}
-	offset = nul - data;
+	offset = (size_t)(nul - data);
 	if (1 > offset || 79 < offset) {
 		return(-1);
 	}
@@ -394,40 +394,40 @@ lgpng_create_iCCP_from_data(struct iCCP *iccp, uint8_t *data, size_t dataz)
 	/*
 	 * Only one compression type allowed here too but check anyway
 	 */
-	if (offset + 1 > dataz) {
+	if (offset + 1 > length) {
 		return(-1);
 	}
 	iccp->data.compression = data[offset + 1];
 	if (COMPRESSION_TYPE_DEFLATE != iccp->data.compression) {
 		return(-1);
 	}
-	if (offset + 2 > dataz) {
+	if (offset + 2 > length) {
 		return(-1);
 	}
 	iccp->data.profile = data + offset + 2;
-	iccp->data.profilez = dataz - offset - 2;
+	iccp->data.profilez = length - offset - 2;
 	return(0);
 }
 
 int
-lgpng_create_sRGB_from_data(struct sRGB *srgb, uint8_t *data, size_t dataz)
+lgpng_create_sRGB_from_data(struct sRGB *srgb, uint8_t *data, uint32_t length)
 {
-	if (1 != dataz) {
+	if (1 != length) {
 		return(-1);
 	}
-	srgb->length = dataz;
+	srgb->length = length;
 	(void)memcpy(&(srgb->type), "sRGB", 4);
 	srgb->data.intent = data[0];
 	return(0);
 }
 
 int
-lgpng_create_cICP_from_data(struct cICP *cicp, uint8_t *data, size_t dataz)
+lgpng_create_cICP_from_data(struct cICP *cicp, uint8_t *data, uint32_t length)
 {
-	if (4 != dataz) {
+	if (4 != length) {
 		return(-1);
 	}
-	cicp->length = dataz;
+	cicp->length = length;
 	(void)memcpy(&(cicp->type), "cICP", 4);
 	cicp->data.colour_primaries = data[0];
 	cicp->data.transfer_function = data[1];
@@ -447,17 +447,17 @@ lgpng_create_cICP_from_data(struct cICP *cicp, uint8_t *data, size_t dataz)
 }
 
 int
-lgpng_create_tEXt_from_data(struct tEXt *text, uint8_t *data, size_t dataz)
+lgpng_create_tEXt_from_data(struct tEXt *text, uint8_t *data, uint32_t length)
 {
 	size_t	 offset;
 	uint8_t	*nul;
 
-	text->length = dataz;
+	text->length = length;
 	(void)memcpy(&(text->type), "tEXt", 4);
 	if (NULL == (nul = memchr(data, '\0', 80))) {
 		return(-1);
 	}
-	offset = nul - data;
+	offset = (size_t)(nul - data);
 	(void)memset(text->data.keyword, 0, sizeof(text->data.keyword));
 	(void)memcpy(text->data.keyword, data, offset);
 	if (1 > offset || 79 < offset) {
@@ -471,17 +471,17 @@ lgpng_create_tEXt_from_data(struct tEXt *text, uint8_t *data, size_t dataz)
 }
 
 int
-lgpng_create_zTXt_from_data(struct zTXt *ztxt, uint8_t *data, size_t dataz)
+lgpng_create_zTXt_from_data(struct zTXt *ztxt, uint8_t *data, uint32_t length)
 {
 	size_t	 offset;
 	uint8_t	*nul;
 
-	ztxt->length = dataz;
+	ztxt->length = length;
 	(void)memcpy(&(ztxt->type), "zTXt", 4);
 	if (NULL == (nul = memchr(data, '\0', 80))) {
 		return(-1);
 	}
-	offset = nul - data;
+	offset = (size_t)(nul - data);
 	(void)memset(ztxt->data.keyword, 0, sizeof(ztxt->data.keyword));
 	(void)memcpy(ztxt->data.keyword, data, offset);
 	ztxt->data.keywordz = offset;
@@ -494,23 +494,23 @@ lgpng_create_zTXt_from_data(struct zTXt *ztxt, uint8_t *data, size_t dataz)
 	/*
 	 * Only one compression type allowed here but check anyway
 	 */
-	if (offset + 1 > dataz) {
+	if (offset + 1 > length) {
 		return(-1);
 	}
 	ztxt->data.compression = data[offset + 1];
 	if (COMPRESSION_TYPE_DEFLATE != ztxt->data.compression) {
 		return(-1);
 	}
-	if (offset + 2 > dataz) {
+	if (offset + 2 > length) {
 		return(-1);
 	}
 	ztxt->data.text = data + offset + 2;
-	ztxt->data.textz = dataz - offset - 2;
+	ztxt->data.textz = length - offset - 2;
 	return(0);
 }
 
 int
-lgpng_create_bKGD_from_data(struct bKGD *bkgd, struct IHDR *ihdr, struct PLTE *plte, uint8_t *data, size_t dataz)
+lgpng_create_bKGD_from_data(struct bKGD *bkgd, struct IHDR *ihdr, struct PLTE *plte, uint8_t *data, uint32_t length)
 {
 	struct rgb16	*rgb;
 
@@ -523,13 +523,13 @@ lgpng_create_bKGD_from_data(struct bKGD *bkgd, struct IHDR *ihdr, struct PLTE *p
 	    && COLOUR_TYPE_INDEXED == ihdr->data.colourtype) {
 		return(-1);
 	}
-	bkgd->length = dataz;
+	bkgd->length = length;
 	(void)memcpy(&(bkgd->type), "bKGD", 4);
 	switch (ihdr->data.colourtype) {
 	case COLOUR_TYPE_GREYSCALE:
 		/* FALLTHROUGH */
 	case COLOUR_TYPE_GREYSCALE_ALPHA:
-		if (2 != dataz) {
+		if (2 != length) {
 			return(-1);
 		}
 		bkgd->data.greyscale = *(uint16_t *)data;
@@ -538,7 +538,7 @@ lgpng_create_bKGD_from_data(struct bKGD *bkgd, struct IHDR *ihdr, struct PLTE *p
 	case COLOUR_TYPE_TRUECOLOUR:
 		/* FALLTHROUGH */
 	case COLOUR_TYPE_TRUECOLOUR_ALPHA:
-		if (6 != dataz) {
+		if (6 != length) {
 			return(-1);
 		}
 		rgb = (struct rgb16 *)data;
@@ -547,7 +547,7 @@ lgpng_create_bKGD_from_data(struct bKGD *bkgd, struct IHDR *ihdr, struct PLTE *p
 		bkgd->data.rgb.blue = be16toh(rgb->blue);
 		break;
 	case COLOUR_TYPE_INDEXED:
-		if (1 != dataz) {
+		if (1 != length) {
 			return(-1);
 		}
 		/* Colour out of PLTE index */
@@ -561,7 +561,7 @@ lgpng_create_bKGD_from_data(struct bKGD *bkgd, struct IHDR *ihdr, struct PLTE *p
 }
 
 int
-lgpng_create_hIST_from_data(struct hIST *hist, struct PLTE *plte, uint8_t *data, size_t dataz)
+lgpng_create_hIST_from_data(struct hIST *hist, struct PLTE *plte, uint8_t *data, uint32_t length)
 {
 	size_t		 elemz;
 	uint16_t	*frequency;
@@ -571,11 +571,11 @@ lgpng_create_hIST_from_data(struct hIST *hist, struct PLTE *plte, uint8_t *data,
 		return(-1);
 	}
 	(void)memcpy(&(hist->type), "hIST", 4);
-	hist->length = dataz;
-	/* dataz is a series of 16-bit integers */
-	elemz = dataz / 2;
+	hist->length = length;
+	/* length is a series of 16-bit integers */
+	elemz = length / 2;
 	/* hIST mirrors the PLTE chunk so it inherits the same restrictions */
-	if (0 != dataz % 2 || 256 < elemz) {
+	if (0 != length % 2 || 256 < elemz) {
 		return(-1);
 	}
 	/* hIST should have the exact same number of entries than PLTE */
@@ -591,9 +591,9 @@ lgpng_create_hIST_from_data(struct hIST *hist, struct PLTE *plte, uint8_t *data,
 }
 
 int
-lgpng_create_pHYs_from_data(struct pHYs *phys, uint8_t *data, size_t dataz)
+lgpng_create_pHYs_from_data(struct pHYs *phys, uint8_t *data, uint32_t length)
 {
-	phys->length = dataz;
+	phys->length = length;
 	(void)memcpy(&(phys->type), "pHYs", 4);
 	(void)memcpy(&(phys->data.ppux), data, 4);
 	(void)memcpy(&(phys->data.ppuy), data + 4, 4);
@@ -604,17 +604,17 @@ lgpng_create_pHYs_from_data(struct pHYs *phys, uint8_t *data, size_t dataz)
 }
 
 int
-lgpng_create_sPLT_from_data(struct sPLT *splt, uint8_t *data, size_t dataz)
+lgpng_create_sPLT_from_data(struct sPLT *splt, uint8_t *data, uint32_t length)
 {
-	int	 offset;
+	size_t offset;
 	uint8_t	*nul;
 
-	splt->length = dataz;
+	splt->length = length;
 	(void)memcpy(&(splt->type), "sPLT", 4);
 	if (NULL == (nul = memchr(data, '\0', 80))) {
 		return(-1);
 	}
-	offset = nul - data;
+	offset = (size_t)(nul - data);
 	(void)memset(splt->data.palettename, 0, sizeof(splt->data.palettename));
 	(void)memcpy(splt->data.palettename, data, offset);
 	if (1 > offset || 79 < offset) {
@@ -630,14 +630,14 @@ lgpng_create_sPLT_from_data(struct sPLT *splt, uint8_t *data, size_t dataz)
 	}
 	offset += 1;
 	if (8 == splt->data.sampledepth) {
-		splt->data.entries = (dataz - offset) / 6;
-		if ((dataz - offset) % 6 != 0) {
+		splt->data.entries = (length - offset) / 6;
+		if ((length - offset) % 6 != 0) {
 			return(-1);
 		}
 	}
 	if (16 == splt->data.sampledepth) {
-		splt->data.entries = (dataz - offset) / 10;
-		if ((dataz - offset) % 10 != 0) {
+		splt->data.entries = (length - offset) / 10;
+		if ((length - offset) % 10 != 0) {
 			return(-1);
 		}
 	}
@@ -646,21 +646,21 @@ lgpng_create_sPLT_from_data(struct sPLT *splt, uint8_t *data, size_t dataz)
 }
 
 int
-lgpng_create_eXIf_from_data(struct eXIf *exif, uint8_t *data, size_t dataz)
+lgpng_create_eXIf_from_data(struct eXIf *exif, uint8_t *data, uint32_t length)
 {
-	exif->length = dataz;
+	exif->length = length;
 	(void)memcpy(&(exif->type), "eXIf", 4);
 	exif->data.profile = data;
 	return(0);
 }
 
 int
-lgpng_create_tIME_from_data(struct tIME *time, uint8_t *data, size_t dataz)
+lgpng_create_tIME_from_data(struct tIME *time, uint8_t *data, uint32_t length)
 {
-	if (7 != dataz) {
+	if (7 != length) {
 		return(-1);
 	}
-	time->length = dataz;
+	time->length = length;
 	(void)memcpy(&(time->type), "tIME", 4);
 	(void)memcpy(&(time->data.year), data, 2);
 	time->data.year = be16toh(time->data.year);
@@ -673,12 +673,12 @@ lgpng_create_tIME_from_data(struct tIME *time, uint8_t *data, size_t dataz)
 }
 
 int
-lgpng_create_acTL_from_data(struct acTL *actl, uint8_t *data, size_t dataz)
+lgpng_create_acTL_from_data(struct acTL *actl, uint8_t *data, uint32_t length)
 {
-	if (8 != dataz) {
+	if (8 != length) {
 		return(-1);
 	}
-	actl->length = dataz;
+	actl->length = length;
 	(void)memcpy(&(actl->type), "acTL", 4);
 	(void)memcpy(&(actl->data.num_frames), data, 4);
 	(void)memcpy(&(actl->data.num_plays), data + 4, 4);
@@ -691,12 +691,12 @@ lgpng_create_acTL_from_data(struct acTL *actl, uint8_t *data, size_t dataz)
 }
 
 int
-lgpng_create_fcTL_from_data(struct fcTL *fctl, uint8_t *data, size_t dataz)
+lgpng_create_fcTL_from_data(struct fcTL *fctl, uint8_t *data, uint32_t length)
 {
-	if (26 != dataz) {
+	if (26 != length) {
 		return(-1);
 	}
-	fctl->length = dataz;
+	fctl->length = length;
 	(void)memcpy(&(fctl->type), "fcTL", 4);
 	(void)memcpy(&(fctl->data.sequence_number), data, 4);
 	(void)memcpy(&(fctl->data.width), data + 4, 4);
@@ -727,12 +727,12 @@ lgpng_create_fcTL_from_data(struct fcTL *fctl, uint8_t *data, size_t dataz)
 }
 
 int
-lgpng_create_fdAT_from_data(struct fdAT *fdat, uint8_t *data, size_t dataz)
+lgpng_create_fdAT_from_data(struct fdAT *fdat, uint8_t *data, uint32_t length)
 {
-	if (5 > dataz) {
+	if (5 > length) {
 		return(-1);
 	}
-	fdat->length = dataz;
+	fdat->length = length;
 	(void)memcpy(&(fdat->type), "fdAT", 4);
 	(void)memcpy(&(fdat->data.sequence_number), data, 4);
 	fdat->data.sequence_number = be32toh(fdat->data.sequence_number);
@@ -741,17 +741,17 @@ lgpng_create_fdAT_from_data(struct fdAT *fdat, uint8_t *data, size_t dataz)
 }
 
 int
-lgpng_create_oFFs_from_data(struct oFFs *offs, uint8_t *data, size_t dataz)
+lgpng_create_oFFs_from_data(struct oFFs *offs, uint8_t *data, uint32_t length)
 {
-	if (5 > dataz) {
+	if (5 > length) {
 		return(-1);
 	}
-	offs->length = dataz;
+	offs->length = length;
 	(void)memcpy(&(offs->type), "oFFs", 4);
 	(void)memcpy(&(offs->data.x_position), data, 4);
 	(void)memcpy(&(offs->data.y_position), data, 4);
-	offs->data.x_position = be32toh(offs->data.x_position);
-	offs->data.y_position = be32toh(offs->data.y_position);
+	offs->data.x_position = (int32_t)be32toh(offs->data.x_position);
+	offs->data.y_position = (int32_t)be32toh(offs->data.y_position);
 	offs->data.unitspecifier = data[8];
 	if (offs->data.unitspecifier >= OFFS_UNITSPECIFIER__MAX) {
 		return(-1);
@@ -760,12 +760,12 @@ lgpng_create_oFFs_from_data(struct oFFs *offs, uint8_t *data, size_t dataz)
 }
 
 int
-lgpng_create_gIFg_from_data(struct gIFg *gifg, uint8_t *data, size_t dataz)
+lgpng_create_gIFg_from_data(struct gIFg *gifg, uint8_t *data, uint32_t length)
 {
-	if (4 > dataz) {
+	if (4 > length) {
 		return(-1);
 	}
-	gifg->length = dataz;
+	gifg->length = length;
 	(void)memcpy(&(gifg->type), "gIFg", 4);
 	gifg->data.disposal_method = data[0];
 	gifg->data.user_input = data[1];
@@ -781,12 +781,12 @@ lgpng_create_gIFg_from_data(struct gIFg *gifg, uint8_t *data, size_t dataz)
 }
 
 int
-lgpng_create_gIFx_from_data(struct gIFx *gifx, uint8_t *data, size_t dataz)
+lgpng_create_gIFx_from_data(struct gIFx *gifx, uint8_t *data, uint32_t length)
 {
-	if (dataz < 11) {
+	if (length < 11) {
 		return(-1);
 	}
-	gifx->length = dataz;
+	gifx->length = length;
 	(void)memcpy(&(gifx->type), "gIFx", 4);
 	(void)memcpy(gifx->data.identifier, data, 8);
 	(void)memcpy(gifx->data.code, data + 8, 3);
@@ -795,13 +795,16 @@ lgpng_create_gIFx_from_data(struct gIFx *gifx, uint8_t *data, size_t dataz)
 }
 
 int
-lgpng_create_sTER_from_data(struct sTER *ster, uint8_t *data, size_t dataz)
+lgpng_create_sTER_from_data(struct sTER *ster, uint8_t *data, uint32_t length)
 {
-	if (dataz != 1) {
+	if (length != 1) {
 		return(-1);
 	}
-	ster->length = dataz;
+	ster->length = length;
 	(void)memcpy(&(ster->type), "sTER", 4);
+	if (data[0] >= STER_MODE__MAX) {
+		return(-1);
+	}
 	ster->data.mode = data[0];
 	return(0);
 }

@@ -40,12 +40,12 @@ const char *orientationmap[ORIENTATION__MAX] = {
 };
 
 int
-lgpng_create_vpAg_from_data(struct vpAg *vpag, uint8_t *data, size_t dataz)
+lgpng_create_vpAg_from_data(struct vpAg *vpag, uint8_t *data, uint32_t length)
 {
-	if (9 != dataz) {
+	if (9 != length) {
 		return(-1);
 	}
-	vpag->length = dataz;
+	vpag->length = length;
 	(void)memcpy(&(vpag->type), "vpAg", 4);
 	(void)memcpy(&(vpag->data.width), data, 4);
 	(void)memcpy(&(vpag->data.height), data + 4, 4);
@@ -59,12 +59,12 @@ lgpng_create_vpAg_from_data(struct vpAg *vpag, uint8_t *data, size_t dataz)
 }
 
 int
-lgpng_create_caNv_from_data(struct caNv *canv, uint8_t *data, size_t dataz)
+lgpng_create_caNv_from_data(struct caNv *canv, uint8_t *data, uint32_t length)
 {
-	if (16 != dataz) {
+	if (16 != length) {
 		return(-1);
 	}
-	canv->length = dataz;
+	canv->length = length;
 	(void)memcpy(&(canv->type), "caNv", 4);
 	(void)memcpy(&(canv->data.width), data, 4);
 	(void)memcpy(&(canv->data.height), data + 4, 4);
@@ -72,18 +72,18 @@ lgpng_create_caNv_from_data(struct caNv *canv, uint8_t *data, size_t dataz)
 	(void)memcpy(&(canv->data.y_position), data + 12, 4);
 	canv->data.width = be32toh(canv->data.width);
 	canv->data.height = be32toh(canv->data.height);
-	canv->data.x_position = be32toh(canv->data.x_position);
-	canv->data.y_position = be32toh(canv->data.y_position);
+	canv->data.x_position = (int32_t)be32toh(canv->data.x_position);
+	canv->data.y_position = (int32_t)be32toh(canv->data.y_position);
 	return(0);
 }
 
 int
-lgpng_create_orNt_from_data(struct orNt *ornt, uint8_t *data, size_t dataz)
+lgpng_create_orNt_from_data(struct orNt *ornt, uint8_t *data, uint32_t length)
 {
-	if (1 != dataz) {
+	if (1 != length) {
 		return(-1);
 	}
-	ornt->length = dataz;
+	ornt->length = length;
 	(void)memcpy(&(ornt->type), "orNt", 4);
 	ornt->data.orientation = data[0];
 	if (ornt->data.orientation >= ORIENTATION__MAX) {
@@ -93,21 +93,21 @@ lgpng_create_orNt_from_data(struct orNt *ornt, uint8_t *data, size_t dataz)
 }
 
 int
-lgpng_create_skMf_from_data(struct skMf *skmf, uint8_t *data, size_t dataz)
+lgpng_create_skMf_from_data(struct skMf *skmf, uint8_t *data, uint32_t length)
 {
-	skmf->length = dataz;
+	skmf->length = length;
 	(void)memcpy(&(skmf->type), "skMf", 4);
 	skmf->data.json = data;
 	return(0);
 }
 
 int
-lgpng_create_skRf_from_data(struct skRf *skrf, uint8_t *data, size_t dataz)
+lgpng_create_skRf_from_data(struct skRf *skrf, uint8_t *data, uint32_t length)
 {
-	if (dataz < 16) {
+	if (length < 16) {
 		return(-1);
 	}
-	skrf->length = dataz;
+	skrf->length = length;
 	(void)memcpy(&(skrf->type), "skRf", 4);
 	(void)memcpy(&(skrf->data.header), data, 16);
 	skrf->data.data = data + 16;
@@ -147,12 +147,12 @@ const char *walv_soil_textures_map[WALV_SOIL__MAX] = {
 };
 
 int
-lgpng_create_waLV_from_data(struct waLV *walv, uint8_t *data, size_t dataz)
+lgpng_create_waLV_from_data(struct waLV *walv, uint8_t *data, uint32_t length)
 {
-	if (dataz < 40) {
+	if (length < 40) {
 		return(-1);
 	}
-	walv->length = dataz;
+	walv->length = length;
 	(void)memcpy(&(walv->type), "waLV", 4);
 	(void)memcpy(&(walv->data.land_seed), data, 4);
 	(void)memcpy(&(walv->data.object_seed), data + 4, 4);
@@ -170,26 +170,26 @@ lgpng_create_waLV_from_data(struct waLV *walv, uint8_t *data, size_t dataz)
 }
 
 int
-lgpng_create_msOG_from_data(struct msOG *msog, uint8_t *data, size_t dataz)
+lgpng_create_msOG_from_data(struct msOG *msog, uint8_t *data, uint32_t length)
 {
-	if (dataz < 11) {
+	if (length < 11) {
 		return(-1);
 	}
-	msog->length = dataz;
+	msog->length = length;
 	(void)memcpy(&(msog->type), "msOG", 4);
 	(void)memcpy(&(msog->data.header), data, 11);
-	msog->data.gifz = dataz - 11;
+	msog->data.gifz = length - 11;
 	msog->data.ptr = data + 11;
 	return(0);
 }
 
 int
-lgpng_create_tpNG_from_data(struct tpNG *tpng, uint8_t *data, size_t dataz)
+lgpng_create_tpNG_from_data(struct tpNG *tpng, uint8_t *data, uint32_t length)
 {
-	if (dataz != 8) {
+	if (length != 8) {
 		return(-1);
 	}
-	tpng->length = dataz;
+	tpng->length = length;
 	(void)memcpy(&(tpng->type), "tpNG", 4);
 	(void)memcpy(&(tpng->data.version), data, 4);
 	tpng->data.password = data[4];

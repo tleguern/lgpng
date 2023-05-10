@@ -58,8 +58,8 @@ lgpng_data_get_length(uint8_t *src, size_t srcz, uint32_t *length)
 enum lgpng_err
 lgpng_data_get_type(uint8_t *src, size_t srcz, uint8_t name[4])
 {
-	uint8_t	type[4];
-	int	err = LGPNG_OK;
+	uint8_t		type[4];
+	unsigned int	err = LGPNG_OK;
 
 	if (NULL == src) {
 		return(LGPNG_INVALID_PARAM);
@@ -111,14 +111,14 @@ lgpng_data_get_crc(uint8_t *src, size_t srcz, uint32_t *crc)
 	return(LGPNG_OK);
 }
 
-int
+size_t
 lgpng_data_write_sig(uint8_t *dest)
 {
 	(void)memcpy(dest, png_sig, sizeof(png_sig));
 	return(sizeof(png_sig));
 }
 
-int
+size_t
 lgpng_data_write_chunk(uint8_t *dest, uint32_t length, uint8_t type[4],
     uint8_t *data, uint32_t crc)
 {

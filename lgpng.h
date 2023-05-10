@@ -22,13 +22,13 @@
 #define LGPNG_H__
 
 /* Global variables */
-extern char	png_sig[8];
+extern uint8_t	png_sig[8];
 
 struct chunk {
-	uint32_t         length;
-	uint8_t		 type[4];
-	uint32_t         crc;
-	uint8_t          data[];
+	uint32_t	length; /* Actualy from 0 to LONG_MAX */
+	uint8_t		type[4];
+	uint32_t	crc;
+	uint8_t		data[];
 };
 
 /* IHDR chunk */
@@ -68,17 +68,17 @@ enum interlace_method {
 extern const char *interlacemap[INTERLACE_METHOD__MAX];
 
 struct IHDR {
-	uint32_t         length;
-	uint8_t		 type[4];
-	uint32_t         crc;
+	uint32_t	length;
+	uint8_t		type[4];
+	uint32_t	crc;
 	struct {
 		uint32_t	width;
 		uint32_t	height;
-		int8_t		bitdepth;
-		int8_t		colourtype;
-		int8_t		compression;
-		int8_t		filter;
-		int8_t		interlace;
+		uint8_t		bitdepth;
+		uint8_t		colourtype;
+		uint8_t		compression;
+		uint8_t		filter;
+		uint8_t		interlace;
 	} __attribute__((packed)) data;
 };
 
@@ -90,9 +90,9 @@ struct rgb8 {
 } __attribute__((packed));
 
 struct PLTE {
-	uint32_t         length;
-	uint8_t		 type[4];
-	uint32_t         crc;
+	uint32_t	length;
+	uint8_t		type[4];
+	uint32_t	crc;
 	struct {
 		size_t		entries;
 		struct rgb8	entry[256];
@@ -101,9 +101,9 @@ struct PLTE {
 
 /* IDAT chunk */
 struct IDAT {
-	uint32_t         length;
-	uint8_t		 type[4];
-	uint32_t         crc;
+	uint32_t	length;
+	uint8_t		type[4];
+	uint32_t	crc;
 	struct {
 		uint8_t	*data;
 	} __attribute__((packed)) data;
@@ -111,9 +111,9 @@ struct IDAT {
 
 /* tRNS chunk */
 struct tRNS {
-	uint32_t         length;
-	uint8_t		 type[4];
-	uint32_t         crc;
+	uint32_t	length;
+	uint8_t		type[4];
+	uint32_t	crc;
 	struct {
 		uint16_t	gray;
 		uint16_t	red;
@@ -126,9 +126,9 @@ struct tRNS {
 
 /* cHRM chunk */
 struct cHRM {
-	uint32_t         length;
-	uint8_t		 type[4];
-	uint32_t         crc;
+	uint32_t	length;
+	uint8_t		type[4];
+	uint32_t	crc;
 	struct {
 		uint32_t	whitex;
 		uint32_t	whitey;
@@ -143,9 +143,9 @@ struct cHRM {
 
 /* gAMA chunk */
 struct gAMA {
-	uint32_t         length;
-	uint8_t		 type[4];
-	uint32_t         crc;
+	uint32_t	length;
+	uint8_t		type[4];
+	uint32_t	crc;
 	struct {
 		uint32_t	gamma;
 	} __attribute__((packed)) data;
@@ -153,13 +153,13 @@ struct gAMA {
 
 /* iCCP chunk */
 struct iCCP {
-	uint32_t         length;
-	uint8_t		 type[4];
-	uint32_t         crc;
+	uint32_t	length;
+	uint8_t		type[4];
+	uint32_t	crc;
 	struct {
 		size_t	 namez;
 		uint8_t	 name[80];
-		int8_t	 compression;
+		uint8_t	 compression;
 		size_t	 profilez;
 		uint8_t	*profile;
 	} __attribute__((packed)) data;
@@ -167,9 +167,9 @@ struct iCCP {
 
 /* sBIT chunk */
 struct sBIT {
-	uint32_t         length;
-	uint8_t		 type[4];
-	uint32_t         crc;
+	uint32_t	length;
+	uint8_t		type[4];
+	uint32_t	crc;
 	struct {
 		uint8_t	sgreyscale;
 		uint8_t	sred;
@@ -191,9 +191,9 @@ enum rendering_intent {
 extern const char *rendering_intentmap[RENDERING_INTENT__MAX];
 
 struct sRGB {
-	uint32_t         length;
-	uint8_t		 type[4];
-	uint32_t         crc;
+	uint32_t	length;
+	uint8_t		type[4];
+	uint32_t	crc;
 	struct {
 		uint8_t		intent;
 	} __attribute__((packed)) data;
@@ -201,9 +201,9 @@ struct sRGB {
 
 /* cICP chunk */
 struct cICP {
-	uint32_t         length;
-	uint8_t		 type[4];
-	uint32_t         crc;
+	uint32_t	length;
+	uint8_t		type[4];
+	uint32_t	crc;
 	struct {
 		uint8_t	colour_primaries;
 		uint8_t	transfer_function;
@@ -214,9 +214,9 @@ struct cICP {
 
 /* tEXt chunk */
 struct tEXt {
-	uint32_t         length;
-	uint8_t		 type[4];
-	uint32_t         crc;
+	uint32_t	length;
+	uint8_t		type[4];
+	uint32_t	crc;
 	struct {
 		uint8_t	 keyword[80];
 		uint8_t	*text;
@@ -225,9 +225,9 @@ struct tEXt {
 
 /* zTXt chunk */
 struct zTXt {
-	uint32_t         length;
-	uint8_t		 type[4];
-	uint32_t         crc;
+	uint32_t	length;
+	uint8_t		type[4];
+	uint32_t	crc;
 	struct {
 		size_t		 keywordz;
 		uint8_t		 keyword[80];
@@ -245,9 +245,9 @@ struct rgb16 {
 };
 
 struct bKGD {
-	uint32_t         length;
-	uint8_t		 type[4];
-	uint32_t         crc;
+	uint32_t	length;
+	uint8_t		type[4];
+	uint32_t	crc;
 	struct {
 		uint16_t	greyscale;
 		uint8_t		paletteindex;
@@ -257,9 +257,9 @@ struct bKGD {
 
 /* hIST chunk */
 struct hIST {
-	uint32_t         length;
-	uint8_t		 type[4];
-	uint32_t         crc;
+	uint32_t	length;
+	uint8_t		type[4];
+	uint32_t	crc;
 	struct {
 		uint16_t	frequency[256];
 	} __attribute__((packed)) data;
@@ -275,9 +275,9 @@ enum unitspecifier {
 extern const char *unitspecifiermap[UNITSPECIFIER__MAX];
 
 struct pHYs {
-	uint32_t         length;
-	uint8_t		 type[4];
-	uint32_t         crc;
+	uint32_t	length;
+	uint8_t		type[4];
+	uint32_t	crc;
 	struct {
 		uint32_t	ppux;
 		uint32_t	ppuy;
@@ -307,9 +307,9 @@ struct splt_entry {
 };
 
 struct sPLT {
-	uint32_t         length;
-	uint8_t		 type[4];
-	uint32_t         crc;
+	uint32_t	length;
+	uint8_t		type[4];
+	uint32_t	crc;
 	struct {
 		char			 palettename[80];
 		uint8_t			 sampledepth;
@@ -320,9 +320,9 @@ struct sPLT {
 
 /* eXIf chunk */
 struct eXIf {
-	uint32_t         length;
-	uint8_t		 type[4];
-	uint32_t         crc;
+	uint32_t	length;
+	uint8_t		type[4];
+	uint32_t	crc;
 	struct {
 		uint8_t	*profile;
 	} __attribute__((packed)) data;
@@ -330,9 +330,9 @@ struct eXIf {
 
 /* tIME chunk */
 struct tIME {
-	uint32_t         length;
-	uint8_t		 type[4];
-	uint32_t         crc;
+	uint32_t	length;
+	uint8_t		type[4];
+	uint32_t	crc;
 	struct {
 		uint16_t	year;
 		uint8_t		month;
@@ -345,9 +345,9 @@ struct tIME {
 
 /* acTL chunk */
 struct acTL {
-	uint32_t         length;
-	uint8_t		 type[4];
-	uint32_t         crc;
+	uint32_t	length;
+	uint8_t		type[4];
+	uint32_t	crc;
 	struct {
 		uint32_t	num_frames;
 		uint32_t	num_plays;
@@ -373,9 +373,9 @@ enum blend_op {
 extern const char *blend_opmap[BLEND_OP__MAX];
 
 struct fcTL {
-	uint32_t         length;
-	uint8_t		 type[4];
-	uint32_t         crc;
+	uint32_t	length;
+	uint8_t		type[4];
+	uint32_t	crc;
 	struct {
 		uint32_t	sequence_number;
 		uint32_t	width;
@@ -392,9 +392,9 @@ struct fcTL {
 
 /* fdAT chunk */
 struct fdAT {
-	uint32_t         length;
-	uint8_t		 type[4];
-	uint32_t         crc;
+	uint32_t	length;
+	uint8_t		type[4];
+	uint32_t	crc;
 	struct {
 		uint32_t	 sequence_number;
 		uint8_t		*frame_data;
@@ -411,9 +411,9 @@ enum offs_unitspecifier {
 extern const char *offsunitspecifiermap[OFFS_UNITSPECIFIER__MAX];
 
 struct oFFs {
-	uint32_t         length;
-	uint8_t		 type[4];
-	uint32_t         crc;
+	uint32_t	length;
+	uint8_t		type[4];
+	uint32_t	crc;
 	struct {
 		int32_t	 x_position;
 		int32_t	 y_position;
@@ -446,9 +446,9 @@ enum user_input {
 extern const char *user_inputmap[USER_INPUT__MAX];
 
 struct gIFg {
-	uint32_t         length;
-	uint8_t		 type[4];
-	uint32_t         crc;
+	uint32_t	length;
+	uint8_t		type[4];
+	uint32_t	crc;
 	struct {
 		uint8_t	 	disposal_method;
 		uint8_t	 	user_input;
@@ -458,9 +458,9 @@ struct gIFg {
 
 /* gIFx chunk */
 struct gIFx {
-	uint32_t         length;
-	uint8_t		 type[4];
-	uint32_t         crc;
+	uint32_t	length;
+	uint8_t		type[4];
+	uint32_t	crc;
 	struct {
 		uint8_t	 identifier[8];
 		uint8_t	 code[3];
@@ -482,7 +482,7 @@ struct sTER {
 	uint8_t		 type[4];
 	uint32_t         crc;
 	struct {
-		int8_t	 mode;
+		uint8_t	 mode;
 	} __attribute__((packed)) data;
 };
 
@@ -495,9 +495,9 @@ enum vpag_unitspecifier {
 extern const char *vpagunitspecifiermap[VPAG_UNITSPECIFIER__MAX];
 
 struct vpAg {
-	uint32_t         length;
-	uint8_t		 type[4];
-	uint32_t         crc;
+	uint32_t	length;
+	uint8_t		type[4];
+	uint32_t	crc;
 	struct {
 		uint32_t	width;
 		uint32_t	height;
@@ -507,9 +507,9 @@ struct vpAg {
 
 /* caNv chunk */
 struct caNv {
-	uint32_t         length;
-	uint8_t		 type[4];
-	uint32_t         crc;
+	uint32_t	length;
+	uint8_t		type[4];
+	uint32_t	crc;
 	struct {
 		uint32_t	width;
 		uint32_t	height;
@@ -536,9 +536,9 @@ typedef enum
 extern const char *orientationmap[ORIENTATION__MAX];
 
 struct orNt {
-	uint32_t         length;
-	uint8_t		 type[4];
-	uint32_t         crc;
+	uint32_t	length;
+	uint8_t		type[4];
+	uint32_t	crc;
 	struct {
 		uint8_t	orientation;
 	} __attribute__((packed)) data;
@@ -546,9 +546,9 @@ struct orNt {
 
 /* skMf chunk */
 struct skMf {
-	uint32_t         length;
-	uint8_t		 type[4];
-	uint32_t         crc;
+	uint32_t	length;
+	uint8_t		type[4];
+	uint32_t	crc;
 	struct {
 		uint8_t	*json;
 	} __attribute__((packed)) data;
@@ -556,9 +556,9 @@ struct skMf {
 
 /* skRf chunk */
 struct skRf {
-	uint32_t         length;
-	uint8_t		 type[4];
-	uint32_t         crc;
+	uint32_t	length;
+	uint8_t		type[4];
+	uint32_t	crc;
 	struct {
 		uint8_t	 header[16];
 		uint8_t	*data;
@@ -650,42 +650,42 @@ struct tpNG {
 bool		lgpng_validate_keyword(uint8_t *, size_t);
 bool		lgpng_is_official_keyword(uint8_t *, size_t);
 
-int		lgpng_create_IHDR_from_data(struct IHDR *, uint8_t *, size_t);
-int		lgpng_create_PLTE_from_data(struct PLTE *, uint8_t *, size_t);
-int		lgpng_create_IDAT_from_data(struct IDAT *, uint8_t *, size_t);
-int		lgpng_create_tRNS_from_data(struct tRNS *, struct IHDR *, uint8_t *, size_t);
-int		lgpng_create_cHRM_from_data(struct cHRM *, uint8_t *, size_t);
-int		lgpng_create_gAMA_from_data(struct gAMA *, uint8_t *, size_t);
-int		lgpng_create_iCCP_from_data(struct iCCP *, uint8_t *, size_t);
-int		lgpng_create_sBIT_from_data(struct sBIT *, struct IHDR *, uint8_t *, size_t);
-int		lgpng_create_sRGB_from_data(struct sRGB *, uint8_t *, size_t);
-int		lgpng_create_cICP_from_data(struct cICP *, uint8_t *, size_t);
-/*int		lgpng_create_iTXt_from_data(struct iTXt *, uint8_t *, size_t);*/
-int		lgpng_create_tEXt_from_data(struct tEXt *, uint8_t *, size_t);
-int		lgpng_create_zTXt_from_data(struct zTXt *, uint8_t *, size_t);
-int		lgpng_create_bKGD_from_data(struct bKGD *, struct IHDR *, struct PLTE *, uint8_t *, size_t);
-int		lgpng_create_hIST_from_data(struct hIST *, struct PLTE *, uint8_t *, size_t);
-int		lgpng_create_pHYs_from_data(struct pHYs *, uint8_t *, size_t);
-int		lgpng_create_sPLT_from_data(struct sPLT *, uint8_t *, size_t);
-int		lgpng_create_eXIf_from_data(struct eXIf *, uint8_t *, size_t);
-int		lgpng_create_tIME_from_data(struct tIME *, uint8_t *, size_t);
-int		lgpng_create_acTL_from_data(struct acTL *, uint8_t *, size_t);
-int		lgpng_create_fcTL_from_data(struct fcTL *, uint8_t *, size_t);
-int		lgpng_create_fdAT_from_data(struct fdAT *, uint8_t *, size_t);
-int		lgpng_create_oFFs_from_data(struct oFFs *, uint8_t *, size_t);
-int		lgpng_create_gIFg_from_data(struct gIFg *, uint8_t *, size_t);
-int		lgpng_create_gIFx_from_data(struct gIFx *, uint8_t *, size_t);
-int		lgpng_create_sTER_from_data(struct sTER *, uint8_t *, size_t);
+int		lgpng_create_IHDR_from_data(struct IHDR *, uint8_t *, uint32_t);
+int		lgpng_create_PLTE_from_data(struct PLTE *, uint8_t *, uint32_t);
+int		lgpng_create_IDAT_from_data(struct IDAT *, uint8_t *, uint32_t);
+int		lgpng_create_tRNS_from_data(struct tRNS *, struct IHDR *, uint8_t *, uint32_t);
+int		lgpng_create_cHRM_from_data(struct cHRM *, uint8_t *, uint32_t);
+int		lgpng_create_gAMA_from_data(struct gAMA *, uint8_t *, uint32_t);
+int		lgpng_create_iCCP_from_data(struct iCCP *, uint8_t *, uint32_t);
+int		lgpng_create_sBIT_from_data(struct sBIT *, struct IHDR *, uint8_t *, uint32_t);
+int		lgpng_create_sRGB_from_data(struct sRGB *, uint8_t *, uint32_t);
+int		lgpng_create_cICP_from_data(struct cICP *, uint8_t *, uint32_t);
+/*int		lgpng_create_iTXt_from_data(struct iTXt *, uint8_t *, uint32_t);*/
+int		lgpng_create_tEXt_from_data(struct tEXt *, uint8_t *, uint32_t);
+int		lgpng_create_zTXt_from_data(struct zTXt *, uint8_t *, uint32_t);
+int		lgpng_create_bKGD_from_data(struct bKGD *, struct IHDR *, struct PLTE *, uint8_t *, uint32_t);
+int		lgpng_create_hIST_from_data(struct hIST *, struct PLTE *, uint8_t *, uint32_t);
+int		lgpng_create_pHYs_from_data(struct pHYs *, uint8_t *, uint32_t);
+int		lgpng_create_sPLT_from_data(struct sPLT *, uint8_t *, uint32_t);
+int		lgpng_create_eXIf_from_data(struct eXIf *, uint8_t *, uint32_t);
+int		lgpng_create_tIME_from_data(struct tIME *, uint8_t *, uint32_t);
+int		lgpng_create_acTL_from_data(struct acTL *, uint8_t *, uint32_t);
+int		lgpng_create_fcTL_from_data(struct fcTL *, uint8_t *, uint32_t);
+int		lgpng_create_fdAT_from_data(struct fdAT *, uint8_t *, uint32_t);
+int		lgpng_create_oFFs_from_data(struct oFFs *, uint8_t *, uint32_t);
+int		lgpng_create_gIFg_from_data(struct gIFg *, uint8_t *, uint32_t);
+int		lgpng_create_gIFx_from_data(struct gIFx *, uint8_t *, uint32_t);
+int		lgpng_create_sTER_from_data(struct sTER *, uint8_t *, uint32_t);
 
 /* chunks_extra */
-int		lgpng_create_vpAg_from_data(struct vpAg *, uint8_t *, size_t);
-int		lgpng_create_caNv_from_data(struct caNv *, uint8_t *, size_t);
-int		lgpng_create_orNt_from_data(struct orNt *, uint8_t *, size_t);
-int		lgpng_create_skMf_from_data(struct skMf *, uint8_t *, size_t);
-int		lgpng_create_skRf_from_data(struct skRf *, uint8_t *, size_t);
-int		lgpng_create_waLV_from_data(struct waLV *, uint8_t *, size_t);
-int		lgpng_create_msOG_from_data(struct msOG *, uint8_t *, size_t);
-int		lgpng_create_tpNG_from_data(struct tpNG *, uint8_t *, size_t);
+int		lgpng_create_vpAg_from_data(struct vpAg *, uint8_t *, uint32_t);
+int		lgpng_create_caNv_from_data(struct caNv *, uint8_t *, uint32_t);
+int		lgpng_create_orNt_from_data(struct orNt *, uint8_t *, uint32_t);
+int		lgpng_create_skMf_from_data(struct skMf *, uint8_t *, uint32_t);
+int		lgpng_create_skRf_from_data(struct skRf *, uint8_t *, uint32_t);
+int		lgpng_create_waLV_from_data(struct waLV *, uint8_t *, uint32_t);
+int		lgpng_create_msOG_from_data(struct msOG *, uint8_t *, uint32_t);
+int		lgpng_create_tpNG_from_data(struct tpNG *, uint8_t *, uint32_t);
 
 enum lgpng_err {
 	LGPNG_OK = 0,
@@ -702,8 +702,8 @@ enum lgpng_err	lgpng_data_get_length(uint8_t *, size_t, uint32_t *);
 enum lgpng_err	lgpng_data_get_type(uint8_t *, size_t, uint8_t [4]);
 enum lgpng_err	lgpng_data_get_data(uint8_t *, size_t, uint32_t, uint8_t **);
 enum lgpng_err	lgpng_data_get_crc(uint8_t *, size_t, uint32_t *);
-int		lgpng_data_write_sig(uint8_t *);
-int		lgpng_data_write_chunk(uint8_t *, uint32_t, uint8_t [4], uint8_t *, uint32_t);
+size_t		lgpng_data_write_sig(uint8_t *);
+size_t		lgpng_data_write_chunk(uint8_t *, uint32_t, uint8_t [4], uint8_t *, uint32_t);
 
 /* stream */
 enum lgpng_err	lgpng_stream_is_png(FILE *);

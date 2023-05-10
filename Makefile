@@ -3,7 +3,8 @@
 
 include Makefile.configure
 
-CFLAGS+= -Wpointer-sign -Wtype-limits -Wunused-function
+CFLAGS+= -Wpointer-sign -Wtype-limits -Wunused-function -Wconversion
+CFLAGS+= -fsanitize-trap=undefined
 CFLAGS+= -I. -std=c99
 
 SRCS =  lgpng_chunks.c \

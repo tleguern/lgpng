@@ -59,8 +59,8 @@ lgpng_stream_get_length(FILE *src, uint32_t *length)
 enum lgpng_err
 lgpng_stream_get_type(FILE *src, uint8_t name[4])
 {
-	uint8_t	type[4];
-	int	err = LGPNG_OK;
+	uint8_t		type[4];
+	unsigned int	err = LGPNG_OK;
 
 	if (NULL == src) {
 		return(LGPNG_INVALID_PARAM);

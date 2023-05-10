@@ -33,7 +33,8 @@ void usage(void);
 int
 main(int argc, char *argv[])
 {
-	int		 ch, oflag = 0;
+	int		 ch;
+	uint8_t	 	 oflag = 0;
 	long		 offset;
 	bool		 dflag = false, sflag = false;
 	bool		 loopexit = false;
@@ -54,7 +55,7 @@ main(int argc, char *argv[])
 			}
 			break;
 		case 'o':
-			if (0 == (oflag = strtonum(optarg, 1, 256, &errstr))) {
+			if (0 == (oflag = (uint8_t)strtonum(optarg, 1, 255, &errstr))) {
 				fprintf(stderr, "value is %s -- b\n", errstr);
 				return(EXIT_FAILURE);
 			}

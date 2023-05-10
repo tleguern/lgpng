@@ -33,38 +33,38 @@ void usage(void);
 int  info_zlib(uint8_t, uint8_t, uint8_t [4]);
 void info_IHDR(struct IHDR *);
 void info_PLTE(struct PLTE *);
-void info_IDAT(uint8_t *, size_t, int);
-void info_tRNS(struct IHDR *, struct PLTE *, uint8_t *, size_t);
-void info_cHRM(uint8_t *, size_t);
-void info_gAMA(uint8_t *, size_t);
-void info_iCCP(uint8_t *, size_t);
-void info_sBIT(struct IHDR *, uint8_t *, size_t);
-void info_sRGB(uint8_t *, size_t);
-void info_cICP(uint8_t *, size_t);
-void info_tEXt(uint8_t *, size_t);
-void info_zTXt(uint8_t *, size_t);
-void info_bKGD(struct IHDR *, struct PLTE *, uint8_t *, size_t);
-void info_hIST(struct PLTE *, uint8_t *, size_t);
-void info_pHYs(uint8_t *, size_t);
-void info_sPLT(uint8_t *, size_t);
-void info_eXIf(uint8_t *, size_t);
-void info_tIME(uint8_t *, size_t);
-void info_acTL(uint8_t *, size_t);
-void info_fcTL(uint8_t *, size_t);
-void info_fdAT(uint8_t *, size_t);
-void info_oFFs(uint8_t *, size_t);
-void info_gIFg(uint8_t *, size_t);
-void info_gIFx(uint8_t *, size_t);
-void info_sTER(uint8_t *, size_t);
-void info_vpAg(uint8_t *, size_t);
-void info_caNv(uint8_t *, size_t);
-void info_orNt(uint8_t *, size_t);
-void info_skMf(uint8_t *, size_t);
-void info_skRf(uint8_t *, size_t);
-void info_waLV(uint8_t *, size_t);
-void info_msOG(uint8_t *, size_t);
-void info_tpNG(uint8_t *, size_t);
-void info_unknown(uint8_t [4], uint8_t *, size_t);
+void info_IDAT(uint8_t *, uint32_t, int);
+void info_tRNS(struct IHDR *, struct PLTE *, uint8_t *, uint32_t);
+void info_cHRM(uint8_t *, uint32_t);
+void info_gAMA(uint8_t *, uint32_t);
+void info_iCCP(uint8_t *, uint32_t);
+void info_sBIT(struct IHDR *, uint8_t *, uint32_t);
+void info_sRGB(uint8_t *, uint32_t);
+void info_cICP(uint8_t *, uint32_t);
+void info_tEXt(uint8_t *, uint32_t);
+void info_zTXt(uint8_t *, uint32_t);
+void info_bKGD(struct IHDR *, struct PLTE *, uint8_t *, uint32_t);
+void info_hIST(struct PLTE *, uint8_t *, uint32_t);
+void info_pHYs(uint8_t *, uint32_t);
+void info_sPLT(uint8_t *, uint32_t);
+void info_eXIf(uint8_t *, uint32_t);
+void info_tIME(uint8_t *, uint32_t);
+void info_acTL(uint8_t *, uint32_t);
+void info_fcTL(uint8_t *, uint32_t);
+void info_fdAT(uint8_t *, uint32_t);
+void info_oFFs(uint8_t *, uint32_t);
+void info_gIFg(uint8_t *, uint32_t);
+void info_gIFx(uint8_t *, uint32_t);
+void info_sTER(uint8_t *, uint32_t);
+void info_vpAg(uint8_t *, uint32_t);
+void info_caNv(uint8_t *, uint32_t);
+void info_orNt(uint8_t *, uint32_t);
+void info_skMf(uint8_t *, uint32_t);
+void info_skRf(uint8_t *, uint32_t);
+void info_waLV(uint8_t *, uint32_t);
+void info_msOG(uint8_t *, uint32_t);
+void info_tpNG(uint8_t *, uint32_t);
+void info_unknown(uint8_t [4], uint8_t *, uint32_t);
 
 int
 main(int argc, char *argv[])
@@ -128,7 +128,7 @@ main(int argc, char *argv[])
 	}
 
 	do {
-		int		 err;
+		unsigned int	 err;
 		uint32_t	 length = 0, chunk_crc = 0, calc_crc = 0;
 		uint8_t		*data = NULL;
 		uint8_t		 current_chunk[4] = {0, 0, 0, 0};
@@ -419,7 +419,7 @@ info_PLTE(struct PLTE *plte)
 }
 
 void
-info_IDAT(uint8_t *data, size_t dataz, int idatnum)
+info_IDAT(uint8_t *data, uint32_t dataz, int idatnum)
 {
 	struct IDAT	 idat;
 
@@ -431,7 +431,7 @@ info_IDAT(uint8_t *data, size_t dataz, int idatnum)
 }
 
 void
-info_tRNS(struct IHDR *ihdr, struct PLTE *plte, uint8_t *data, size_t dataz)
+info_tRNS(struct IHDR *ihdr, struct PLTE *plte, uint8_t *data, uint32_t dataz)
 {
 	struct tRNS trns;
 
@@ -463,7 +463,7 @@ info_tRNS(struct IHDR *ihdr, struct PLTE *plte, uint8_t *data, size_t dataz)
 }
 
 void
-info_cHRM(uint8_t *data, size_t dataz)
+info_cHRM(uint8_t *data, uint32_t dataz)
 {
 	double 		whitex, whitey;
 	double		redx, redy;
@@ -494,7 +494,7 @@ info_cHRM(uint8_t *data, size_t dataz)
 }
 
 void
-info_gAMA(uint8_t *data, size_t dataz)
+info_gAMA(uint8_t *data, uint32_t dataz)
 {
 	struct gAMA	gama;
 
@@ -506,7 +506,7 @@ info_gAMA(uint8_t *data, size_t dataz)
 }
 
 void
-info_iCCP(uint8_t *data, size_t dataz)
+info_iCCP(uint8_t *data, uint32_t dataz)
 {
 	struct iCCP		 iccp;
 
@@ -521,7 +521,7 @@ info_iCCP(uint8_t *data, size_t dataz)
 }
 
 void
-info_sBIT(struct IHDR *ihdr, uint8_t *data, size_t dataz)
+info_sBIT(struct IHDR *ihdr, uint8_t *data, uint32_t dataz)
 {
 	struct sBIT sbit;
 
@@ -552,7 +552,7 @@ info_sBIT(struct IHDR *ihdr, uint8_t *data, size_t dataz)
 }
 
 void
-info_sRGB(uint8_t *data, size_t dataz)
+info_sRGB(uint8_t *data, uint32_t dataz)
 {
 	struct sRGB srgb;
 
@@ -569,7 +569,7 @@ info_sRGB(uint8_t *data, size_t dataz)
 }
 
 void
-info_cICP(uint8_t *data, size_t dataz)
+info_cICP(uint8_t *data, uint32_t dataz)
 {
 	struct cICP cicp;
 
@@ -584,7 +584,7 @@ info_cICP(uint8_t *data, size_t dataz)
 }
 
 void
-info_tEXt(uint8_t *data, size_t dataz)
+info_tEXt(uint8_t *data, uint32_t dataz)
 {
 	struct tEXt	text;
 
@@ -602,9 +602,10 @@ info_tEXt(uint8_t *data, size_t dataz)
 }
 
 void
-info_zTXt(uint8_t *data, size_t dataz)
+info_zTXt(uint8_t *data, uint32_t dataz)
 {
-	int		 retry = 2, zret;
+	unsigned int	 retry = 2;
+	int		 zret;
 	size_t		 outz, outtmpz;
 	struct zTXt	 ztxt;
 	uint8_t		*out = NULL, *outtmp = NULL;
@@ -654,7 +655,7 @@ error:
 }
 
 void
-info_bKGD(struct IHDR *ihdr, struct PLTE *plte, uint8_t *data, size_t dataz)
+info_bKGD(struct IHDR *ihdr, struct PLTE *plte, uint8_t *data, uint32_t dataz)
 {
 	struct bKGD bkgd;
 
@@ -711,7 +712,7 @@ info_bKGD(struct IHDR *ihdr, struct PLTE *plte, uint8_t *data, size_t dataz)
 }
 
 void
-info_hIST(struct PLTE *plte, uint8_t *data, size_t dataz)
+info_hIST(struct PLTE *plte, uint8_t *data, uint32_t dataz)
 {
 	struct hIST hist;
 
@@ -726,7 +727,7 @@ info_hIST(struct PLTE *plte, uint8_t *data, size_t dataz)
 }
 
 void
-info_pHYs(uint8_t *data, size_t dataz)
+info_pHYs(uint8_t *data, uint32_t dataz)
 {
 	struct pHYs phys;
 
@@ -741,7 +742,7 @@ info_pHYs(uint8_t *data, size_t dataz)
 }
 
 void
-info_sPLT(uint8_t *data, size_t dataz)
+info_sPLT(uint8_t *data, uint32_t dataz)
 {
 	struct sPLT splt;
 
@@ -755,7 +756,7 @@ info_sPLT(uint8_t *data, size_t dataz)
 }
 
 void
-info_eXIf(uint8_t *data, size_t dataz)
+info_eXIf(uint8_t *data, uint32_t dataz)
 {
 	struct eXIf exif;
 	uint8_t little_endian[4] = { 73, 73, 42, 0};
@@ -772,7 +773,7 @@ info_eXIf(uint8_t *data, size_t dataz)
 }
 
 void
-info_tIME(uint8_t *data, size_t dataz)
+info_tIME(uint8_t *data, uint32_t dataz)
 {
 	struct tIME time;
 
@@ -801,7 +802,7 @@ info_tIME(uint8_t *data, size_t dataz)
 }
 
 void
-info_acTL(uint8_t *data, size_t dataz)
+info_acTL(uint8_t *data, uint32_t dataz)
 {
 	struct acTL actl;
 
@@ -818,7 +819,7 @@ info_acTL(uint8_t *data, size_t dataz)
 }
 
 void
-info_fcTL(uint8_t *data, size_t dataz)
+info_fcTL(uint8_t *data, uint32_t dataz)
 {
 	struct fcTL fctl;
 
@@ -838,7 +839,7 @@ info_fcTL(uint8_t *data, size_t dataz)
 }
 
 void
-info_fdAT(uint8_t *data, size_t dataz)
+info_fdAT(uint8_t *data, uint32_t dataz)
 {
 	struct fdAT fdat;
 
@@ -850,7 +851,7 @@ info_fdAT(uint8_t *data, size_t dataz)
 }
 
 void
-info_oFFs(uint8_t *data, size_t dataz)
+info_oFFs(uint8_t *data, uint32_t dataz)
 {
 	struct oFFs offs;
 
@@ -864,7 +865,7 @@ info_oFFs(uint8_t *data, size_t dataz)
 }
 
 void
-info_gIFg(uint8_t *data, size_t dataz)
+info_gIFg(uint8_t *data, uint32_t dataz)
 {
 	struct gIFg gifg;
 
@@ -878,7 +879,7 @@ info_gIFg(uint8_t *data, size_t dataz)
 }
 
 void
-info_gIFx(uint8_t *data, size_t dataz)
+info_gIFx(uint8_t *data, uint32_t dataz)
 {
 	struct gIFx	gifx;
 
@@ -901,7 +902,7 @@ info_gIFx(uint8_t *data, size_t dataz)
 }
 
 void
-info_sTER(uint8_t *data, size_t dataz)
+info_sTER(uint8_t *data, uint32_t dataz)
 {
 	struct sTER	ster;
 
@@ -917,7 +918,7 @@ info_sTER(uint8_t *data, size_t dataz)
 }
 
 void
-info_vpAg(uint8_t *data, size_t dataz)
+info_vpAg(uint8_t *data, uint32_t dataz)
 {
 	struct vpAg vpag;
 
@@ -932,7 +933,7 @@ info_vpAg(uint8_t *data, size_t dataz)
 
 
 void
-info_caNv(uint8_t *data, size_t dataz)
+info_caNv(uint8_t *data, uint32_t dataz)
 {
 	struct caNv canv;
 
@@ -947,7 +948,7 @@ info_caNv(uint8_t *data, size_t dataz)
 }
 
 void
-info_orNt(uint8_t *data, size_t dataz)
+info_orNt(uint8_t *data, uint32_t dataz)
 {
 	struct orNt ornt;
 
@@ -959,7 +960,7 @@ info_orNt(uint8_t *data, size_t dataz)
 }
 
 void
-info_skMf(uint8_t *data, size_t dataz)
+info_skMf(uint8_t *data, uint32_t dataz)
 {
 	struct skMf skmf;
 
@@ -971,7 +972,7 @@ info_skMf(uint8_t *data, size_t dataz)
 }
 
 void
-info_skRf(uint8_t *data, size_t dataz)
+info_skRf(uint8_t *data, uint32_t dataz)
 {
 	struct skRf skrf;
 
@@ -989,7 +990,7 @@ info_skRf(uint8_t *data, size_t dataz)
 }
 
 void
-info_waLV(uint8_t *data, size_t dataz)
+info_waLV(uint8_t *data, uint32_t dataz)
 {
 	struct waLV walv;
 
@@ -1038,7 +1039,7 @@ info_waLV(uint8_t *data, size_t dataz)
 }
 
 void
-info_msOG(uint8_t *data, size_t dataz)
+info_msOG(uint8_t *data, uint32_t dataz)
 {
 	struct msOG msog;
 
@@ -1051,7 +1052,7 @@ info_msOG(uint8_t *data, size_t dataz)
 }
 
 void
-info_tpNG(uint8_t *data, size_t dataz)
+info_tpNG(uint8_t *data, uint32_t dataz)
 {
 	struct tpNG tpng;
 
@@ -1069,10 +1070,10 @@ info_tpNG(uint8_t *data, size_t dataz)
 
 
 void
-info_unknown(uint8_t name[4], uint8_t *data, size_t dataz)
+info_unknown(uint8_t name[4], uint8_t *data, uint32_t dataz)
 {
 	(void)data;
-	printf("%.4s: bytes %zu\n", name, dataz);
+	printf("%.4s: bytes %u\n", name, dataz);
 }
 
 void
