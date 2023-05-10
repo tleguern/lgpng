@@ -3,6 +3,7 @@ image: debian/stable
 packages:
   - gcc
   - zlib1g-dev
+  - bmake
 sources:
   - https://git.sr.ht/~tleguern/lgpng
 tasks:
@@ -11,7 +12,7 @@ tasks:
       ./configure
   - build: |
       cd lgpng
-      make
+      bmake
   - regress: |
       cd lgpng
-      make regress
+      bmake regress
