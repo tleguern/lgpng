@@ -1,11 +1,14 @@
-# pnginfo
+# lgpng
 
-The pnginfo utility explores the content of PNG files.
+The lgpng library allows to explore the PNG file format.
+It is not (for now) intended to actually decode the pixels to display an image.
+
+Some utilities using lgpng are provided in this repository.
 
 ## Contents
 
 1. [Install](#install)
-2. [Instructions](#instruction)
+2. [pnginfo](#pnginfo)
 3. [License](#license)
 
 ## Install
@@ -13,6 +16,7 @@ The pnginfo utility explores the content of PNG files.
 #### Requires
 
 * C compiler ;
+* zlib.
 
 ### Build
 
@@ -26,9 +30,15 @@ Alternatively install in your `$HOME/bin`:
     $ make
     $ make install
 
-## Instructions
+### Tests
 
-It is possible to list the chunks in a given PNG file or to request the content of a specific chunk.
+A few regression tests are available when invoking the command:
+
+    $ make regress
+
+## pnginfo
+
+It is possible to list the chunks in a given PNG file or to request the details of a specific chunk.
 
 Examples:
 
@@ -46,10 +56,8 @@ IHDR: colourtype: truecolour
 IHDR: compression: deflate
 IHDR: filter: adaptive
 IHDR: interlace method: standard
-$ pnginfo -f lena.png -c sRGB
+$ cat lena.ong | pnginfo -c sRGB
 sRGB: rendering intent: perceptual
-$ pnginfo -f lena.png -c sRGB -d | xxd
-00000000: 00
 ```
 
 Here is a list of supported chunks:
@@ -85,11 +93,18 @@ Here is a list of supported chunks:
   * vpAg
   * caNv
   * orNt
+  * skMf
+  * skRf
 
 Unknown chunks can still be listed and queried but only very basic informations will be displayed.
 
 The `-s` option can be handy if garbage is placed at the beginning of a file. `pnginfo -s` will try to skip said garbage until it finds an acceptable PNG signature.
 
+Example:
+
+```sh
+$ curl https://example.org/file.png | pnginfo -s -l
+```
 ## License
 
 All the code is licensed under the ISC License.
