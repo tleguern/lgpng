@@ -60,7 +60,7 @@ void info_caNv(uint8_t *, size_t);
 void info_orNt(uint8_t *, size_t);
 void info_skMf(uint8_t *, size_t);
 void info_skRf(uint8_t *, size_t);
-void info_unknown(uint8_t [5], uint8_t *, size_t);
+void info_unknown(uint8_t [4], uint8_t *, size_t);
 
 int
 main(int argc, char *argv[])
@@ -950,10 +950,10 @@ info_skRf(uint8_t *data, size_t dataz)
 }
 
 void
-info_unknown(uint8_t name[5], uint8_t *data, size_t dataz)
+info_unknown(uint8_t name[4], uint8_t *data, size_t dataz)
 {
 	(void)data;
-	printf("%s: bytes %zu\n", name, dataz);
+	printf("%.4s: bytes %zu\n", name, dataz);
 }
 
 void
