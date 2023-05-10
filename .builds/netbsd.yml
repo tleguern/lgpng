@@ -1,11 +1,14 @@
 ---
 image: netbsd/latest
 sources:
-  - https://git.sr.ht/~tleguern/pnginfo
+  - https://git.sr.ht/~tleguern/lgpng
 tasks:
   - setup: |
-      cd pnginfo
+      cd lgpng
       ./configure
   - build: |
-      cd pnginfo
+      cd lgpng
       make
+  - regress: |
+      cd lgpng
+      make regress
