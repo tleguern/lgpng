@@ -14,7 +14,9 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include <endian.h>
+#include "config.h"
+
+#include COMPAT_ENDIAN_H
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
