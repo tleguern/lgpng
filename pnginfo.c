@@ -61,6 +61,8 @@ void info_orNt(uint8_t *, size_t);
 void info_skMf(uint8_t *, size_t);
 void info_skRf(uint8_t *, size_t);
 void info_waLV(uint8_t *, size_t);
+void info_msOG(uint8_t *, size_t);
+void info_tpNG(uint8_t *, size_t);
 void info_unknown(uint8_t [4], uint8_t *, size_t);
 
 int
@@ -258,6 +260,10 @@ main(int argc, char *argv[])
 					info_skRf(data, length);
 				} else if (0 == memcmp(current_chunk, "waLV", 4)) {
 					info_waLV(data, length);
+				} else if (0 == memcmp(current_chunk, "msOG", 4)) {
+					info_msOG(data, length);
+				} else if (0 == memcmp(current_chunk, "tpNG", 4)) {
+					info_tpNG(data, length);
 
 				} else {
 					info_unknown(current_chunk, data, length);
@@ -1000,6 +1006,35 @@ info_waLV(uint8_t *data, size_t dataz)
 		printf("waLV: water colour: blue\n");
 	}
 	printf("waLV: worm places: %u\n", walv.data.worm_places);
+}
+
+void
+info_msOG(uint8_t *data, size_t dataz)
+{
+	struct msOG msog;
+
+	if (-1 == lgpng_create_msOG_from_data(&msog, data, dataz)) {
+		warnx("Bad msOG chunk, skipping.");
+		return;
+	}
+	printf("msOG: header: %.11s\n", msog.data.header);
+	printf("msOG: embeded GIF image size: %zu bytes\n", msog.data.gifz);
+}
+
+void
+info_tpNG(uint8_t *data, size_t dataz)
+{
+	struct tpNG tpng;
+
+	if (-1 == lgpng_create_tpNG_from_data(&tpng, data, dataz)) {
+		warnx("Bad tpNG chunk, skipping.");
+		return;
+	}
+	printf("tpNG: version: %.4s\n", tpng.data.version);
+	if (tpng.data.unused[0] != 0 || tpng.data.unused[1] != 0
+	    || tpng.data.unused[2] != 0 || tpng.data.unused[3] != 0) {
+		warnx("tpNG: data in the unused portion");
+	}
 }
 
 

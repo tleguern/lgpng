@@ -169,3 +169,30 @@ lgpng_create_waLV_from_data(struct waLV *walv, uint8_t *data, size_t dataz)
 	return(0);
 }
 
+int
+lgpng_create_msOG_from_data(struct msOG *msog, uint8_t *data, size_t dataz)
+{
+	if (dataz < 11) {
+		return(-1);
+	}
+	msog->length = dataz;
+	(void)memcpy(&(msog->type), "msOG", 4);
+	(void)memcpy(&(msog->data.header), data, 11);
+	msog->data.gifz = dataz - 11;
+	msog->data.ptr = data + 11;
+	return(0);
+}
+
+int
+lgpng_create_tpNG_from_data(struct tpNG *tpng, uint8_t *data, size_t dataz)
+{
+	if (dataz != 8) {
+		return(-1);
+	}
+	tpng->length = dataz;
+	(void)memcpy(&(tpng->type), "tpNG", 4);
+	(void)memcpy(&(tpng->data.version), data, 4);
+	(void)memcpy(&(tpng->data.unused), data + 4, 4);
+	return(0);
+}
+

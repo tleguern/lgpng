@@ -603,6 +603,29 @@ struct waLV {
 	} __attribute__((packed)) data;
 };
 
+/* msOG chunk */
+struct msOG {
+	uint32_t         length;
+	uint8_t		 type[4];
+	uint32_t         crc;
+	struct {
+		uint8_t	 header[11];
+		size_t	 gifz;
+		uint8_t	*ptr;
+	} __attribute__((packed)) data;
+};
+
+/* tpNG chunk */
+struct tpNG {
+	uint32_t         length;
+	uint8_t		 type[4];
+	uint32_t         crc;
+	struct {
+		uint8_t	 version[4];
+		uint8_t	 unused[4];
+	} __attribute__((packed)) data;
+};
+
 /* chunks */
 bool		lgpng_validate_keyword(uint8_t *, size_t);
 bool		lgpng_is_official_keyword(uint8_t *, size_t);
@@ -640,6 +663,8 @@ int		lgpng_create_orNt_from_data(struct orNt *, uint8_t *, size_t);
 int		lgpng_create_skMf_from_data(struct skMf *, uint8_t *, size_t);
 int		lgpng_create_skRf_from_data(struct skRf *, uint8_t *, size_t);
 int		lgpng_create_waLV_from_data(struct waLV *, uint8_t *, size_t);
+int		lgpng_create_msOG_from_data(struct msOG *, uint8_t *, size_t);
+int		lgpng_create_tpNG_from_data(struct tpNG *, uint8_t *, size_t);
 
 /* data */
 bool	lgpng_data_is_png(uint8_t *, size_t);
