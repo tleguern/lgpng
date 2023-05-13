@@ -60,6 +60,7 @@ void info_caNv(uint8_t *, size_t);
 void info_orNt(uint8_t *, size_t);
 void info_skMf(uint8_t *, size_t);
 void info_skRf(uint8_t *, size_t);
+void info_waLV(uint8_t *, size_t);
 void info_unknown(uint8_t [4], uint8_t *, size_t);
 
 int
@@ -255,6 +256,9 @@ main(int argc, char *argv[])
 					info_skMf(data, length);
 				} else if (0 == memcmp(current_chunk, "skRf", 4)) {
 					info_skRf(data, length);
+				} else if (0 == memcmp(current_chunk, "waLV", 4)) {
+					info_waLV(data, length);
+
 				} else {
 					info_unknown(current_chunk, data, length);
 				}
@@ -948,6 +952,56 @@ info_skRf(uint8_t *data, size_t dataz)
 	    skrf.data.header[13], skrf.data.header[14], skrf.data.header[15]);
 	printf("skRf: embeded PNG image size: %u bytes\n", skrf.length - 16);
 }
+
+void
+info_waLV(uint8_t *data, size_t dataz)
+{
+	struct waLV walv;
+
+	if (-1 == lgpng_create_waLV_from_data(&walv, data, dataz)) {
+		warnx("Bad skRf chunk, skipping.");
+		return;
+	}
+	printf("waLV: land seed: %u\n", walv.data.land_seed);
+	printf("waLV: object seed: %u\n", walv.data.object_seed);
+	if (0 == walv.data.cavern) {
+		printf("waLV: cavern: no\n");
+	} else {
+		printf("waLV: cavern: yes\n");
+	}
+	printf("waLV: style: %d\n", walv.data.style);
+	if (0 == walv.data.borders) {
+		printf("waLV: indestructible borders: yes\n");
+	} else {
+		printf("waLV: indestructible borders: no\n");
+	}
+	if (walv.data.object_percent > 99) {
+		warnx("waLV: invalid object percentage");
+	}
+	printf("waLV: object percentage: %u%%\n", walv.data.object_percent);
+	if (walv.data.bridge_percent > 99) {
+		warnx("waLV: invalid bridge percentage");
+	}
+	printf("waLV: bridge percentage: %u%%\n", walv.data.bridge_percent);
+	if (walv.data.water_level > 99) {
+		warnx("waLV: invalid water level");
+	}
+	printf("waLV: water level: %u%%\n", walv.data.water_level);
+	if (walv.data.soil_texture_idx > 28) {
+		warnx("waLV: invalid soil texture index (%u)",
+		    walv.data.soil_texture_idx);
+	} else {
+		printf("waLV: soil texture: %s\n", walv_soil_textures_map[walv.data.soil_texture_idx]);
+	}
+	if (walv.data.water_colour != 0) {
+		printf("waLV: water colour: unknown (%u)\n",
+		    walv.data.water_colour);
+	} else {
+		printf("waLV: water colour: blue\n");
+	}
+	printf("waLV: worm places: %u\n", walv.data.worm_places);
+}
+
 
 void
 info_unknown(uint8_t name[4], uint8_t *data, size_t dataz)

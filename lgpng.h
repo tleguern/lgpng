@@ -547,6 +547,62 @@ struct skRf {
 	} __attribute__((packed)) data;
 };
 
+/* waLV chunk */
+typedef enum
+{
+	WALV_SOIL_ART,
+	WALV_SOIL_CHEESE,
+	WALV_SOIL_CLASSIC_BEACH,
+	WALV_SOIL_CLASSIC_DESERT,
+	WALV_SOIL_CLASSIC_FARM,
+	WALV_SOIL_CLASSIC_FOREST,
+	WALV_SOIL_CLASSIC_HELL,
+	WALV_SOIL_CONSTRUCTION,
+	WALV_SOIL_DESERT,
+	WALV_SOIL_DUNGEON,
+	WALV_SOIL_EASTER,
+	WALV_SOIL_FOREST,
+	WALV_SOIL_FRUIT,
+	WALV_SOIL_GULF,
+	WALV_SOIL_HELL,
+	WALV_SOIL_HOSPITAL,
+	WALV_SOIL_JUNGLE,
+	WALV_SOIL_MANHATTAN,
+	WALV_SOIL_MEDIEVAL,
+	WALV_SOIL_MUSIC,
+	WALV_SOIL_PIRATE,
+	WALV_SOIL_SNOW,
+	WALV_SOIL_SPACE,
+	WALV_SOIL_SPORTS,
+	WALV_SOIL_TENTACLE,
+	WALV_SOIL_TIME,
+	WALV_SOIL_TOOLS,
+	WALV_SOIL_TRIBAL,
+	WALV_SOIL_URBAN,
+	WALV_SOIL__MAX,
+} walv_soil_textures;
+
+extern const char *walv_soil_textures_map[WALV_SOIL__MAX];
+
+struct waLV {
+	uint32_t         length;
+	uint8_t		 type[4];
+	uint32_t         crc;
+	struct {
+		uint32_t	land_seed;
+		uint32_t	object_seed;
+		uint32_t	cavern;
+		int32_t		style; /* can be -1 */
+		uint32_t	borders;
+		uint32_t	object_percent;
+		uint32_t	bridge_percent;
+		uint32_t	water_level;
+		uint32_t	soil_texture_idx;
+		uint32_t	water_colour;
+		uint8_t		worm_places;
+	} __attribute__((packed)) data;
+};
+
 /* chunks */
 bool		lgpng_validate_keyword(uint8_t *, size_t);
 bool		lgpng_is_official_keyword(uint8_t *, size_t);
@@ -583,6 +639,7 @@ int		lgpng_create_caNv_from_data(struct caNv *, uint8_t *, size_t);
 int		lgpng_create_orNt_from_data(struct orNt *, uint8_t *, size_t);
 int		lgpng_create_skMf_from_data(struct skMf *, uint8_t *, size_t);
 int		lgpng_create_skRf_from_data(struct skRf *, uint8_t *, size_t);
+int		lgpng_create_waLV_from_data(struct waLV *, uint8_t *, size_t);
 
 /* data */
 bool	lgpng_data_is_png(uint8_t *, size_t);

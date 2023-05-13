@@ -114,3 +114,58 @@ lgpng_create_skRf_from_data(struct skRf *skrf, uint8_t *data, size_t dataz)
 	return(0);
 }
 
+const char *walv_soil_textures_map[WALV_SOIL__MAX] = {
+	"art",
+	"cheese",
+	"classic beach",
+	"classic desert",
+	"classic farm",
+	"classic forest",
+	"classic hell",
+	"construction",
+	"desert",
+	"dungeon",
+	"easter",
+	"forest",
+	"fruit",
+	"gulf",
+	"hell",
+	"hospital",
+	"jungle",
+	"manhattan",
+	"medieval",
+	"music",
+	"pirate",
+	"snow",
+	"space",
+	"sports",
+	"tentacle",
+	"time",
+	"tools",
+	"tribal",
+	"urban",
+};
+
+int
+lgpng_create_waLV_from_data(struct waLV *walv, uint8_t *data, size_t dataz)
+{
+	if (dataz < 40) {
+		return(-1);
+	}
+	walv->length = dataz;
+	(void)memcpy(&(walv->type), "waLV", 4);
+	(void)memcpy(&(walv->data.land_seed), data, 4);
+	(void)memcpy(&(walv->data.object_seed), data + 4, 4);
+	(void)memcpy(&(walv->data.cavern), data + 8, 4);
+	(void)memcpy(&(walv->data.style), data + 12, 4);
+	(void)memcpy(&(walv->data.borders), data + 16, 4);
+	(void)memcpy(&(walv->data.object_percent), data + 20, 4);
+	(void)memcpy(&(walv->data.bridge_percent), data + 24, 4);
+	(void)memcpy(&(walv->data.water_level), data + 28, 4);
+	(void)memcpy(&(walv->data.soil_texture_idx), data + 32, 4);
+	(void)memcpy(&(walv->data.water_colour), data + 36, 4);
+	walv->data.worm_places = data[40];
+	/* In this chunks data is not stored in big-endian */
+	return(0);
+}
+
