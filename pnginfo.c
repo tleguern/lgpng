@@ -55,6 +55,7 @@ void info_fdAT(uint8_t *, size_t);
 void info_oFFs(uint8_t *, size_t);
 void info_gIFg(uint8_t *, size_t);
 void info_gIFx(uint8_t *, size_t);
+void info_sTER(uint8_t *, size_t);
 void info_vpAg(uint8_t *, size_t);
 void info_caNv(uint8_t *, size_t);
 void info_orNt(uint8_t *, size_t);
@@ -248,6 +249,8 @@ main(int argc, char *argv[])
 					info_gIFg(data, length);
 				} else if (0 == memcmp(current_chunk, "gIFx", 4)) {
 					info_gIFx(data, length);
+				} else if (0 == memcmp(current_chunk, "sTER", 4)) {
+					info_sTER(data, length);
 				} else if (0 == memcmp(current_chunk, "vpAg", 4)) {
 					info_vpAg(data, length);
 				} else if (0 == memcmp(current_chunk, "caNv", 4)) {
@@ -884,6 +887,22 @@ info_gIFx(uint8_t *data, size_t dataz)
 			}
 		}
 		printf("\n");
+	}
+}
+
+void
+info_sTER(uint8_t *data, size_t dataz)
+{
+	struct sTER	ster;
+
+	if (-1 == lgpng_create_sTER_from_data(&ster, data, dataz)) {
+		warnx("Bad gIFx chunk, skipping.");
+		return;
+	}
+	if (ster.data.mode > 2) {
+		printf("sTER: mode: unknown\n");
+	} else {
+		printf("sTER: mode: %s\n", ster_mode_map[ster.data.mode]);
 	}
 }
 

@@ -78,6 +78,11 @@ const char *offsunitspecifiermap[OFFS_UNITSPECIFIER__MAX] = {
 	"micrometer",
 };
 
+const char *ster_mode_map[STER_MODE__MAX] = {
+	"cross-fuse layout",
+	"diverging-fuse layout",
+};
+
 const char *disposal_methodmap[DISPOSAL_METHOD__MAX] = {
 	"none",
 	"do not dispose",
@@ -783,6 +788,18 @@ lgpng_create_gIFx_from_data(struct gIFx *gifx, uint8_t *data, size_t dataz)
 	(void)memcpy(gifx->data.identifier, data, 8);
 	(void)memcpy(gifx->data.code, data + 8, 3);
 	gifx->data.data = data + 11;
+	return(0);
+}
+
+int
+lgpng_create_sTER_from_data(struct sTER *ster, uint8_t *data, size_t dataz)
+{
+	if (dataz != 1) {
+		return(-1);
+	}
+	ster->length = dataz;
+	(void)memcpy(&(ster->type), "sTER", 4);
+	ster->data.mode = data[0];
 	return(0);
 }
 

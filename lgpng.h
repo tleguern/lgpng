@@ -468,6 +468,24 @@ struct gIFx {
 	} __attribute__((packed)) data;
 };
 
+/* sTER chunk */
+enum ster_mode {
+	STER_MODE_CROSS,
+	STER_MODE_DIVERGING,
+	STER_MODE__MAX,
+};
+
+extern const char *ster_mode_map[STER_MODE__MAX];
+
+struct sTER {
+	uint32_t         length;
+	uint8_t		 type[4];
+	uint32_t         crc;
+	struct {
+		int8_t	 mode;
+	} __attribute__((packed)) data;
+};
+
 /* vpAg chunk */
 enum vpag_unitspecifier {
 	VPAG_UNITSPECIFIER_PIXEL,
@@ -655,6 +673,7 @@ int		lgpng_create_fdAT_from_data(struct fdAT *, uint8_t *, size_t);
 int		lgpng_create_oFFs_from_data(struct oFFs *, uint8_t *, size_t);
 int		lgpng_create_gIFg_from_data(struct gIFg *, uint8_t *, size_t);
 int		lgpng_create_gIFx_from_data(struct gIFx *, uint8_t *, size_t);
+int		lgpng_create_sTER_from_data(struct sTER *, uint8_t *, size_t);
 
 /* chunks_extra */
 int		lgpng_create_vpAg_from_data(struct vpAg *, uint8_t *, size_t);
