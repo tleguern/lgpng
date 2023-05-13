@@ -65,6 +65,7 @@ void info_skRf(uint8_t *, uint32_t);
 void info_waLV(uint8_t *, uint32_t);
 void info_msOG(uint8_t *, uint32_t);
 void info_tpNG(uint8_t *, uint32_t);
+void info_firework(uint8_t *, size_t);
 void info_unknown(uint8_t [4], uint8_t *, uint32_t);
 
 int
@@ -278,7 +279,8 @@ main(int argc, char *argv[])
 					info_msOG(data, length);
 				} else if (0 == memcmp(current_chunk, "tpNG", 4) || 0 == memcmp(current_chunk, "tpNg", 4)) {
 					info_tpNG(data, length);
-
+				} else if (0 == memcmp(current_chunk, "prVW", 4) || 0 == memcmp(current_chunk, "mkTS", 4) || 0 == memcmp(current_chunk, "mkBS", 4)) {
+					info_firework(data, length);
 				} else {
 					info_unknown(current_chunk, data, length);
 				}
@@ -1079,6 +1081,41 @@ info_tpNG(uint8_t *data, uint32_t dataz)
 	}
 }
 
+void
+info_firework(uint8_t *data, size_t dataz)
+{
+	int		 retry = 2, zret;
+	size_t		 outz, outtmpz;
+	uint8_t		*out = NULL, *outtmp = NULL;
+
+	do {
+		outtmpz = dataz * retry;
+		if (NULL == (outtmp = realloc(out, outtmpz + 1))) {
+			warn("realloc(outtmpz + 1)");
+			goto error;
+		}
+		out = outtmp;
+		outz = outtmpz;
+		zret = uncompress(out, &outz, data, dataz);
+		if (Z_BUF_ERROR != zret && Z_OK != zret) {
+			if (Z_MEM_ERROR == zret) {
+				warn("uncompress(data)");
+			} else if (Z_DATA_ERROR == zret) {
+				warnx("Invalid input data");
+			}
+			warnx("firework: Failed decompression");
+			goto error;
+		}
+		out[outz] = '\0';
+		retry += 1;
+	} while (Z_OK != zret);
+	printf("firework: uncompressed size: %zu\n", outz);
+	fwrite(out, outz, 1, stdout);
+error:
+	free(out);
+	out = NULL;
+	outz = 0;
+}
 
 void
 info_unknown(uint8_t name[4], uint8_t *data, uint32_t dataz)
