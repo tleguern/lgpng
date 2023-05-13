@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018,2022 Tristan Le Guern <tleguern@bouledef.eu>
+ * Copyright (c) 2018,2022-2023 Tristan Le Guern <tleguern@bouledef.eu>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
