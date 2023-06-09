@@ -86,15 +86,23 @@ Here is a list of supported chunks:
   * fcTL
   * fdAT
 * Extensions to the PNG specification (Version 1.6.0):
+  * oFFs
   * gIFg
   * gIFx
+  * sTER
 * ImageMagick private chunks:
-  * oFFs
   * vpAg
   * caNv
   * orNt
+* Skitch/Evernote private chunks:
   * skMf
   * skRf
+* Microsoft private chunks:
+  * msOG
+* Worms Armageddon private chunks:
+  * waLV
+* GLDPNG private chunks:
+  * tpNG
 
 Unknown chunks can still be listed and queried but only very basic informations will be displayed.
 
