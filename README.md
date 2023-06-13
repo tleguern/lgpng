@@ -9,6 +9,7 @@ Some utilities using lgpng are provided in this repository.
 
 1. [Install](#install)
 2. [pnginfo](#pnginfo)
+2. [pngdump](#pngdump)
 3. [License](#license)
 
 ## Install
@@ -113,6 +114,25 @@ Example:
 ```sh
 $ curl https://example.org/file.png | pnginfo -s -l
 ```
+
+## pngdump
+
+This utility dumps a raw chunk from a PNG file or optionally its data segment.
+
+
+Example - extract the original gif from a msOG chunk:
+
+```
+$ pngdump -d -o 11 -f samples/msOG.png msOG | file -
+/dev/stdin: GIF image data, version 89a, 32 x 32
+```
+Example - extract the original png from a skRf chunk:
+
+```
+$ pngdump -d -o 16 -f samples/skRf.png skRf | file -
+/dev/stdin: PNG image data, 512 x 512, 8-bit/color RGBA, non-interlaced
+```
+
 ## License
 
 All the code is licensed under the ISC License.
