@@ -265,7 +265,7 @@ main(int argc, char *argv[])
 					info_waLV(data, length);
 				} else if (0 == memcmp(current_chunk, "msOG", 4)) {
 					info_msOG(data, length);
-				} else if (0 == memcmp(current_chunk, "tpNG", 4)) {
+				} else if (0 == memcmp(current_chunk, "tpNG", 4) || 0 == memcmp(current_chunk, "tpNg", 4)) {
 					info_tpNG(data, length);
 
 				} else {
@@ -1050,8 +1050,9 @@ info_tpNG(uint8_t *data, size_t dataz)
 		return;
 	}
 	printf("tpNG: version: %.4s\n", tpng.data.version);
-	if (tpng.data.unused[0] != 0 || tpng.data.unused[1] != 0
-	    || tpng.data.unused[2] != 0 || tpng.data.unused[3] != 0) {
+	printf("tpNG: encrypted image: %s\n", tpng.data.password == 1 ? "yes" : "no");
+	printf("tpNG: alpha 256: %s\n", tpng.data.alpha256 == 1 ? "yes" : "no");
+	if (tpng.data.unused[0] != 0 || tpng.data.unused[1] != 0) {
 		warnx("tpNG: data in the unused portion");
 	}
 }

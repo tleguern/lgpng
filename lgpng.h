@@ -640,7 +640,9 @@ struct tpNG {
 	uint32_t         crc;
 	struct {
 		uint8_t	 version[4];
-		uint8_t	 unused[4];
+		uint8_t	 password;
+		uint8_t	 alpha256;
+		uint8_t	 unused[2];
 	} __attribute__((packed)) data;
 };
 

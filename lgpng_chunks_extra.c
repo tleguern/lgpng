@@ -192,7 +192,15 @@ lgpng_create_tpNG_from_data(struct tpNG *tpng, uint8_t *data, size_t dataz)
 	tpng->length = dataz;
 	(void)memcpy(&(tpng->type), "tpNG", 4);
 	(void)memcpy(&(tpng->data.version), data, 4);
-	(void)memcpy(&(tpng->data.unused), data + 4, 4);
+	tpng->data.password = data[4];
+	tpng->data.alpha256 = data[5];
+	(void)memcpy(&(tpng->data.unused), data + 4, 2);
+	if (tpng->data.password != 0 && tpng->data.password != 1) {
+		return(-1);
+	}
+	if (tpng->data.alpha256 != 0 && tpng->data.alpha256 != 1) {
+		return(-1);
+	}
 	return(0);
 }
 
