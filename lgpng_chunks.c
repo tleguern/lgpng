@@ -122,6 +122,7 @@ lgpng_validate_keyword(uint8_t *keyword, size_t keywordz)
 bool
 lgpng_is_official_keyword(uint8_t *keyword, size_t keywordz)
 {
+	/* From WD-png-3-20221025/ */
 	if (0 != memcmp(keyword, "Title", keywordz)
 	    && 0 != memcmp(keyword, "Author", keywordz)
 	    && 0 != memcmp(keyword, "Description", keywordz)
@@ -131,7 +132,8 @@ lgpng_is_official_keyword(uint8_t *keyword, size_t keywordz)
 	    && 0 != memcmp(keyword, "Disclaimer", keywordz)
 	    && 0 != memcmp(keyword, "Warning", keywordz)
 	    && 0 != memcmp(keyword, "Source", keywordz)
-	    && 0 != memcmp(keyword, "Comment", keywordz)) {
+	    && 0 != memcmp(keyword, "Comment", keywordz)
+	    && 0 != memcmp(keyword, "XML:com.adobe.xmp", keywordz)) {
 		return(false);
 	}
 	return(true);
