@@ -133,7 +133,9 @@ lgpng_is_official_keyword(uint8_t *keyword, size_t keywordz)
 	    && 0 != memcmp(keyword, "Warning", keywordz)
 	    && 0 != memcmp(keyword, "Source", keywordz)
 	    && 0 != memcmp(keyword, "Comment", keywordz)
-	    && 0 != memcmp(keyword, "XML:com.adobe.xmp", keywordz)) {
+	    && 0 != memcmp(keyword, "XML:com.adobe.xmp", keywordz)
+	/* From DNOTE-pngext-20221024 */
+	    && 0 != memcmp(keyword, "Collection", keywordz)) {
 		return(false);
 	}
 	return(true);
