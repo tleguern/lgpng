@@ -687,24 +687,33 @@ int		lgpng_create_waLV_from_data(struct waLV *, uint8_t *, size_t);
 int		lgpng_create_msOG_from_data(struct msOG *, uint8_t *, size_t);
 int		lgpng_create_tpNG_from_data(struct tpNG *, uint8_t *, size_t);
 
-/* data */
-bool	lgpng_data_is_png(uint8_t *, size_t);
-bool	lgpng_data_get_length(uint8_t *, size_t, uint32_t *);
-bool	lgpng_data_get_type(uint8_t *, size_t, uint8_t [4]);
-bool	lgpng_data_get_data(uint8_t *, size_t, uint32_t, uint8_t **);
-bool	lgpng_data_get_crc(uint8_t *, size_t, uint32_t *);
-int	lgpng_data_write_sig(uint8_t *);
-int	lgpng_data_write_chunk(uint8_t *, uint32_t, uint8_t [4], uint8_t *, uint32_t);
+enum lgpng_err {
+	LGPNG_OK = 0,
+	LGPNG_INVALID_PARAM,
+	LGPNG_TOO_SHORT,
+	LGPNG_INVALID_CHUNK_LENGTH,
+	LGPNG_INVALID_CHUNK_NAME,
+	/* Generic error, to be refined */
+	LGPNG_ERROR,
+};
+
+enum lgpng_err	lgpng_data_is_png(uint8_t *, size_t);
+enum lgpng_err	lgpng_data_get_length(uint8_t *, size_t, uint32_t *);
+enum lgpng_err	lgpng_data_get_type(uint8_t *, size_t, uint8_t [4]);
+enum lgpng_err	lgpng_data_get_data(uint8_t *, size_t, uint32_t, uint8_t **);
+enum lgpng_err	lgpng_data_get_crc(uint8_t *, size_t, uint32_t *);
+int		lgpng_data_write_sig(uint8_t *);
+int		lgpng_data_write_chunk(uint8_t *, uint32_t, uint8_t [4], uint8_t *, uint32_t);
 
 /* stream */
-bool	lgpng_stream_is_png(FILE *);
-bool	lgpng_stream_get_length(FILE *, uint32_t *);
-bool	lgpng_stream_get_type(FILE *, uint8_t [4]);
-bool	lgpng_stream_get_data(FILE *, uint32_t, uint8_t **);
-bool	lgpng_stream_skip_data(FILE *, uint32_t);
-bool	lgpng_stream_get_crc(FILE *, uint32_t *);
-bool	lgpng_stream_write_sig(FILE *);
-bool	lgpng_stream_write_chunk(FILE *, uint32_t, uint8_t [4], uint8_t *, uint32_t);
+enum lgpng_err	lgpng_stream_is_png(FILE *);
+enum lgpng_err	lgpng_stream_get_length(FILE *, uint32_t *);
+enum lgpng_err	lgpng_stream_get_type(FILE *, uint8_t [4]);
+enum lgpng_err	lgpng_stream_get_data(FILE *, uint32_t, uint8_t **);
+enum lgpng_err	lgpng_stream_skip_data(FILE *, uint32_t);
+enum lgpng_err	lgpng_stream_get_crc(FILE *, uint32_t *);
+enum lgpng_err	lgpng_stream_write_sig(FILE *);
+enum lgpng_err	lgpng_stream_write_chunk(FILE *, uint32_t, uint8_t [4], uint8_t *, uint32_t);
 
 /* crc */
 extern uint32_t	lgpng_crc_table[256];

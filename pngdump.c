@@ -83,7 +83,7 @@ main(int argc, char *argv[])
 	/* Read the file byte by byte until the PNG signature is found */
 	offset = 0;
 	if (false == sflag) {
-		if (false == lgpng_stream_is_png(source)) {
+		if (LGPNG_OK != lgpng_stream_is_png(source)) {
 			errx(EXIT_FAILURE, "not a PNG file");
 		}
 	} else {
@@ -95,7 +95,7 @@ main(int argc, char *argv[])
 				errx(EXIT_FAILURE, "not a PNG file");
 			}
 			offset += 1;
-		} while (false == lgpng_stream_is_png(source));
+		} while (LGPNG_OK != lgpng_stream_is_png(source));
 	}
 
 	do {
@@ -103,20 +103,20 @@ main(int argc, char *argv[])
 		uint8_t		*data = NULL;
 		uint8_t		 type[4] = {0, 0, 0, 0};
 
-		if (false == lgpng_stream_get_length(source, &length)) {
+		if (LGPNG_OK != lgpng_stream_get_length(source, &length)) {
 			break;
 		}
-		if (false == lgpng_stream_get_type(source, type)) {
+		if (LGPNG_OK != lgpng_stream_get_type(source, type)) {
 			break;
 		}
 		if (NULL == (data = malloc(length + 1))) {
 			fprintf(stderr, "malloc\n");
 			break;
 		}
-		if (false == lgpng_stream_get_data(source, length, &data)) {
+		if (LGPNG_OK != lgpng_stream_get_data(source, length, &data)) {
 			goto stop;
 		}
-		if (false == lgpng_stream_get_crc(source, &crc)) {
+		if (LGPNG_OK != lgpng_stream_get_crc(source, &crc)) {
 			goto stop;
 		}
 		/* Ignore invalid CRC */

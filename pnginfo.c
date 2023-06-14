@@ -112,7 +112,7 @@ main(int argc, char *argv[])
 	/* Read the file byte by byte until the PNG signature is found */
 	offset = 0;
 	if (false == sflag) {
-		if (false == lgpng_stream_is_png(source)) {
+		if (LGPNG_OK != lgpng_stream_is_png(source)) {
 			errx(EXIT_FAILURE, "not a PNG file");
 		}
 	} else {
@@ -124,19 +124,27 @@ main(int argc, char *argv[])
 				errx(EXIT_FAILURE, "not a PNG file");
 			}
 			offset += 1;
-		} while (false == lgpng_stream_is_png(source));
+		} while (LGPNG_OK != lgpng_stream_is_png(source));
 	}
 
 	do {
+		int		 err;
 		uint32_t	 length = 0, chunk_crc = 0, calc_crc = 0;
 		uint8_t		*data = NULL;
 		uint8_t		 current_chunk[4] = {0, 0, 0, 0};
 
-		if (false == lgpng_stream_get_length(source, &length)) {
+		if (LGPNG_OK != lgpng_stream_get_length(source, &length)) {
 			break;
 		}
-		if (false == lgpng_stream_get_type(source, current_chunk)) {
-			break;
+		/*
+		 * Keep processing in case of invalid chunks
+		 */
+		err = lgpng_stream_get_type(source, current_chunk);
+		if (LGPNG_INVALID_CHUNK_NAME == err) {
+			warnx("Invalid chunk type -- %.4s", current_chunk);
+		} else if (LGPNG_OK != err) {
+			loopexit = 1;
+			goto stop;
 		}
 		/*
 		 * Do not bother allocating memory in -l mode
@@ -146,24 +154,26 @@ main(int argc, char *argv[])
 				warn("malloc(length + 1)");
 				break;
 			}
-			if (false == lgpng_stream_get_data(source, length, &data)) {
+			if (LGPNG_OK != lgpng_stream_get_data(source, length, &data)) {
 				goto stop;
 			}
 		} else if (lflag) {
-			lgpng_stream_skip_data(source, length);
+			(void)lgpng_stream_skip_data(source, length);
 		} else {
 			warnx("Internal error");
 			break;
 		}
-		if (false == lgpng_stream_get_crc(source, &chunk_crc)) {
+		if (LGPNG_OK != lgpng_stream_get_crc(source, &chunk_crc)) {
 			goto stop;
 		}
 		/* Validate the CRC in chunk mode */
-		if (cflag && false == lgpng_chunk_crc(length, current_chunk,
-		    data, &calc_crc)) {
-			warnx("Invalid CRC for chunk %.4s, skipping",
-			    current_chunk);
-			goto stop;
+		if (cflag) {
+			lgpng_chunk_crc(length, current_chunk, data, &calc_crc);
+			if (chunk_crc != calc_crc) {
+				warnx("Invalid CRC for chunk %.4s, skipping",
+				    current_chunk);
+				goto stop;
+			}
 		}
 		if (lflag) {
 			/* Simply list chunks' name */

@@ -18,112 +18,97 @@
 
 #include <ctype.h>
 #include COMPAT_ENDIAN_H
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "lgpng.h"
 
-bool
+enum lgpng_err
 lgpng_data_is_png(uint8_t *src, size_t srcz)
 {
 	if (NULL == src) {
-		return(false);
+		return(LGPNG_INVALID_PARAM);
 	}
 	if (srcz < 8) {
-		return(false);
+		return(LGPNG_TOO_SHORT);
 	}
 	if (memcmp(src, png_sig, sizeof(png_sig)) == 0)
-		return(true);
-	return(false);
+		return(LGPNG_OK);
+	return(LGPNG_ERROR);
 }
 
-bool
+enum lgpng_err
 lgpng_data_get_length(uint8_t *src, size_t srcz, uint32_t *length)
 {
-	if (NULL == src) {
-		return(false);
-	}
-	if (NULL == length) {
-		return(false);
+	if (NULL == src || NULL == length) {
+		return(LGPNG_INVALID_PARAM);
 	}
 	if (srcz < 4) {
-		return(false);
+		return(LGPNG_TOO_SHORT);
 	}
 	/* Read the first four bytes to gather the length of the data part */
 	(void)memcpy(length, src, 4);
 	*length = be32toh(*length);
 	if (*length > INT32_MAX) {
-		fprintf(stderr, "Chunk length is too big (%u)\n", *length);
-		return(false);
+		return(LGPNG_INVALID_CHUNK_LENGTH);
 	}
-	return(true);
+	return(LGPNG_OK);
 }
 
-bool
+enum lgpng_err
 lgpng_data_get_type(uint8_t *src, size_t srcz, uint8_t name[4])
 {
 	uint8_t	type[4];
+	int	err = LGPNG_OK;
 
 	if (NULL == src) {
-		return(false);
+		return(LGPNG_INVALID_PARAM);
 	}
 	if (srcz < 4) {
-		fprintf(stderr, "Not enough data to read chunk's type\n");
-		return(false);
+		return(LGPNG_TOO_SHORT);
 	}
 
 	(void)memcpy(type, src, 4);
 	for (size_t i = 0; i < 4; i++) {
+		/* Copy the chunk name even if invalid */
+		name[i] = type[i];
 		if (isalpha(type[i]) == 0) {
-			fprintf(stderr, "Invalid chunk type\n");
-			return(false);
+			err = LGPNG_INVALID_CHUNK_NAME;
 		}
 	}
-	for (size_t i = 0; i < 4; i++) {
-		name[i] = type[i];
-	}
-	return(true);
+	return(err);
 }
 
-bool
+enum lgpng_err
 lgpng_data_get_data(uint8_t *src, size_t srcz, uint32_t length, uint8_t **data)
 {
-	if (NULL == src) {
-		return(false);
-	}
-	if (NULL == data) {
-		return(false);
+	if (NULL == src || NULL == data) {
+		return(LGPNG_INVALID_PARAM);
 	}
 	if (srcz < length) {
-		fprintf(stderr, "Not enough data to read chunk's data\n");
-		return(false);
+		return(LGPNG_TOO_SHORT);
 	}
 
 	if (0 != length) {
 		(void)memcpy((*data), src, length);
 		(*data)[length] = '\0';
 	}
-	return(true);
+	return(LGPNG_OK);
 }
 
-bool
+enum lgpng_err
 lgpng_data_get_crc(uint8_t *src, size_t srcz, uint32_t *crc)
 {
-	if (NULL == src) {
-		return(false);
-	}
-	if (NULL == crc) {
-		return(false);
+	if (NULL == src || NULL == crc) {
+		return(LGPNG_INVALID_PARAM);
 	}
 	if (srcz < 4) {
-		fprintf(stderr, "Not enough data to read chunk's CRC\n");
-		return(false);
+		return(LGPNG_TOO_SHORT);
 	}
 
 	(void)memcpy(crc, src, 4);
 	*crc = be32toh(*crc);
-	return(true);
+	return(LGPNG_OK);
 }
 
 int

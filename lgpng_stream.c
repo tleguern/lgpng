@@ -18,153 +18,142 @@
 
 #include <ctype.h>
 #include COMPAT_ENDIAN_H
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "lgpng.h"
 
-bool
+enum lgpng_err
 lgpng_stream_is_png(FILE *src)
 {
 	char sig[8] = {  0,  0,  0,  0,  0,  0,  0,  0};
 
 	if (NULL == src) {
-		return(false);
+		return(LGPNG_INVALID_PARAM);
 	}
 	if (sizeof(sig) != fread(sig, 1, sizeof(sig), src)) {
-		return(false);
+		return(LGPNG_TOO_SHORT);
 	}
 	if (memcmp(sig, png_sig, sizeof(sig)) == 0)
-		return(true);
-	return(false);
+		return(LGPNG_OK);
+	return(LGPNG_ERROR);
 }
 
-bool
+enum lgpng_err
 lgpng_stream_get_length(FILE *src, uint32_t *length)
 {
-	if (NULL == src) {
-		return(false);
-	}
-	if (NULL == length) {
-		return(false);
+	if (NULL == src || NULL == length) {
+		return(LGPNG_INVALID_PARAM);
 	}
 	/* Read the first four bytes to gather the length of the data part */
 	if (1 != fread(length, 4, 1, src)) {
-		fprintf(stderr, "Not enough data to read chunk's length\n");
-		return(false);
+		return(LGPNG_TOO_SHORT);
 	}
 	*length = be32toh(*length);
 	if (*length > INT32_MAX) {
-		fprintf(stderr, "Chunk length is too big (%d)\n", *length);
-		return(false);
+		return(LGPNG_INVALID_CHUNK_LENGTH);
 	}
-	return(true);
+	return(LGPNG_OK);
 }
 
-bool
+enum lgpng_err
 lgpng_stream_get_type(FILE *src, uint8_t name[4])
 {
 	uint8_t	type[4];
+	int	err = LGPNG_OK;
 
 	if (NULL == src) {
-		return(false);
+		return(LGPNG_INVALID_PARAM);
 	}
 	if (4 != fread(type, 1, 4, src)) {
-		fprintf(stderr, "Not enough data to read chunk's type\n");
-		return(false);
+		return(LGPNG_TOO_SHORT);
 	}
 	for (size_t i = 0; i < 4; i++) {
+		/* Copy the chunk name even if invalid */
+		name[i] = type[i];
 		if (isalpha(type[i]) == 0) {
-			fprintf(stderr, "Invalid chunk type\n");
-			return(false);
+			err = LGPNG_INVALID_CHUNK_NAME;
 		}
 	}
-	for (size_t i = 0; i < 4; i++) {
-		name[i] = type[i];
-	}
-	return(true);
+	return(err);
 }
 
-bool
+enum lgpng_err
 lgpng_stream_get_data(FILE *src, uint32_t length, uint8_t **data)
 {
-	if (NULL == src) {
-		return(false);
-	}
-	if (NULL == data) {
-		return(false);
+	if (NULL == src || NULL == data) {
+		return(LGPNG_INVALID_PARAM);
 	}
 	if (0 != length) {
 		if (length != fread(*data, 1, length, src)) {
-			fprintf(stderr, "Not enough data to read chunk's data\n");
-			return(false);
+			return(LGPNG_TOO_SHORT);
 		}
 		(*data)[length] = '\0';
 	}
-	return(true);
+	return(LGPNG_OK);
 }
 
-bool
+enum lgpng_err
 lgpng_stream_skip_data(FILE *src, uint32_t length)
 {
 	if (NULL == src) {
-		return(false);
+		return(LGPNG_INVALID_PARAM);
 	}
 	if (0 != length) {
 		if (-1 == fseek(src, length, SEEK_CUR)) {
-			fprintf(stderr, "Not enough data to skip chunk's data\n");
-			return(false);
+			return(LGPNG_TOO_SHORT);
 		}
 	}
-	return(true);
+	return(LGPNG_OK);
 }
 
-bool
+enum lgpng_err
 lgpng_stream_get_crc(FILE *src, uint32_t *crc)
 {
-	if (NULL == src) {
-		return(false);
-	}
-	if (NULL == crc) {
-		return(false);
+	if (NULL == src || NULL == crc) {
+		return(LGPNG_INVALID_PARAM);
 	}
 	if (1 != fread(crc, 4, 1, src)) {
-		fprintf(stderr, "Not enough data to read chunk's CRC\n");
-		return(false);
+		return(LGPNG_TOO_SHORT);
 	}
 	*crc = be32toh(*crc);
-	return(true);
+	return(LGPNG_OK);
 }
 
-bool
+enum lgpng_err
 lgpng_stream_write_sig(FILE *output)
 {
-	if (8 != fwrite(png_sig, 1, 8, output)) {
-		return(false);
+	if (NULL == output) {
+		return(LGPNG_INVALID_PARAM);
 	}
-	return(true);
+	if (8 != fwrite(png_sig, 1, 8, output)) {
+		return(LGPNG_ERROR);
+	}
+	return(LGPNG_OK);
 }
 
-bool
+enum lgpng_err
 lgpng_stream_write_chunk(FILE *output, uint32_t length, uint8_t type[4],
     uint8_t *data, uint32_t crc)
 {
 	uint32_t nlength = htobe32(length);
 	uint32_t ncrc = htobe32(crc);
 
+	if (NULL == output) {
+		return(LGPNG_INVALID_PARAM);
+	}
 	if (4 != fwrite((uint8_t *)&nlength, 1, 4, output)) {
-		return(false);
+		return(LGPNG_ERROR);
 	}
 	if (4 != fwrite(type, 1, 4, output)) {
-		return(false);
+		return(LGPNG_ERROR);
 	}
 	if (length != fwrite(data, 1, length, output)) {
-		return(false);
+		return(LGPNG_ERROR);
 	}
 	if (4 != fwrite((uint8_t *)&ncrc, 1, 4, output)) {
-		return(false);
+		return(LGPNG_ERROR);
 	}
-	return(true);
+	return(LGPNG_OK);
 }
 

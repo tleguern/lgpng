@@ -48,7 +48,7 @@ main(void)
 
 	/* PNG signature */
 	subject = "%s %d - lgpng_data_is_png with data NULL\n";
-	if (false == lgpng_data_is_png(NULL, 0)) {
+	if (LGPNG_INVALID_PARAM == lgpng_data_is_png(NULL, 0)) {
 		status = "ok";
 	} else {
 		status = "not ok";
@@ -57,7 +57,7 @@ main(void)
 	printf(subject, status, ++test);
 
 	subject = "%s %d - lgpng_data_is_png with short dataz\n";
-	if (false == lgpng_data_is_png(source, 4)) {
+	if (LGPNG_TOO_SHORT == lgpng_data_is_png(source, 4)) {
 		status = "ok";
 	} else {
 		status = "not ok";
@@ -66,7 +66,7 @@ main(void)
 	printf(subject, status, ++test);
 
 	subject = "%s %d - lgpng_data_is_png\n";
-	if (false != lgpng_data_is_png(source, sourcez)) {
+	if (LGPNG_OK == lgpng_data_is_png(source, sourcez)) {
 		status = "ok";
 	} else {
 		status = "not ok";
@@ -78,7 +78,7 @@ main(void)
 	offset += 8;
 	sourcez -= 8;
 	subject = "%s %d - lgpng_data_get_length with data NULL\n";
-	if (false == lgpng_data_get_length(NULL, sourcez, &length)) {
+	if (LGPNG_INVALID_PARAM == lgpng_data_get_length(NULL, sourcez, &length)) {
 		status = "ok";
 	} else {
 		status = "not ok";
@@ -87,7 +87,7 @@ main(void)
 	printf(subject, status, ++test);
 
 	subject = "%s %d - lgpng_data_get_length with length NULL\n";
-	if (false == lgpng_data_get_length(source + offset, sourcez, NULL)) {
+	if (LGPNG_INVALID_PARAM == lgpng_data_get_length(source + offset, sourcez, NULL)) {
 		status = "ok";
 	} else {
 		status = "not ok";
@@ -96,7 +96,7 @@ main(void)
 	printf(subject, status, ++test);
 
 	subject = "%s %d - lgpng_data_get_length with short dataz\n";
-	if (false == lgpng_data_get_length(source + offset, 3, &length)) {
+	if (LGPNG_TOO_SHORT == lgpng_data_get_length(source + offset, 3, &length)) {
 		status = "ok";
 	} else {
 		status = "not ok";
@@ -105,7 +105,7 @@ main(void)
 	printf(subject, status, ++test);
 
 	subject = "%s %d - lgpng_data_get_length\n";
-	if (false != lgpng_data_get_length(source + offset, sourcez, &length)) {
+	if (LGPNG_OK == lgpng_data_get_length(source + offset, sourcez, &length)) {
 		status = "ok";
 	} else {
 		status = "not ok";
@@ -126,7 +126,7 @@ main(void)
 	offset += 4;
 	sourcez -= 4;
 	subject = "%s %d - lgpng_data_get_type with data NULL\n";
-	if (false == lgpng_data_get_type(NULL, 0, type)) {
+	if (LGPNG_INVALID_PARAM == lgpng_data_get_type(NULL, 0, type)) {
 		status = "ok";
 	} else {
 		status = "not ok";
@@ -135,7 +135,7 @@ main(void)
 	printf(subject, status, ++test);
 
 	subject = "%s %d - lgpng_data_get_type with short srcz\n";
-	if (false == lgpng_data_get_type(source + offset, 1, type)) {
+	if (LGPNG_TOO_SHORT == lgpng_data_get_type(source + offset, 1, type)) {
 		status = "ok";
 	} else {
 		status = "not ok";
@@ -144,7 +144,7 @@ main(void)
 	printf(subject, status, ++test);
 
 	subject = "%s %d - lgpng_data_get_type\n";
-	if (false != lgpng_data_get_type(source + offset, sourcez, type)) {
+	if (LGPNG_OK == lgpng_data_get_type(source + offset, sourcez, type)) {
 		status = "ok";
 	} else {
 		status = "not ok";
@@ -169,7 +169,7 @@ main(void)
 	offset += length;
 	sourcez -= length;
 	subject = "%s %d - lgpng_data_get_data with data NULL\n";
-	if (false == lgpng_data_get_data(NULL, 0, length, &data)) {
+	if (LGPNG_INVALID_PARAM == lgpng_data_get_data(NULL, 0, length, &data)) {
 		status = "ok";
 	} else {
 		status = "not ok";
@@ -178,7 +178,7 @@ main(void)
 	printf(subject, status, ++test);
 
 	subject = "%s %d - lgpng_data_get_data with data NULL\n";
-	if (false == lgpng_data_get_data(source + offset, sourcez, length, NULL)) {
+	if (LGPNG_INVALID_PARAM == lgpng_data_get_data(source + offset, sourcez, length, NULL)) {
 		status = "ok";
 	} else {
 		status = "not ok";
@@ -187,7 +187,7 @@ main(void)
 	printf(subject, status, ++test);
 
 	subject = "%s %d - lgpng_data_get_data with short srcz\n";
-	if (false == lgpng_data_get_data(source + offset, length / 2, length, NULL)) {
+	if (LGPNG_TOO_SHORT == lgpng_data_get_data(source + offset, length / 2, length, &data)) {
 		status = "ok";
 	} else {
 		status = "not ok";
@@ -196,7 +196,7 @@ main(void)
 	printf(subject, status, ++test);
 
 	subject = "%s %d - lgpng_data_get_data\n";
-	if (false != lgpng_data_get_data(source + offset, sourcez, length, &data)) {
+	if (LGPNG_OK == lgpng_data_get_data(source + offset, sourcez, length, &data)) {
 		status = "ok";
 	} else {
 		status = "not ok";
@@ -208,7 +208,7 @@ main(void)
 	offset += 4;
 	sourcez -= 4;
 	subject = "%s %d - lgpng_data_get_crc with data NULL\n";
-	if (false == lgpng_data_get_crc(NULL, 0, &crc)) {
+	if (LGPNG_INVALID_PARAM == lgpng_data_get_crc(NULL, 0, &crc)) {
 		status = "ok";
 	} else {
 		status = "not ok";
@@ -217,7 +217,7 @@ main(void)
 	printf(subject, status, ++test);
 
 	subject = "%s %d - lgpng_data_get_crc with crc NULL\n";
-	if (false == lgpng_data_get_crc(source + offset, sourcez, NULL)) {
+	if (LGPNG_INVALID_PARAM == lgpng_data_get_crc(source + offset, sourcez, NULL)) {
 		status = "ok";
 	} else {
 		status = "not ok";
@@ -226,7 +226,7 @@ main(void)
 	printf(subject, status, ++test);
 
 	subject = "%s %d - lgpng_data_get_crc with short dataz\n";
-	if (false == lgpng_data_get_crc(source + offset, 1, NULL)) {
+	if (LGPNG_TOO_SHORT == lgpng_data_get_crc(source + offset, 1, &crc)) {
 		status = "ok";
 	} else {
 		status = "not ok";
@@ -235,7 +235,7 @@ main(void)
 	printf(subject, status, ++test);
 
 	subject = "%s %d - lgpng_data_get_crc\n";
-	if (false != lgpng_data_get_crc(source + offset, sourcez, &crc)) {
+	if (LGPNG_OK == lgpng_data_get_crc(source + offset, sourcez, &crc)) {
 		status = "ok";
 	} else {
 		status = "not ok";

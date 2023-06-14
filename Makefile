@@ -18,7 +18,7 @@ MANS= ${MAN1S}
 REGRESS = regress/test-data \
 	  regress/test-stream
 
-all: lgpng.c liblgpng.a pngdump pngexplode pnginfo pngshuffle
+all: lgpng.c liblgpng.a pngdump pngexplode pnginfo pngshuffle ${REGRESS}
 
 regress: ${REGRESS}
 	@for f in ${REGRESS} ; do \
