@@ -599,7 +599,7 @@ lgpng_create_pHYs_from_data(struct pHYs *phys, uint8_t *data, uint32_t length)
 	(void)memcpy(&(phys->data.ppuy), data + 4, 4);
 	phys->data.ppux = be32toh(phys->data.ppux);
 	phys->data.ppuy = be32toh(phys->data.ppuy);
-	phys->data.unitspecifier = data[9];
+	phys->data.unitspecifier = data[8];
 	return(0);
 }
 
