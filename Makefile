@@ -63,6 +63,7 @@ clean:
 	rm -f lgpng.c
 	rm -f liblgpng.a
 	rm -f pngdump pngexplode pnginfo pngshuffle
+	rm -f pngdump.o pngexplode.o pnginfo.o pngshuffle.o
 	rm -f ${OBJS} compats.o tests.o
 	rm -f ${REGRESS} regress/*.o
 
