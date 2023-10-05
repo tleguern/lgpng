@@ -743,8 +743,13 @@ info_pHYs(uint8_t *data, uint32_t dataz)
 	}
 	printf("pHYs: pixel per unit, X axis: %u\n", phys.data.ppux);
 	printf("pHYs: pixel per unit, Y axis: %u\n", phys.data.ppuy);
-	printf("pHYs: unit specifier: %s\n",
-	    unitspecifiermap[phys.data.unitspecifier]);
+	if (phys.data.unitspecifier >= UNITSPECIFIER__MAX) {
+		printf("pHYs: unit specifier: wrong (%d)\n",
+		    phys.data.unitspecifier);
+	} else {
+		printf("pHYs: unit specifier: %s\n",
+		    unitspecifiermap[phys.data.unitspecifier]);
+	}
 }
 
 void
