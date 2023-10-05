@@ -5,7 +5,7 @@ include Makefile.configure
 
 CFLAGS+= -Wpointer-sign -Wtype-limits -Wunused-function -Wconversion
 CFLAGS+= -fsanitize-trap=undefined
-CFLAGS+= -I. -std=c99
+CFLAGS+= -I. -std=c17
 
 SRCS =  lgpng_chunks.c \
 	lgpng_chunks_extra.c \
