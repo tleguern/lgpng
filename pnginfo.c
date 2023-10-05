@@ -30,6 +30,7 @@
 #include "lgpng.h"
 
 void usage(void);
+void info_compression_method(uint8_t, uint8_t [4]);
 int  info_zlib(uint8_t, uint8_t, uint8_t [4]);
 void info_IHDR(struct IHDR *);
 void info_PLTE(struct PLTE *);
@@ -297,6 +298,17 @@ stop:
 	return(EXIT_SUCCESS);
 }
 
+void
+info_compression_method(uint8_t method, uint8_t chunk[4])
+{
+	if (COMPRESSION_TYPE_DEFLATE != method) {
+		printf("%.4s: compression method: wrong (%d)\n", chunk, method);
+	} else {
+		printf("%.4s: compression method: %s\n", chunk,
+		    compressiontypemap[method]);
+	}
+}
+
 int
 info_zlib(uint8_t cmf, uint8_t flg, uint8_t chunk[4])
 {
@@ -386,12 +398,8 @@ info_IHDR(struct IHDR *ihdr)
 	printf("IHDR: height: %u\n", ihdr->data.height);
 	printf("IHDR: bitdepth: %i\n", ihdr->data.bitdepth);
 	printf("IHDR: colourtype: %s\n", colourtypemap[ihdr->data.colourtype]);
-	if (COMPRESSION_TYPE_DEFLATE != ihdr->data.compression) {
-		warnx("IHDR: Invalid compression type %i", ihdr->data.compression);
-	} else {
-		printf("IHDR: compression: %s\n",
-		    compressiontypemap[ihdr->data.compression]);
-	}
+
+	info_compression_method(ihdr->data.compression, (uint8_t *)"IHDR");
 	if (FILTER_METHOD_ADAPTIVE != ihdr->data.filter) {
 		warnx("IHDR: Invalid filter method %i", ihdr->data.filter);
 	} else {
@@ -515,8 +523,7 @@ info_iCCP(uint8_t *data, uint32_t dataz)
 		return;
 	}
 	printf("iCCP: profile name: %.80s\n", iccp.data.name);
-	printf("iCCP: compression method: %s\n",
-	    compressiontypemap[iccp.data.compression]);
+	info_compression_method(iccp.data.compression, (uint8_t *)"iCCP");
 	info_zlib(iccp.data.profile[0], iccp.data.profile[1], (uint8_t *)"iCCP");
 }
 
@@ -619,8 +626,7 @@ info_zTXt(uint8_t *data, uint32_t dataz)
 		printf("zTXt: %s is not an official keyword\n",
 		    ztxt.data.keyword);
 	}
-	printf("zTXt: compression method: %s\n",
-	    compressiontypemap[ztxt.data.compression]);
+	info_compression_method(ztxt.data.compression, (uint8_t *)"zTXt");
 	info_zlib(ztxt.data.text[0], ztxt.data.text[1], (uint8_t *)"zTXt");
 	do {
 		outtmpz = ztxt.data.textz * retry;
