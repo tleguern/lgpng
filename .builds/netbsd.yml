@@ -1,11 +1,13 @@
 ---
 image: netbsd/latest
+packages:
+  - clang
 sources:
   - https://git.sr.ht/~tleguern/lgpng
 tasks:
   - setup: |
       cd lgpng
-      ./configure
+      CC=clang ./configure
   - build: |
       cd lgpng
       make
