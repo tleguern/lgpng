@@ -54,10 +54,17 @@ pngshuffle: pngshuffle.o compats.o liblgpng.a
 # Regression tests
 ${REGRESS}: config.h lgpng.h liblgpng.a
 
-.for BIN in ${REGRESS}
-${BIN}: ${BIN}.c
-	${CC} ${CFLAGS} -o $@ ${BIN}.c liblgpng.a
-.endfor
+ifeq ($(MAKE), make)
+	# For GNU make, use pattern rule
+	$(REGRESS): %: %.c
+		${CC} ${CFLAGS} -o $@ $< liblgpng.a
+else
+	# For BSD make, use .for loop
+	.for BIN in ${REGRESS}
+	${BIN}: ${BIN}.c
+		${CC} ${CFLAGS} -o $@ ${BIN}.c liblgpng.a
+	.endfor
+endif
 
 clean:
 	rm -f lgpng.c
