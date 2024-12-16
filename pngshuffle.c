@@ -76,7 +76,7 @@ main(int argc, char *argv[])
 		} while (LGPNG_OK != lgpng_stream_is_png(source));
 	}
 
-#if HAVE_ARC4RANDOM
+#if !HAVE_ARC4RANDOM
 	srandom(0);
 #endif
 	/* Write the PNG magic bytes */
