@@ -52,12 +52,11 @@ pngshuffle: pngshuffle.o compats.o liblgpng.a
 	${CC} -o $@ pngshuffle.o compats.o liblgpng.a
 
 # Regression tests
-${REGRESS}: config.h lgpng.h liblgpng.a
+regress/test-data: regress/test-data.c config.h lgpng.h liblgpng.a
+	${CC} -o $@ regress/test-data.c compats.o liblgpng.a
 
-.for BIN in ${REGRESS}
-${BIN}: ${BIN}.c
-	${CC} ${CFLAGS} -o $@ ${BIN}.c liblgpng.a
-.endfor
+regress/test-stream: regress/test-stream.c config.h lgpng.h liblgpng.a
+	${CC} -o $@ regress/test-stream.c compats.o liblgpng.a
 
 clean:
 	rm -f lgpng.c
