@@ -9,8 +9,9 @@ Some utilities using lgpng are provided in this repository.
 
 1. [Install](#install)
 2. [pnginfo](#pnginfo)
-2. [pngdump](#pngdump)
-3. [License](#license)
+3. [pngdump](#pngdump)
+4. [pngexplode](#pngexplode)
+5. [License](#license)
 
 ## Install
 
@@ -131,6 +132,29 @@ Example - extract the original png from a skRf chunk:
 ```
 $ pngdump -d -o 16 -f samples/skRf.png skRf | file -
 /dev/stdin: PNG image data, 512 x 512, 8-bit/color RGBA, non-interlaced
+```
+
+## pngexplode
+
+This utility crudely split a PNG stream into multiple files, one per chunk.
+
+Example:
+
+```
+$ pngexplode -f nsfw25-highres.png
+$ ls -1 png_*
+png_000_sig.dat
+png_001_IHDR.dat
+png_002_gAMA.dat
+png_003_iCCP.dat
+png_004_cHRM.dat
+png_005_pHYs.dat
+png_006_IDAT.dat
+png_007_IDAT.dat
+png_008_IDAT.dat
+png_009_IDAT.dat
+png_010_IDAT.dat
+png_011_IEND.dat
 ```
 
 ## License
