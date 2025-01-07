@@ -81,7 +81,7 @@ main(int argc, char *argv[])
 	/* Write the PNG magic bytes in a file */
 	(void)memset(output_file_name, 0, sizeof(output_file_name));
 	(void)snprintf(output_file_name, sizeof(output_file_name),
-	    "__pure_000_sig.dat");
+	    "png_000_sig.dat");
 	if (NULL == (output = fopen(output_file_name, "w"))) {
 		err(EXIT_FAILURE, "%s", output_file_name);
 	}
@@ -115,7 +115,7 @@ main(int argc, char *argv[])
 		nchunk += 1;
 		(void)memset(output_file_name, 0, sizeof(output_file_name));
 		(void)snprintf(output_file_name, sizeof(output_file_name),
-		    "__pure_%03d_%.4s.dat", nchunk, type);
+		    "png_%03d_%.4s.dat", nchunk, type);
 		if (NULL == (output = fopen(output_file_name, "w"))) {
 			warn("%s", output_file_name);
 			fclose(source);
