@@ -518,7 +518,7 @@ struct caNv {
 	} __attribute__((packed)) data;
 };
 
-/* orNt chunk */
+/* orNT chunk */
 typedef enum
 {
 	ORIENTATION_UNDEFINED,
@@ -535,7 +535,7 @@ typedef enum
 
 extern const char *orientationmap[ORIENTATION__MAX];
 
-struct orNt {
+struct orNT {
 	uint32_t	length;
 	uint8_t		type[4];
 	uint32_t	crc;
@@ -680,7 +680,7 @@ int		lgpng_create_sTER_from_data(struct sTER *, uint8_t *, uint32_t);
 /* chunks_extra */
 int		lgpng_create_vpAg_from_data(struct vpAg *, uint8_t *, uint32_t);
 int		lgpng_create_caNv_from_data(struct caNv *, uint8_t *, uint32_t);
-int		lgpng_create_orNt_from_data(struct orNt *, uint8_t *, uint32_t);
+int		lgpng_create_orNT_from_data(struct orNT *, uint8_t *, uint32_t);
 int		lgpng_create_skMf_from_data(struct skMf *, uint8_t *, uint32_t);
 int		lgpng_create_skRf_from_data(struct skRf *, uint8_t *, uint32_t);
 int		lgpng_create_waLV_from_data(struct waLV *, uint8_t *, uint32_t);

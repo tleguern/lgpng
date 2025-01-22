@@ -59,7 +59,7 @@ void info_gIFx(uint8_t *, uint32_t);
 void info_sTER(uint8_t *, uint32_t);
 void info_vpAg(uint8_t *, uint32_t);
 void info_caNv(uint8_t *, uint32_t);
-void info_orNt(uint8_t *, uint32_t);
+void info_orNT(uint8_t *, uint32_t);
 void info_skMf(uint8_t *, uint32_t);
 void info_skRf(uint8_t *, uint32_t);
 void info_waLV(uint8_t *, uint32_t);
@@ -266,8 +266,8 @@ main(int argc, char *argv[])
 					info_vpAg(data, length);
 				} else if (0 == memcmp(current_chunk, "caNv", 4)) {
 					info_caNv(data, length);
-				} else if (0 == memcmp(current_chunk, "orNt", 4)) {
-					info_orNt(data, length);
+				} else if (0 == memcmp(current_chunk, "orNT", 4)) {
+					info_orNT(data, length);
 				} else if (0 == memcmp(current_chunk, "skMf", 4)) {
 					info_skMf(data, length);
 				} else if (0 == memcmp(current_chunk, "skRf", 4)) {
@@ -959,15 +959,15 @@ info_caNv(uint8_t *data, uint32_t dataz)
 }
 
 void
-info_orNt(uint8_t *data, uint32_t dataz)
+info_orNT(uint8_t *data, uint32_t dataz)
 {
-	struct orNt ornt;
+	struct orNT ornt;
 
-	if (-1 == lgpng_create_orNt_from_data(&ornt, data, dataz)) {
-		warnx("Bad orNt chunk, skipping.");
+	if (-1 == lgpng_create_orNT_from_data(&ornt, data, dataz)) {
+		warnx("Bad orNT chunk, skipping.");
 		return;
 	}
-	printf("orNt: orientation: %s\n", orientationmap[ornt.data.orientation]);
+	printf("orNT: orientation: %s\n", orientationmap[ornt.data.orientation]);
 }
 
 void

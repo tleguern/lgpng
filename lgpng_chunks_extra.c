@@ -78,13 +78,13 @@ lgpng_create_caNv_from_data(struct caNv *canv, uint8_t *data, uint32_t length)
 }
 
 int
-lgpng_create_orNt_from_data(struct orNt *ornt, uint8_t *data, uint32_t length)
+lgpng_create_orNT_from_data(struct orNT *ornt, uint8_t *data, uint32_t length)
 {
 	if (1 != length) {
 		return(-1);
 	}
 	ornt->length = length;
-	(void)memcpy(&(ornt->type), "orNt", 4);
+	(void)memcpy(&(ornt->type), "orNT", 4);
 	ornt->data.orientation = data[0];
 	if (ornt->data.orientation >= ORIENTATION__MAX) {
 		return(-1);
