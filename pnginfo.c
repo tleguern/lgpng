@@ -244,7 +244,7 @@ main(int argc, char *argv[])
 					info_pHYs(data, length);
 				} else if (0 == memcmp(current_chunk, "sPLT", 4)) {
 					info_sPLT(data, length);
-				} else if (0 == memcmp(current_chunk, "eXIf", 4)) {
+				} else if (0 == memcmp(current_chunk, "eXIf", 4) || 0 == memcmp(current_chunk, "exIf", 4)) {
 					info_eXIf(data, length);
 				} else if (0 == memcmp(current_chunk, "tIME", 4)) {
 					info_tIME(data, length);
