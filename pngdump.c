@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <zlib.h>
 
 #include "lgpng.h"
 
@@ -36,7 +37,7 @@ main(int argc, char *argv[])
 	int		 ch;
 	uint8_t	 	 oflag = 0;
 	long		 offset;
-	bool		 dflag = false, sflag = false;
+	bool		 sflag = false;
 	bool		 loopexit = false;
 	const char	*errstr = NULL;
 	FILE		*source = stdin;
@@ -44,11 +45,8 @@ main(int argc, char *argv[])
 #if HAVE_PLEDGE
 	pledge("stdio rpath", NULL);
 #endif
-	while (-1 != (ch = getopt(argc, argv, "df:o:s")))
+	while (-1 != (ch = getopt(argc, argv, "f:o:s")))
 		switch (ch) {
-		case 'd':
-			dflag = true;
-			break;
 		case 'f':
 			if (NULL == (source = fopen(optarg, "r"))) {
 				err(EXIT_FAILURE, "%s", optarg);
@@ -68,12 +66,6 @@ main(int argc, char *argv[])
 		}
 	argc -= optind;
 	argv += optind;
-
-	if (oflag != 0 && !dflag) {
-		fclose(source);
-		warnx("%s: -o can only be used with -d", getprogname());
-		usage();
-	}
 
 	if (argc != 1) {
 		fclose(source);
@@ -122,12 +114,7 @@ main(int argc, char *argv[])
 		}
 		/* Ignore invalid CRC */
 		if (0 == memcmp(type, argv[0], 4)) {
-			if (dflag) {
-				(void)fwrite(data + oflag, 1, length - oflag, stdout);
-			} else {
-				(void)lgpng_stream_write_chunk(stdout, length,
-				   type, data, crc);
-			}
+			(void)fwrite(data + oflag, 1, length - oflag, stdout);
 			loopexit = true;
 		}
 stop:
@@ -143,7 +130,7 @@ stop:
 void
 usage(void)
 {
-	fprintf(stderr, "usage: %s [-s] [-f file] [-d [-o offset]] chunk\n",
+	fprintf(stderr, "usage: %s [-s] [-f file] [-o offset] chunk\n",
 	    getprogname());
 	exit(EXIT_FAILURE);
 }

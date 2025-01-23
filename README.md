@@ -124,13 +124,13 @@ This utility dumps a raw chunk from a PNG file or optionally its data segment.
 Example - extract the original gif from a msOG chunk:
 
 ```
-$ pngdump -d -o 11 -f samples/msOG.png msOG | file -
+$ pngdump -o 11 -f samples/msOG.png msOG | file -
 /dev/stdin: GIF image data, version 89a, 32 x 32
 ```
 Example - extract the original png from a skRf chunk:
 
 ```
-$ pngdump -d -o 16 -f samples/skRf.png skRf | file -
+$ pngdump -o 16 -f samples/skRf.png skRf | file -
 /dev/stdin: PNG image data, 512 x 512, 8-bit/color RGBA, non-interlaced
 ```
 
