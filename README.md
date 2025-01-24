@@ -11,7 +11,8 @@ Some utilities using lgpng are provided in this repository.
 2. [pnginfo](#pnginfo)
 3. [pngdump](#pngdump)
 4. [pngexplode](#pngexplode)
-5. [License](#license)
+5. [pngextract](#pngextract)
+6. [License](#license)
 
 ## Install
 
@@ -120,13 +121,13 @@ $ curl https://example.org/file.png | pnginfo -s -l
 
 This utility dumps a raw chunk from a PNG file or optionally its data segment.
 
-
 Example - extract the original gif from a msOG chunk:
 
 ```
 $ pngdump -o 11 -f samples/msOG.png msOG | file -
 /dev/stdin: GIF image data, version 89a, 32 x 32
 ```
+
 Example - extract the original png from a skRf chunk:
 
 ```
@@ -155,6 +156,17 @@ png_008_IDAT.dat
 png_009_IDAT.dat
 png_010_IDAT.dat
 png_011_IEND.dat
+```
+
+## pngextract
+
+Extract a PNG file embedded in something else.
+
+Example - extract a PNG file from an OLE document embedded inside a cpIp chunk:
+
+```
+$ python oledump.py -a -d -s 182 some-ole.dat | pngextract | file -
+/dev/stdin: PNG image data, 941 x 400, 8-bit/color RGBA, non-interlaced
 ```
 
 ## License

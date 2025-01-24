@@ -4,6 +4,7 @@ lgpng.c
 liblgpng.a
 pngdump
 pngexplode
+pngextract
 pnginfo
 pngshuffle
 Makefile.configure

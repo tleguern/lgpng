@@ -19,7 +19,7 @@ MANS= ${MAN1S}
 REGRESS = regress/test-data \
 	  regress/test-stream
 
-all: lgpng.c liblgpng.a pngdump pngexplode pnginfo pngshuffle ${REGRESS}
+all: lgpng.c liblgpng.a pngdump pngexplode pngextract pnginfo pngshuffle ${REGRESS}
 
 regress: ${REGRESS}
 	@for f in ${REGRESS} ; do \
@@ -45,6 +45,9 @@ pngdump: pngdump.o compats.o liblgpng.a
 pngexplode: pngexplode.o compats.o liblgpng.a
 	${CC} -o $@ pngexplode.o compats.o liblgpng.a
 
+pngextract: pngextract.o compats.o liblgpng.a
+	${CC} -o $@ pngextract.o compats.o liblgpng.a
+
 pnginfo: pnginfo.o compats.o liblgpng.a
 	${CC} -o $@ pnginfo.o compats.o liblgpng.a -lz
 
@@ -61,8 +64,8 @@ regress/test-stream: regress/test-stream.c config.h lgpng.h liblgpng.a
 clean:
 	rm -f lgpng.c
 	rm -f liblgpng.a
-	rm -f pngdump pngexplode pnginfo pngshuffle
-	rm -f pngdump.o pngexplode.o pnginfo.o pngshuffle.o
+	rm -f pngdump pngexplode pngextract pnginfo pngshuffle
+	rm -f pngdump.o pngexplode.o pngextract.o pnginfo.o pngshuffle.o
 	rm -f ${OBJS} compats.o tests.o
 	rm -f ${REGRESS} regress/*.o
 
@@ -77,5 +80,6 @@ install: all
 	${INSTALL_MAN} ${MANS} ${DESTDIR}${MANDIR}/man1/
 	${INSTALL_PROGRAM} pngdump ${DESTDIR}${BINDIR}
 	${INSTALL_PROGRAM} pngexplode ${DESTDIR}${BINDIR}
+	${INSTALL_PROGRAM} pngextract ${DESTDIR}${BINDIR}
 	${INSTALL_PROGRAM} pnginfo ${DESTDIR}${BINDIR}
 	${INSTALL_PROGRAM} pngshuffle ${DESTDIR}${BINDIR}
