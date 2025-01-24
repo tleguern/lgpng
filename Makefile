@@ -40,7 +40,7 @@ liblgpng.a: ${OBJS} compats.o
 	${AR} rcs $@ ${OBJS} compats.o
 
 pngdump: pngdump.o compats.o liblgpng.a
-	${CC} -o $@ pngdump.o compats.o liblgpng.a
+	${CC} -o $@ pngdump.o compats.o liblgpng.a -lz
 
 pngexplode: pngexplode.o compats.o liblgpng.a
 	${CC} -o $@ pngexplode.o compats.o liblgpng.a

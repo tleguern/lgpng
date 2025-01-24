@@ -10,7 +10,7 @@
 .Nd dump chunks from PNG images
 .Sh SYNOPSIS
 .Nm
-.Op Fl s
+.Op Fl su
 .Op Fl o Ar offset
 .Op Fl f Ar file
 .Ar chunk
@@ -32,6 +32,8 @@ Specifies the number of bytes to skip at the begining of the data part.
 Skip the first bytes until a valid PNG signature is found or the end of file.
 This is useful to pipe after a call to
 .Xr curl .
+.It Fl u
+Uncompress the data part.
 .Sh AUTHORS
 The
 .Nm

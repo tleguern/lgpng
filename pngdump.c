@@ -35,7 +35,7 @@ int
 main(int argc, char *argv[])
 {
 	int		 ch;
-	uint8_t	 	 oflag = 0;
+	uint8_t	 	 oflag = 0, uflag = 0;
 	long		 offset;
 	bool		 sflag = false;
 	bool		 loopexit = false;
@@ -45,7 +45,7 @@ main(int argc, char *argv[])
 #if HAVE_PLEDGE
 	pledge("stdio rpath", NULL);
 #endif
-	while (-1 != (ch = getopt(argc, argv, "f:o:s")))
+	while (-1 != (ch = getopt(argc, argv, "f:o:su")))
 		switch (ch) {
 		case 'f':
 			if (NULL == (source = fopen(optarg, "r"))) {
@@ -60,6 +60,9 @@ main(int argc, char *argv[])
 			break;
 		case 's':
 			sflag = true;
+			break;
+		case 'u':
+			uflag = true;
 			break;
 		default:
 			usage();
@@ -114,7 +117,29 @@ main(int argc, char *argv[])
 		}
 		/* Ignore invalid CRC */
 		if (0 == memcmp(type, argv[0], 4)) {
-			(void)fwrite(data + oflag, 1, length - oflag, stdout);
+			if (true == uflag) {
+				unsigned int	 retry = 2;
+				int	 zret;
+				size_t	 outz, outtmpz;
+				uint8_t	*out = NULL, *outtmp = NULL;
+				do {
+					outtmpz = (length - oflag) * retry;
+					if (NULL == (outtmp = realloc(out, outtmpz + 1))) {
+						errx(EXIT_FAILURE, "realloc(outtmpz + 1)");
+					}
+					out = outtmp;
+					outz = outtmpz;
+					zret = uncompress(out, &outz, data + oflag, length - oflag);
+					if (Z_BUF_ERROR != zret && Z_OK != zret) {
+						errx(EXIT_FAILURE, "Failed decompression");
+					}
+					out[outz] = '\0';
+					retry += 1;
+				} while (Z_OK != zret);
+				(void)fwrite(out, 1, outz, stdout);
+			} else {
+				(void)fwrite(data + oflag, 1, length - oflag, stdout);
+			}
 			loopexit = true;
 		}
 stop:
@@ -130,7 +155,7 @@ stop:
 void
 usage(void)
 {
-	fprintf(stderr, "usage: %s [-s] [-f file] [-o offset] chunk\n",
+	fprintf(stderr, "usage: %s [-su] [-f file] [-o offset] chunk\n",
 	    getprogname());
 	exit(EXIT_FAILURE);
 }
