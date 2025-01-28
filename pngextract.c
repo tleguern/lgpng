@@ -36,9 +36,6 @@ main(int argc, char *argv[])
 	int		 ch;
 	FILE		*source = stdin;
 
-#if HAVE_PLEDGE
-	pledge("stdio", NULL);
-#endif
 	while (-1 != (ch = getopt(argc, argv, "f:")))
 		switch (ch) {
 		case 'f':
@@ -51,6 +48,14 @@ main(int argc, char *argv[])
 		}
 	argc -= optind;
 	argv += optind;
+
+#if HAVE_PLEDGE
+	if (source == stdin) {
+		pledge("stdio", NULL);
+	} else {
+		pledge("stdio rpath", NULL);
+	}
+#endif
 
 	/* First read the 8 first bytes for the happy case */
 	uint8_t sig[8] = {  0,  0,  0,  0,  0,  0,  0,  0};

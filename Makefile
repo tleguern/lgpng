@@ -17,7 +17,8 @@ MAN1S= pngdump.1
 MANS= ${MAN1S}
 
 REGRESS = regress/test-data \
-	  regress/test-stream
+	  regress/test-stream \
+	  regress/test-pngextract.sh
 
 all: lgpng.c liblgpng.a pngdump pngexplode pngextract pnginfo pngshuffle ${REGRESS}
 
