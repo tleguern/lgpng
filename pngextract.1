@@ -1,0 +1,31 @@
+.\"	$OpenBSD: mdoc.template,v 1.15 2014/03/31 00:09:54 dlg Exp $
+.\"
+.\" Copyright (c) 2025 Tristan Le Guern <tleguern@bouledef.eu>
+.\"
+.Dd $Mdocdate$
+.Dt PNGEXTRACT 1
+.Os
+.Sh NAME
+.Nm pngextract
+.Nd extract a PNG file from a stream of data
+.Sh SYNOPSIS
+.Nm
+.Op Fl f Ar file
+.Sh DESCRIPTION
+The
+.Nm
+utility searches for the magic bytes of the PNG signature in a stream of data.
+If found it will write the file on stdout.
+If no file is supplied using
+.Fl f
+then standard input is read.
+.Pp
+The options are as follows:
+.Bl -tag -width Ds
+.It Fl f
+Specifies the PNG file instead of reading from stdin.
+.Sh AUTHORS
+The
+.Nm
+utility was written by
+.An Tristan Le Guern Aq Mt tleguern@bouledef.eu .

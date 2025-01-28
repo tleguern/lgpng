@@ -13,7 +13,7 @@ SRCS =  lgpng_chunks.c \
 	lgpng_data.c \
 	lgpng_stream.c
 OBJS= ${SRCS:.c=.o}
-MAN1S= pngdump.1
+MAN1S= pngdump.1 pngextract.1
 MANS= ${MAN1S}
 
 REGRESS = regress/test-data \
