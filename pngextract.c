@@ -34,6 +34,7 @@ int
 main(int argc, char *argv[])
 {
 	int		 ch;
+	bool		 loopexit = false;
 	FILE		*source = stdin;
 
 	while (-1 != (ch = getopt(argc, argv, "f:")))
@@ -81,23 +82,41 @@ main(int argc, char *argv[])
 		sig[7] = c;
 	}
 
-	/* Then dump the input on stdout without modifications */
-	(void)fwrite(sig, sizeof(sig), 1, stdout);
-	while (1) {
-		uint8_t	buf[4096];
-		size_t nmemb;
+	/* Then dump the input on stdout without modifications until IEND */
+	(void)lgpng_stream_write_sig(stdout);
+	do {
+		uint32_t	 length = 0, crc = 0;
+		uint8_t		*data = NULL;
+		uint8_t		 type[4] = {0, 0, 0, 0};
 
-		nmemb = fread(buf, 1, sizeof(buf), source);
-		if (0 != feof(source)) {
-			/* reached end-of-file */
+		if (LGPNG_OK != lgpng_stream_get_length(source, &length)) {
 			break;
 		}
-		if (0 != ferror(source)) {
-			/* ??? */
+		(void)lgpng_stream_write_integer(stdout, length);
+		if (LGPNG_OK != lgpng_stream_get_type(source, type)) {
 			break;
 		}
-		(void)fwrite(buf, 1, nmemb, stdout);
-	}
+		(void)fwrite(type, 1, 4, stdout);
+		if (NULL == (data = malloc(length + 1))) {
+			fprintf(stderr, "malloc\n");
+			break;
+		}
+		if (LGPNG_OK != lgpng_stream_get_data(source, length, &data)) {
+			loopexit = true;
+			goto stop;
+		}
+		(void)fwrite(data, 1, length, stdout);
+		if (LGPNG_OK != lgpng_stream_get_crc(source, &crc)) {
+			loopexit = true;
+			goto stop;
+		}
+		(void)lgpng_stream_write_integer(stdout, crc);
+stop:
+		free(data);
+		if (0 == memcmp(type, "IEND", 4)) {
+			loopexit = true;
+		}
+	} while(! loopexit);
 	fclose(source);
 	return(EXIT_SUCCESS);
 }
