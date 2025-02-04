@@ -713,6 +713,7 @@ enum lgpng_err	lgpng_stream_get_data(FILE *, uint32_t, uint8_t **);
 enum lgpng_err	lgpng_stream_skip_data(FILE *, uint32_t);
 enum lgpng_err	lgpng_stream_get_crc(FILE *, uint32_t *);
 enum lgpng_err	lgpng_stream_write_sig(FILE *);
+enum lgpng_err	lgpng_stream_write_integer(FILE *, uint32_t);
 enum lgpng_err	lgpng_stream_write_chunk(FILE *, uint32_t, uint8_t [4], uint8_t *, uint32_t);
 
 /* crc */

@@ -133,6 +133,20 @@ lgpng_stream_write_sig(FILE *output)
 }
 
 enum lgpng_err
+lgpng_stream_write_integer(FILE *output, uint32_t n)
+{
+	uint32_t be = htobe32(n);
+
+	if (NULL == output) {
+		return(LGPNG_INVALID_PARAM);
+	}
+	if (4 != fwrite((uint8_t *)&be, 1, 4, output)) {
+		return(LGPNG_ERROR);
+	}
+	return(LGPNG_OK);
+}
+
+enum lgpng_err
 lgpng_stream_write_chunk(FILE *output, uint32_t length, uint8_t type[4],
     uint8_t *data, uint32_t crc)
 {
