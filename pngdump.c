@@ -117,6 +117,11 @@ main(int argc, char *argv[])
 		}
 		/* Ignore invalid CRC */
 		if (0 == memcmp(type, argv[0], 4)) {
+			if (oflag > length) {
+				warnx("-o flag can't get past chunk length");
+				loopexit = true;
+				goto stop;
+			}
 			if (true == uflag) {
 				unsigned int	 retry = 2;
 				int	 zret;
